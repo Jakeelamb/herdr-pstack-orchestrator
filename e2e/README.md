@@ -79,7 +79,9 @@ Historical evidence keeps its original source attribution. Moving the driver cha
 
 ## Reproduce original skill discovery
 
-[upstream-sync-0.15.17.json](evidence/upstream-sync-0.15.17.json) records the 54-entry pstack 0.15.17 bundle installed from a local source copy, all 192 files preserved after that copy was deleted, and native Pi/Codex discovery, including `ketchup`. It also records regeneration from the pinned source, the upstream freshness check, and cleanup. No model workflow was run for this sync; updated workflows and `ketchup` execution remain runtime unverified.
+[upstream-sync-0.15.18.json](evidence/upstream-sync-0.15.18.json) records the 54-entry pstack 0.15.18 bundle installed from a local source copy, all 192 files preserved after that copy was deleted, and native Pi/Codex discovery. It also records regeneration from the pinned source, the successful upstream freshness check, and cleanup. No model workflow or visual recap was run for this sync; `ketchup` execution remains runtime unverified.
+
+[upstream-sync-0.15.17.json](evidence/upstream-sync-0.15.17.json) records the preceding 54-entry pstack 0.15.17 sync and retains its original source attribution, hashes, checks, and runtime limits.
 
 [bundled-install.json](evidence/bundled-install.json) records the historical 53-entry pstack 0.15.15 bundle installed from a commit-pinned GitHub URL, all 190 files preserved, native Pi/Codex discovery, and a separate local installation checked after its temporary source was deleted. It retains its exact source/driver hashes and cleanup.
 

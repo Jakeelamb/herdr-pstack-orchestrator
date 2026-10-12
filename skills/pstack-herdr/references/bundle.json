@@ -1,7 +1,7 @@
 {
   "repository": "https://github.com/cursor/plugins.git",
-  "revision": "11713c683fe4add4fd403ea880580abbc9e0875f",
-  "version": "0.15.17",
+  "revision": "ea32d9562a1c9f077d7cdd3be53d07383eb18866",
+  "version": "0.15.18",
   "excluded_skills": {
     "make-bot-ui": "Requires unavailable Cursor Routines and secret-request tools; no coding workflow depends on it.",
     "poteto-help": "Cursor-specific setup and navigation duplicate the adapter docs and require unbundled guide pages; no workflow depends on it.",
@@ -78,7 +78,7 @@
       "name": "ketchup",
       "adapted": true,
       "source": "pstack/skills/ketchup/SKILL.md",
-      "source_sha256": "f460a861cf2179808abc24b5588c94709f8cc3e58d4da2e44baf89556f53b587"
+      "source_sha256": "3b00c552fdb236ecfce85184000814bf62d7c518aac3acd1ba7ea8e02d8f2196"
     },
     {
       "name": "maintain-verification-skill",

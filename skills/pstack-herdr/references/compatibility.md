@@ -1,6 +1,6 @@
 # Original pstack source and compatibility
 
-This bundle tracks [Lauren Tan's original pstack](https://github.com/cursor/plugins/tree/11713c683fe4add4fd403ea880580abbc9e0875f/pstack), version **0.15.17**, at commit `11713c683fe4add4fd403ea880580abbc9e0875f`. The revision pins instructions and references; it does not establish runtime support for every playbook.
+This bundle tracks [Lauren Tan's original pstack](https://github.com/cursor/plugins/tree/ea32d9562a1c9f077d7cdd3be53d07383eb18866/pstack), version **0.15.18**, at commit `ea32d9562a1c9f077d7cdd3be53d07383eb18866`. The revision pins instructions and references; it does not establish runtime support for every playbook.
 
 ## Install
 
@@ -24,7 +24,7 @@ The bundle contains **54 entries**: 49 pstack skills, the three referenced team-
 
 Generic guidance remains included: `unslop`, `bro`, technical writing, TypeScript guidance, and all 24 principles. Being independent of delegation is not a reason to exclude a useful skill.
 
-Names are normalized to directory names and original descriptions are preserved. Cursor-only metadata and `disable-model-invocation` are omitted so harnesses can discover and select skills implicitly. Nineteen workflow/runtime entries prepend the Herdr mapping; all original bodies and supporting files are preserved. This includes `principle-guard-the-context-window`, whose instructions call for subagents, and `ketchup`, whose read-only recap maps PR/CI checks and live agent status to GitHub and Herdr tools. No plugin registration, hooks, or custom installer are required.
+Names are normalized to directory names and original descriptions are preserved. Cursor-only metadata and `disable-model-invocation` are omitted so harnesses can discover and select skills implicitly. Nineteen workflow/runtime entries prepend the Herdr mapping; all original bodies and supporting files are preserved. This includes `principle-guard-the-context-window`, whose instructions call for subagents, and `ketchup`, whose recap maps read-only PR/CI and live agent checks to GitHub and Herdr tools while allowing reply visuals from existing evidence. No plugin registration, hooks, or custom installer are required.
 
 ## Resource and runtime mapping
 
@@ -38,7 +38,7 @@ Names are normalized to directory names and original descriptions are preserved.
 
 Read [herdr-tools.md](herdr-tools.md) for tool substitutions and unavailable capabilities. Cursor modes, `/loop`, cloud execution, and missing MCP/app tools remain unavailable unless the environment supplies an equivalent. A workflow requiring one stops at that step. Scripts may require their own tools; bundling them does not install those dependencies.
 
-The current 0.15.17 bundle passed a local source-copy installation check: all 54 entries and 192 files were preserved for Codex, Pi, and Claude Code. After deleting the temporary source, all 54 entries appeared in Pi and Codex native catalogs. See the [upstream-sync receipt](https://github.com/conscientiousness/herdr-pstack-orchestrator/blob/main/e2e/evidence/upstream-sync-0.15.17.json). Native Claude Code discovery has not been measured.
+The current 0.15.18 bundle passed a local source-copy installation check: all 54 entries and 192 files were preserved for Codex, Pi, and Claude Code. After deleting the temporary source, all 54 entries appeared in Pi and Codex native catalogs. See the [0.15.18 receipt](https://github.com/conscientiousness/herdr-pstack-orchestrator/blob/main/e2e/evidence/upstream-sync-0.15.18.json). The historical [0.15.17 receipt](https://github.com/conscientiousness/herdr-pstack-orchestrator/blob/main/e2e/evidence/upstream-sync-0.15.17.json) retains its original source attribution. Native Claude Code discovery has not been measured.
 
 The recorded original `how` run completed three explorer tasks and one explainer task through Herdr. Its [historical receipt](https://github.com/conscientiousness/herdr-pstack-orchestrator/blob/main/e2e/evidence/skill-discovery.json) used the earlier prepared package. Updated workflows, `ketchup`, other original skills, and `poteto-mode` playbooks remain **runtime unverified**. Native discovery and workflow execution are separate checks. Earlier controller/review-loop receipts keep their original attribution in the [E2E guide](https://github.com/conscientiousness/herdr-pstack-orchestrator/blob/main/e2e/README.md#historical-pstack-source).
 

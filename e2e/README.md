@@ -79,7 +79,9 @@ Historical evidence keeps its original source attribution. Moving the driver cha
 
 ## Reproduce original skill discovery
 
-[bundled-install.json](evidence/bundled-install.json) records the current 53-entry bundle installed from a commit-pinned GitHub URL, all 190 files preserved, native Pi/Codex discovery, and a separate local installation checked after its temporary source was deleted. It includes exact source/driver hashes and cleanup. No model workflow was rerun for this packaging change.
+[upstream-sync-0.15.17.json](evidence/upstream-sync-0.15.17.json) records the 54-entry pstack 0.15.17 bundle installed from a local source copy, all 192 files preserved after that copy was deleted, and native Pi/Codex discovery, including `ketchup`. It also records regeneration from the pinned source, the upstream freshness check, and cleanup. No model workflow was run for this sync; updated workflows and `ketchup` execution remain runtime unverified.
+
+[bundled-install.json](evidence/bundled-install.json) records the historical 53-entry pstack 0.15.15 bundle installed from a commit-pinned GitHub URL, all 190 files preserved, native Pi/Codex discovery, and a separate local installation checked after its temporary source was deleted. It retains its exact source/driver hashes and cleanup.
 
 [skill-discovery.json](evidence/skill-discovery.json) records the real 56-entry Pi/Codex catalog checks, preserved original content/resources/licenses, a fresh original `how` invocation with four delivered and closed workers, and real current/older-pin upstream comparisons. The receipt discloses the evaluation controller's corrected tab placement, the user's mid-run role change, and the limited scope of the source walkthrough. The trace review was manual; full transcripts remain private. These results do not validate other original workflows.
 

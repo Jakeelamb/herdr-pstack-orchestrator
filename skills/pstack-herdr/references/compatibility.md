@@ -1,6 +1,6 @@
 # Original pstack source and compatibility
 
-This bundle tracks [Lauren Tan's original pstack](https://github.com/cursor/plugins/tree/ccb5507cec1546dc88135c1139c811e6c59115ba/pstack), version **0.15.15**, at commit `ccb5507cec1546dc88135c1139c811e6c59115ba`. The revision pins instructions and references; it does not establish runtime support for every playbook.
+This bundle tracks [Lauren Tan's original pstack](https://github.com/cursor/plugins/tree/11713c683fe4add4fd403ea880580abbc9e0875f/pstack), version **0.15.17**, at commit `11713c683fe4add4fd403ea880580abbc9e0875f`. The revision pins instructions and references; it does not establish runtime support for every playbook.
 
 ## Install
 
@@ -14,7 +14,7 @@ No separate source checkout is needed. The installer copies complete skill direc
 
 ## Included skills and adaptations
 
-The bundle contains **53 entries**: 48 pstack skills, the three referenced team-kit skills (`control-cli`, `control-ui`, `deslop`), and two Herdr adapters. Each upstream skill retains its resource tree and `UPSTREAM-LICENSE.txt`. The two original agent instructions and their license live in [agents/](agents/). The [bundle provenance](bundle.json) records source paths and hashes; [upstream.json](upstream.json) defines the pin, adaptations, and exclusions.
+The bundle contains **54 entries**: 49 pstack skills, the three referenced team-kit skills (`control-cli`, `control-ui`, `deslop`), and two Herdr adapters. Each upstream skill retains its resource tree and `UPSTREAM-LICENSE.txt`. The two original agent instructions and their license live in [agents/](agents/). The [bundle provenance](bundle.json) records source paths and hashes; [upstream.json](upstream.json) defines the pin, adaptations, and exclusions.
 
 | Excluded original skill | Reason |
 |---|---|
@@ -24,7 +24,7 @@ The bundle contains **53 entries**: 48 pstack skills, the three referenced team-
 
 Generic guidance remains included: `unslop`, `bro`, technical writing, TypeScript guidance, and all 24 principles. Being independent of delegation is not a reason to exclude a useful skill.
 
-Names are normalized to directory names and original descriptions are preserved. Cursor-only metadata and `disable-model-invocation` are omitted so harnesses can discover and select skills implicitly. Eighteen workflow/runtime entries prepend the Herdr mapping; all original bodies and supporting files are preserved. This includes `principle-guard-the-context-window`, whose instructions call for subagents. No plugin registration, hooks, or custom installer are required.
+Names are normalized to directory names and original descriptions are preserved. Cursor-only metadata and `disable-model-invocation` are omitted so harnesses can discover and select skills implicitly. Nineteen workflow/runtime entries prepend the Herdr mapping; all original bodies and supporting files are preserved. This includes `principle-guard-the-context-window`, whose instructions call for subagents, and `ketchup`, whose read-only recap maps PR/CI checks and live agent status to GitHub and Herdr tools. No plugin registration, hooks, or custom installer are required.
 
 ## Resource and runtime mapping
 
@@ -38,7 +38,9 @@ Names are normalized to directory names and original descriptions are preserved.
 
 Read [herdr-tools.md](herdr-tools.md) for tool substitutions and unavailable capabilities. Cursor modes, `/loop`, cloud execution, and missing MCP/app tools remain unavailable unless the environment supplies an equivalent. A workflow requiring one stops at that step. Scripts may require their own tools; bundling them does not install those dependencies.
 
-The recorded original `how` run completed three explorer tasks and one explainer task through Herdr. Its [historical receipt](https://github.com/conscientiousness/herdr-pstack-orchestrator/blob/main/e2e/evidence/skill-discovery.json) used the earlier prepared package. Other original skills and `poteto-mode` playbooks remain **runtime unverified**. Native discovery and workflow execution are separate checks; native Claude Code discovery has not been measured. Earlier controller/review-loop receipts keep their original attribution in the [E2E guide](https://github.com/conscientiousness/herdr-pstack-orchestrator/blob/main/e2e/README.md#historical-pstack-source).
+The current 0.15.17 bundle passed a local source-copy installation check: all 54 entries and 192 files were preserved for Codex, Pi, and Claude Code. After deleting the temporary source, all 54 entries appeared in Pi and Codex native catalogs. See the [upstream-sync receipt](https://github.com/conscientiousness/herdr-pstack-orchestrator/blob/main/e2e/evidence/upstream-sync-0.15.17.json). Native Claude Code discovery has not been measured.
+
+The recorded original `how` run completed three explorer tasks and one explainer task through Herdr. Its [historical receipt](https://github.com/conscientiousness/herdr-pstack-orchestrator/blob/main/e2e/evidence/skill-discovery.json) used the earlier prepared package. Updated workflows, `ketchup`, other original skills, and `poteto-mode` playbooks remain **runtime unverified**. Native discovery and workflow execution are separate checks. Earlier controller/review-loop receipts keep their original attribution in the [E2E guide](https://github.com/conscientiousness/herdr-pstack-orchestrator/blob/main/e2e/README.md#historical-pstack-source).
 
 ## Maintainer updates
 

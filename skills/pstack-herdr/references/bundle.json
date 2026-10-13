@@ -1,7 +1,7 @@
 {
   "repository": "https://github.com/cursor/plugins.git",
-  "revision": "ea32d9562a1c9f077d7cdd3be53d07383eb18866",
-  "version": "0.15.18",
+  "revision": "1dcc2bacde73ddd284803b7af28164d0436198fc",
+  "version": "0.15.21",
   "excluded_skills": {
     "make-bot-ui": "Requires unavailable Cursor Routines and secret-request tools; no coding workflow depends on it.",
     "poteto-help": "Cursor-specific setup and navigation duplicate the adapter docs and require unbundled guide pages; no workflow depends on it.",
@@ -54,7 +54,7 @@
       "name": "create-verification-skill",
       "adapted": true,
       "source": "pstack/skills/create-verification-skill/SKILL.md",
-      "source_sha256": "644f2551403c1bca01a2855b34611b6e7be0ce0dc5b204514c376c0f6a6e6ac4"
+      "source_sha256": "d353973547bf8ad8977eca645f4cd4feaed0d32f4b43d1448f906b0a76c4d694"
     },
     {
       "name": "figure-it-out",
@@ -90,13 +90,13 @@
       "name": "no-comments",
       "adapted": true,
       "source": "pstack/skills/no-comments/SKILL.md",
-      "source_sha256": "5c5b0882297d704c3a9720c52b7a793c68b013eaf717989f0945624efdfe2b05"
+      "source_sha256": "08b9c769040c104ef7fb1902ebac97047edbb89b58c7e113e53c918287b092e6"
     },
     {
       "name": "poteto-mode",
       "adapted": true,
       "source": "pstack/skills/poteto-mode/SKILL.md",
-      "source_sha256": "03d61d15c5a0f7abc2c558c7323ff3c360dedc2915ebadf3c76c9e872f41cb64"
+      "source_sha256": "f6d1edf26119cb9251e3db499c79c689599fdf706c268b61051d05c8b953b43a"
     },
     {
       "name": "principle-attack-the-premise",
@@ -120,13 +120,13 @@
       "name": "principle-encode-lessons-in-structure",
       "adapted": false,
       "source": "pstack/skills/principle-encode-lessons-in-structure/SKILL.md",
-      "source_sha256": "ad12c26209770c52f632d9480c048ac5334ce8e5d6297f83ade59652a56cb3ef"
+      "source_sha256": "228963799189f481827d6f28065f278bc2008ffa37030b1234cbd5814d36b9e9"
     },
     {
       "name": "principle-exhaust-the-design-space",
       "adapted": false,
       "source": "pstack/skills/principle-exhaust-the-design-space/SKILL.md",
-      "source_sha256": "8583310d7297b7823d75494faa57b003564d436807febecdecbd8321abe5cf6e"
+      "source_sha256": "2de83d99f93f60ec6313455b0bc9aa9f0bfb93dd59f414f403691322db00d4db"
     },
     {
       "name": "principle-experience-first",
@@ -156,13 +156,13 @@
       "name": "principle-guard-the-context-window",
       "adapted": true,
       "source": "pstack/skills/principle-guard-the-context-window/SKILL.md",
-      "source_sha256": "d2cef147862576e3d709b7afc149d85196245e8338b9c7eef337c95fba412b3e"
+      "source_sha256": "af0b9dd70b43628ce4a59a4d332e9d9ad055084e460f430e7a757495c627e81a"
     },
     {
       "name": "principle-laziness-protocol",
       "adapted": false,
       "source": "pstack/skills/principle-laziness-protocol/SKILL.md",
-      "source_sha256": "9006579e9e3f33955d17569733db688ae65f22577dc3b21803d219a5a8445aff"
+      "source_sha256": "1be6e7a435f26a75a76eb848b9c3d611b9977d0f5822361753244da25ca3ca45"
     },
     {
       "name": "principle-make-operations-idempotent",
@@ -294,7 +294,7 @@
       "name": "unslop",
       "adapted": false,
       "source": "pstack/skills/unslop/SKILL.md",
-      "source_sha256": "3126b9e2cf46022f5e0c332e84be5e17a9730669cb3d6ac0a7e5e7e94b1e24fa"
+      "source_sha256": "ccab208e315ce05e2fab8eeee2f7879f1289b5c6844840b2d307adf31c79144f"
     },
     {
       "name": "why",
@@ -322,7 +322,7 @@
     }
   ],
   "agents": {
-    "comment-sicko.md": "c0fd0383008da45fc78cfac17b9007d62c42f87ad1c8d5c2fb658b1fd01f7c82",
-    "poteto-agent.md": "abe41c169ecbfe65641f1725f4188d568e046c0dec7fd2dc271abb594c299201"
+    "comment-sicko.md": "3e239e40b7b4b9beb2cf7f3ccc57f2388eb8b69bd1ba8ae888ef87ef6e0e2116",
+    "poteto-agent.md": "cb41fdb80b3eaab7604547c378b97e339689dfebb77e24d4b10c07bbf65590ab"
   }
 }

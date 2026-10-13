@@ -1,0 +1,496 @@
+{
+  "schema": "horch/workspace-limits-comparison/v1",
+  "verdict": "pass",
+  "source_revision": "bc3fcb3f61401ab8beecbff75ac17168926072b9",
+  "source_skills_git_tree": "b7df81e8d4aeaba713960dc70815818b5622dea7",
+  "scope": "Real Herdr run/check/wait/close commands with two owned workspaces, shared isolated task store, and configured authenticated Pi workers.",
+  "scenario": {
+    "max_active_workers_per_workspace": 2,
+    "concurrent_unclosed_reservations": 4,
+    "model_tasks_completed_after_change": 5,
+    "legacy_records_in_workspace_A": 2
+  },
+  "original_receipt_sha256": {
+    "initial_startup_failure": "2443a13736d738139679a4f8f0506b6ee612572a0eab403c04c3c71d13d3d6b5",
+    "before": "8bfaf00f044b596b0ca91fd78e10b4247ae31d0cd9385a348a19da0263ca73c1",
+    "after": "69679f9dbf70d45035fc992954b6316ae2f2200ab62e47f8699ddd6402828150"
+  },
+  "runs": {
+    "initial_startup_failure": {
+      "schema": "horch/workspace-limits-e2e/v1",
+      "verdict": "fail",
+      "source_hashes": {
+        "horch_sha256": "bfc785ca7afac686cbf413faa17ed3257336f7beb6dd5fe9b3a08bb3798da04c",
+        "driver_sha256": "7a7c23cfb75c47093d118bed69e0ef1c47b500cb3a3dc2d07b7ffa5691052b25"
+      },
+      "worker": "gpt",
+      "model": {
+        "harness": "pi",
+        "provider": "openai",
+        "model": "gpt-6.1-sol",
+        "effort": "medium"
+      },
+      "seconds": 3.907,
+      "observations": {
+        "run_A_1": {
+          "state": "running",
+          "error": null
+        },
+        "run_A_2": {
+          "state": "start_failed",
+          "error": null
+        }
+      },
+      "assertions": [
+        {
+          "name": "two distinct owned workspaces",
+          "ok": true
+        },
+        {
+          "name": "A worker 1 starts",
+          "ok": true
+        },
+        {
+          "name": "A worker 2 starts",
+          "ok": false
+        },
+        {
+          "name": "owned worker panes and workspaces removed",
+          "ok": true
+        },
+        {
+          "name": "real worker configuration unchanged",
+          "ok": true
+        },
+        {
+          "name": "verified source unchanged during run",
+          "ok": true
+        }
+      ],
+      "problem_category": "RuntimeError"
+    },
+    "before": {
+      "schema": "horch/workspace-limits-e2e/v1",
+      "verdict": "fail",
+      "source_hashes": {
+        "horch_sha256": "bfc785ca7afac686cbf413faa17ed3257336f7beb6dd5fe9b3a08bb3798da04c",
+        "driver_sha256": "3a473d664427c5eb6222e016e869f4d0eab7451c350067cc892c008f0538de38"
+      },
+      "worker": "gpt",
+      "input_sha256": "46e7948297dd7dab980607ea336922c0592e383c33442ec5332ace8a9f7ac2ff",
+      "model": {
+        "harness": "pi",
+        "provider": "openai",
+        "model": "gpt-6.1-sol",
+        "effort": "medium"
+      },
+      "seconds": 7.911,
+      "observations": {
+        "run_A_1": {
+          "state": "running",
+          "error": null,
+          "exit_code": 0,
+          "task_state": {
+            "state": "running",
+            "closed": false,
+            "problem_present": false
+          }
+        },
+        "run_A_2": {
+          "state": "running",
+          "error": null,
+          "exit_code": 0,
+          "task_state": {
+            "state": "running",
+            "closed": false,
+            "problem_present": false
+          }
+        },
+        "run_B_1": {
+          "state": null,
+          "error": "worker_limit",
+          "exit_code": 1
+        },
+        "before_cleanup": [
+          {
+            "task_id": "t-140343",
+            "state": "running",
+            "closed": false,
+            "problem_present": false
+          },
+          {
+            "task_id": "t-3dcc37",
+            "state": "running",
+            "closed": false,
+            "problem_present": false
+          }
+        ]
+      },
+      "assertions": [
+        {
+          "name": "two distinct owned workspaces",
+          "ok": true
+        },
+        {
+          "name": "A worker 1 starts",
+          "ok": true
+        },
+        {
+          "name": "A worker 2 starts",
+          "ok": true
+        },
+        {
+          "name": "full-A reports worker_limit",
+          "ok": true
+        },
+        {
+          "name": "full-A allocates nothing",
+          "ok": true
+        },
+        {
+          "name": "only A records converted to legacy format",
+          "ok": true
+        },
+        {
+          "name": "legacy-full-A reports worker_limit",
+          "ok": true
+        },
+        {
+          "name": "legacy-full-A allocates nothing",
+          "ok": true
+        },
+        {
+          "name": "full A check is not_checked",
+          "ok": true
+        },
+        {
+          "name": "full A check allocates nothing",
+          "ok": true
+        },
+        {
+          "name": "B worker 1 starts",
+          "ok": false
+        },
+        {
+          "name": "owned worker panes and workspaces removed",
+          "ok": true
+        },
+        {
+          "name": "read-only input unchanged",
+          "ok": true
+        },
+        {
+          "name": "real worker configuration unchanged",
+          "ok": true
+        },
+        {
+          "name": "verified source unchanged during run",
+          "ok": true
+        }
+      ],
+      "problem_category": "RuntimeError"
+    },
+    "after": {
+      "schema": "horch/workspace-limits-e2e/v1",
+      "verdict": "pass",
+      "source_hashes": {
+        "horch_sha256": "32fbad8e88dedf604d9e51407228ef11fa8c86cd7ba25cfe0754168f8f3d493f",
+        "driver_sha256": "3a473d664427c5eb6222e016e869f4d0eab7451c350067cc892c008f0538de38"
+      },
+      "worker": "gpt",
+      "input_sha256": "46e7948297dd7dab980607ea336922c0592e383c33442ec5332ace8a9f7ac2ff",
+      "model": {
+        "harness": "pi",
+        "provider": "openai",
+        "model": "gpt-6.1-sol",
+        "effort": "medium"
+      },
+      "seconds": 66.744,
+      "observations": {
+        "run_A_1": {
+          "state": "running",
+          "error": null,
+          "exit_code": 0,
+          "task_state": {
+            "state": "running",
+            "closed": false,
+            "problem_present": false
+          }
+        },
+        "run_A_2": {
+          "state": "running",
+          "error": null,
+          "exit_code": 0,
+          "task_state": {
+            "state": "running",
+            "closed": false,
+            "problem_present": false
+          }
+        },
+        "run_B_1": {
+          "state": "running",
+          "error": null,
+          "exit_code": 0,
+          "task_state": {
+            "state": "running",
+            "closed": false,
+            "problem_present": false
+          }
+        },
+        "run_B_2": {
+          "state": "running",
+          "error": null,
+          "exit_code": 0,
+          "task_state": {
+            "state": "running",
+            "closed": false,
+            "problem_present": false
+          }
+        },
+        "before_cleanup": [
+          {
+            "task_id": "t-39b9ae",
+            "state": "done",
+            "closed": true,
+            "problem_present": false
+          },
+          {
+            "task_id": "t-44046d",
+            "state": "done",
+            "closed": true,
+            "problem_present": false
+          },
+          {
+            "task_id": "t-b04239",
+            "state": "done",
+            "closed": true,
+            "problem_present": false
+          },
+          {
+            "task_id": "t-e37fac",
+            "state": "done",
+            "closed": true,
+            "problem_present": false
+          },
+          {
+            "task_id": "t-e59609",
+            "state": "done",
+            "closed": true,
+            "problem_present": false
+          }
+        ]
+      },
+      "assertions": [
+        {
+          "name": "two distinct owned workspaces",
+          "ok": true
+        },
+        {
+          "name": "A worker 1 starts",
+          "ok": true
+        },
+        {
+          "name": "A worker 2 starts",
+          "ok": true
+        },
+        {
+          "name": "full-A reports worker_limit",
+          "ok": true
+        },
+        {
+          "name": "full-A allocates nothing",
+          "ok": true
+        },
+        {
+          "name": "only A records converted to legacy format",
+          "ok": true
+        },
+        {
+          "name": "legacy-full-A reports worker_limit",
+          "ok": true
+        },
+        {
+          "name": "legacy-full-A allocates nothing",
+          "ok": true
+        },
+        {
+          "name": "full A check is not_checked",
+          "ok": true
+        },
+        {
+          "name": "full A check allocates nothing",
+          "ok": true
+        },
+        {
+          "name": "B worker 1 starts",
+          "ok": true
+        },
+        {
+          "name": "B worker 2 starts",
+          "ok": true
+        },
+        {
+          "name": "shared store holds four reservations",
+          "ok": true
+        },
+        {
+          "name": "A has two worker panes",
+          "ok": true
+        },
+        {
+          "name": "B has two worker panes",
+          "ok": true
+        },
+        {
+          "name": "B persists launch workspace",
+          "ok": true
+        },
+        {
+          "name": "wait CLI succeeds",
+          "ok": true
+        },
+        {
+          "name": "wait reports a normal lifecycle",
+          "ok": true
+        },
+        {
+          "name": "wait reports a normal lifecycle",
+          "ok": true
+        },
+        {
+          "name": "wait reports a normal lifecycle",
+          "ok": true
+        },
+        {
+          "name": "delivered worker is closed",
+          "ok": true
+        },
+        {
+          "name": "wait reports a normal lifecycle",
+          "ok": true
+        },
+        {
+          "name": "wait CLI succeeds",
+          "ok": true
+        },
+        {
+          "name": "wait reports a normal lifecycle",
+          "ok": true
+        },
+        {
+          "name": "wait reports a normal lifecycle",
+          "ok": true
+        },
+        {
+          "name": "delivered worker is closed",
+          "ok": true
+        },
+        {
+          "name": "wait reports a normal lifecycle",
+          "ok": true
+        },
+        {
+          "name": "wait CLI succeeds",
+          "ok": true
+        },
+        {
+          "name": "wait reports a normal lifecycle",
+          "ok": true
+        },
+        {
+          "name": "wait reports a normal lifecycle",
+          "ok": true
+        },
+        {
+          "name": "delivered worker is closed",
+          "ok": true
+        },
+        {
+          "name": "wait CLI succeeds",
+          "ok": true
+        },
+        {
+          "name": "wait reports a normal lifecycle",
+          "ok": true
+        },
+        {
+          "name": "delivered worker is closed",
+          "ok": true
+        },
+        {
+          "name": "all four tasks settle within cap",
+          "ok": true
+        },
+        {
+          "name": "arithmetic result is correct",
+          "ok": true
+        },
+        {
+          "name": "result identity and completion",
+          "ok": true
+        },
+        {
+          "name": "arithmetic result is correct",
+          "ok": true
+        },
+        {
+          "name": "result identity and completion",
+          "ok": true
+        },
+        {
+          "name": "arithmetic result is correct",
+          "ok": true
+        },
+        {
+          "name": "result identity and completion",
+          "ok": true
+        },
+        {
+          "name": "arithmetic result is correct",
+          "ok": true
+        },
+        {
+          "name": "result identity and completion",
+          "ok": true
+        },
+        {
+          "name": "released A check delivers and closes",
+          "ok": true
+        },
+        {
+          "name": "released check allocates exactly one task",
+          "ok": true
+        },
+        {
+          "name": "owned worker panes and workspaces removed",
+          "ok": true
+        },
+        {
+          "name": "read-only input unchanged",
+          "ok": true
+        },
+        {
+          "name": "real worker configuration unchanged",
+          "ok": true
+        },
+        {
+          "name": "verified source unchanged during run",
+          "ok": true
+        }
+      ],
+      "problem_category": null
+    }
+  },
+  "initial_failure_note": "The initial fixture failed to start its second worker before reaching a quota check. Its failure and cleanup remain recorded. The revised fixture uses a separate owned tab for each worker; the before/after quota runs use the same revised driver.",
+  "reproduction": {
+    "command": "python3 e2e/workspace_limits.py --worker <configured-worker> --output <private-artifact-parent>",
+    "procedure": ".agents/skills/verify-herdr-orchestrator/features/workers.md#workspace-worker-limits"
+  },
+  "scope_limits": [
+    "This is direct CLI verification, not an AI controller or complete pstack playbook run.",
+    "The driver does not exercise simultaneous admission by two controllers in the same workspace; the existing shared startup lock remains around counting and publication.",
+    "Manual pane moves and cross-server task stores were not exercised.",
+    "The other E2E drivers were updated for the workspace argument and syntax checked; their full model scenarios were not rerun.",
+    "Worker transcripts and machine-specific diagnostic paths remain private."
+  ]
+}

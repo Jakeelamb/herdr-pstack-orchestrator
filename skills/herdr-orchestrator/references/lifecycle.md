@@ -56,7 +56,9 @@ A pane-placement error can leave an empty pane when Herdr's response was lost. N
 
 ## Task store and concurrency
 
-Processes sharing a task store serialize startup to enforce `max_active_workers`; workers execute concurrently after launch. Use the same state directory for controllers that should share one limit. Short per-task transactions prevent a concurrent wait from overwriting confirmed closure. JSON updates replace files atomically.
+Processes sharing a task store serialize startup to enforce `max_active_workers` independently for each workspace; workers execute concurrently after launch. Controllers in the same workspace share its slots when they use the same state directory. The shared startup lock prevents two controllers from claiming the last slot together; it does not turn workspace quotas into a total limit. Short per-task transactions prevent a concurrent wait from overwriting confirmed closure. JSON updates replace files atomically.
+
+New task records retain the live caller's `workspace_id` at launch. An unclosed task keeps occupying that workspace's slot, including after a manual pane move or a failed startup. Older records without `workspace_id` count when their recorded pane is present in that workspace's live pane list. A missing legacy pane cannot reserve a slot in another workspace; pane-list failures leave admission unresolved instead of assuming capacity is free. No configuration migration is required.
 
 Scope each task store to one Herdr server. Pane IDs and agent names are server-local, and task records do not retain their originating socket. If using multiple named sessions or machines, give each a separate `XDG_STATE_HOME` and operate its tasks only through that server. Cross-server cleanup with a shared store is unsupported and can target an unrelated pane with the same ID.
 
@@ -64,4 +66,4 @@ A Pi worker waiting for its session signal can use the full 90-second startup bu
 
 `horch close` resolves the recorded pane directly, even from another workspace. Only explicit pane/tab/workspace-not-found responses establish that it is already gone; other Herdr errors leave cleanup unresolved.
 
-`check` batches at `max_active_workers` and deduplicates repeated worker names. Each row has `worker`, `task_id`, `state`, `ok`, `pane_id`, `seconds`, and `message`. Workers that cannot start before the wait cap or have no free slot are `not_checked`, with null task, pane, and duration. Unfinished/problem tasks retain their panes; inspect `message` before acting.
+`check` batches at its caller workspace's `max_active_workers` and deduplicates repeated worker names. Each row has `worker`, `task_id`, `state`, `ok`, `pane_id`, `seconds`, and `message`. Workers that cannot start before the wait cap or have no free slot are `not_checked`, with null task, pane, and duration. Unfinished/problem tasks retain their panes; inspect `message` before acting.

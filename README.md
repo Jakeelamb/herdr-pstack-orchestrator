@@ -130,7 +130,7 @@ The controller never answers worker dialogs. Choose permission flags during setu
 
 Automatic approval can deny an action; denial handling is unverified. A new location can also trigger a trust dialog. See [setup and dialog handling](skills/herdr-orchestrator/references/setup.md).
 
-`max_active_workers` defaults to 4; `notify_after_minutes` defaults to 180. The notification reports elapsed time, not whether the worker is making useful progress. The optional `[roles]` table selects workers for pstack. Each worker can also have an optional `description` explaining its intended tasks; existing configurations need no changes. See [configuration](skills/herdr-orchestrator/references/setup.md#configuration).
+`max_active_workers` defaults to 4 per workspace: two workspaces can each run four workers. Controllers in the same workspace share its limit when they use the same task store. `notify_after_minutes` defaults to 180; the notification reports elapsed time, not whether the worker is making useful progress. The optional `[roles]` table selects workers for pstack. Each worker can also have an optional `description` explaining its intended tasks; existing configurations need no changes. See [configuration](skills/herdr-orchestrator/references/setup.md#configuration).
 
 Task directories live under `~/.local/state/herdr-orchestrator/tasks/`, or the corresponding `$XDG_STATE_HOME` path. Briefs and results remain until you delete them. Controllers sharing that task store share the worker limit; workers execute concurrently after startup.
 
@@ -243,6 +243,7 @@ The current 0.15.21 bundle passed local installation and native discovery checks
 
 | Scope | Evidence |
 |---|---|
+| Workspace worker capacity | Two workspaces sharing one task store each held two workers. Legacy records, local `run`/`check` refusal, five delivered model results, released capacity, and cleanup passed 49 checks. See the [workspace quota receipt](e2e/evidence/workspace-limits.json). |
 | Local bundled installation (pstack 0.15.21) | A temporary local source-copy install preserved all 54 entries and 193 files for Codex, Pi, and Claude Code, with no file differences. The source was deleted before native catalog checks. |
 | Native discovery (pstack 0.15.21) | All 54 entries appeared in Pi and Codex catalogs. Claude Code installation was checked; native discovery was not measured. |
 | Local bundled installation (pstack 0.15.18) | A temporary local source-copy install preserved all 54 entries and 192 files for Codex, Pi, and Claude Code, with no file differences. The source was deleted before native catalog checks. |

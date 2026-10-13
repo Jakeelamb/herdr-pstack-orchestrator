@@ -298,7 +298,9 @@ def load_task(directory, task_id):
     task = read_json(path)
     required = ("nonce", "worker", "agent", "pane_id", "result_path", "created_at")
     if (not isinstance(task, dict) or task.get("task_id") != task_id
-            or any(not isinstance(task.get(key), str) or not task[key] for key in required)):
+            or any(not isinstance(task.get(key), str) or not task[key] for key in required)
+            or ("workspace_id" in task and (
+                not isinstance(task["workspace_id"], str) or not task["workspace_id"].strip()))):
         raise TaskInvalidError(f"task {task_id} has an invalid task.json")
     try:
         created = datetime.fromisoformat(task["created_at"].replace("Z", "+00:00"))
@@ -319,8 +321,23 @@ def all_task_ids():
     )
 
 
-def active_task_count():
-    return sum(not load_state(task_dir(task_id))["closed"] for task_id in all_task_ids())
+def active_task_count(workspace_id):
+    """Unclosed reservations owned by one workspace, including live legacy panes."""
+    active = 0
+    legacy_panes = []
+    for task_id in all_task_ids():
+        directory = task_dir(task_id)
+        if load_state(directory)["closed"]:
+            continue
+        task = load_task(directory, task_id)
+        if "workspace_id" not in task:
+            legacy_panes.append(task["pane_id"])
+        elif task["workspace_id"] == workspace_id:
+            active += 1
+    if legacy_panes:
+        panes = {pane_id for pane_id, _ in workspace_panes(workspace_id)}
+        active += sum(pane_id in panes for pane_id in legacy_panes)
+    return active
 
 
 # ---------------------------------------------------------------------------
@@ -627,13 +644,14 @@ def _start_task_locked(config, worker_name, brief_text, cwd, skip_if_full):
         fail("unknown_worker", f"no worker named {worker_name!r} in {config_path()}")
 
     max_active = config["max_active_workers"]
-    active = active_task_count()
+    active = active_task_count(caller["workspace_id"])
     if active >= max_active:
         if skip_if_full:
             return None
         fail(
             "worker_limit",
-            f"worker limit reached: {active} active tasks, max_active_workers = {max_active}",
+            f"worker limit reached in workspace {caller['workspace_id']}: "
+            f"{active} active tasks, max_active_workers = {max_active}",
         )
 
     root = tasks_root()
@@ -673,6 +691,7 @@ def _start_task_locked(config, worker_name, brief_text, cwd, skip_if_full):
         "agent": agent,
         "pane_id": pane_id,
         "tab_id": tab_id,
+        "workspace_id": caller["workspace_id"],
         "argv": launch_args(worker, directory),
         "created_at": iso_now(),
     }
@@ -1029,6 +1048,7 @@ def cmd_list(args):
                     "worker": task.get("worker"),
                     "agent": task.get("agent"),
                     "pane_id": task.get("pane_id"),
+                    "workspace_id": task.get("workspace_id"),
                     "state": state["state"],
                     "closed": bool(state.get("closed")),
                     "created_at": task.get("created_at"),

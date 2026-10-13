@@ -4,7 +4,7 @@
 Uses Herdr's supported PI_CODING_AGENT_DIR override for an empty, isolated Pi
 directory. Never uninstalls or changes the user's integration. Requires two
 configured Pi workers, one non-Pi worker, and two free worker slots. Keep other
-dispatchers stopped; configuration/task isolation does not reserve global slots.
+dispatchers in the same workspace stopped; isolation does not reserve slots.
 """
 from __future__ import annotations
 
@@ -42,7 +42,8 @@ def main():
             or any(config['workers'].get(n, {}).get('harness') != 'pi' for n in args.pi)
             or args.other not in config['workers'] or config['workers'][args.other]['harness'] == 'pi'):
         parser.error('select two distinct configured Pi workers and one non-Pi worker')
-    if horch.active_task_count() + 2 > config['max_active_workers']:
+    workspace_id = horch.require_caller_context()['workspace_id']
+    if horch.active_task_count(workspace_id) + 2 > config['max_active_workers']:
         parser.error('two free worker slots are required')
     args.cwd = args.cwd.expanduser().resolve()
     output = args.output.expanduser().resolve()

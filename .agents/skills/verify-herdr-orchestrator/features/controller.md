@@ -6,7 +6,7 @@ A real Codex controller reads the current orchestration skill and coordinates th
 
 ## How to get to it (user POV)
 
-Select `controller` from workers.toml with **harness = codex**, explicit model, effort, and permission arguments. A Pi worker using an OpenAI model is not a Codex controller. Select writer and two reviewers as in [worker review](workers.md). The driver needs two free worker slots plus its separate controller pane and access to the controller's local Codex transcript. Stop other dispatchers; isolated task stores cannot reserve the shared worker limit atomically.
+Select `controller` from workers.toml with **harness = codex**, explicit model, effort, and permission arguments. A Pi worker using an OpenAI model is not a Codex controller. Select writer and two reviewers as in [worker review](workers.md). The driver needs two free worker slots in the caller's workspace plus its separate controller pane and access to the controller's local Codex transcript. Stop other dispatchers in that workspace; isolated task stores cannot reserve the shared workspace limit atomically.
 
 ## Driving it with existing scripts
 

@@ -243,6 +243,7 @@ The current 0.15.21 bundle passed local installation and native discovery checks
 
 | Scope | Evidence |
 |---|---|
+| Workspace worker capacity | Two workspaces sharing one task store each held two workers. Legacy records, local `run`/`check` refusal, five delivered model results, released capacity, and cleanup passed 49 checks. See the [workspace quota receipt](e2e/evidence/workspace-limits.json). |
 | Local bundled installation (pstack 0.15.21) | A temporary local source-copy install preserved all 54 entries and 193 files for Codex, Pi, and Claude Code, with no file differences. The source was deleted before native catalog checks. |
 | Native discovery (pstack 0.15.21) | All 54 entries appeared in Pi and Codex catalogs. Claude Code installation was checked; native discovery was not measured. |
 | Local bundled installation (pstack 0.15.18) | A temporary local source-copy install preserved all 54 entries and 192 files for Codex, Pi, and Claude Code, with no file differences. The source was deleted before native catalog checks. |

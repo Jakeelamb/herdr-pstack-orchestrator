@@ -26,6 +26,8 @@ The driver creates two owned workspaces and a shared isolated task store, with t
 
 Quota ownership is the workspace that launched a new task. Manually moving a new worker does not transfer its slot; older records are recognized by their recorded pane's current workspace membership. Other task stores are not included in the admission count, so controllers that share a workspace limit must share the state directory.
 
+The [workspace quota receipt](evidence/workspace-limits.json) records a fresh 49/49 pass in 66.744 seconds with five real Pi tasks. The same revised driver first reproduced the old global limit: B's first worker received `worker_limit` after A held two legacy reservations. It also preserves the earlier fixture's unrelated second-worker startup failure. Cleanup passed for all three attempts; no failed run is relabeled as passing. Concurrent same-workspace admission and manual pane moves were not exercised.
+
 ## Worker and controller loops
 
 Run the public loop driver from a clone inside Herdr:

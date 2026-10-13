@@ -283,7 +283,8 @@ def main():
     config = horch.load_config()
     if any(w not in config["workers"] for w in [args.writer, *args.reviewer]):
         parser.error("every selected worker must exist in workers.toml")
-    if config["max_active_workers"] - horch.active_task_count() < 2:
+    workspace_id = horch.require_caller_context()["workspace_id"]
+    if config["max_active_workers"] - horch.active_task_count(workspace_id) < 2:
         parser.error("the review panel needs two free worker slots")
     if len({(config["workers"][w]["harness"], config["workers"][w]["provider"], config["workers"][w]["model"]) for w in args.reviewer}) != 2:
         parser.error("choose reviewers with distinct model definitions")

@@ -130,7 +130,7 @@ The controller never answers worker dialogs. Choose permission flags during setu
 
 Automatic approval can deny an action; denial handling is unverified. A new location can also trigger a trust dialog. See [setup and dialog handling](skills/herdr-orchestrator/references/setup.md).
 
-`max_active_workers` defaults to 4; `notify_after_minutes` defaults to 180. The notification reports elapsed time, not whether the worker is making useful progress. The optional `[roles]` table selects workers for pstack. Each worker can also have an optional `description` explaining its intended tasks; existing configurations need no changes. See [configuration](skills/herdr-orchestrator/references/setup.md#configuration).
+`max_active_workers` defaults to 4 per workspace: two workspaces can each run four workers. Controllers in the same workspace share its limit when they use the same task store. `notify_after_minutes` defaults to 180; the notification reports elapsed time, not whether the worker is making useful progress. The optional `[roles]` table selects workers for pstack. Each worker can also have an optional `description` explaining its intended tasks; existing configurations need no changes. See [configuration](skills/herdr-orchestrator/references/setup.md#configuration).
 
 Task directories live under `~/.local/state/herdr-orchestrator/tasks/`, or the corresponding `$XDG_STATE_HOME` path. Briefs and results remain until you delete them. Controllers sharing that task store share the worker limit; workers execute concurrently after startup.
 

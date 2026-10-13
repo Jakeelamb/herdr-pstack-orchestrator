@@ -35,7 +35,8 @@ def main():
         parser.error('--worker must select a configured Pi worker')
     if any(a in ('-a', '--approve', '-na', '--no-approve') for a in worker['args']):
         parser.error('the selected worker must not override project trust')
-    if horch.active_task_count() >= config['max_active_workers']:
+    workspace_id = horch.require_caller_context()['workspace_id']
+    if horch.active_task_count(workspace_id) >= config['max_active_workers']:
         parser.error('one free worker slot is required')
     repo = Path(__file__).resolve().parents[1]
     output = args.output.expanduser().resolve()

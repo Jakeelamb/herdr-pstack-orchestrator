@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Real Codex controller E2E; requires an existing trusted repo and Herdr pane.
 
-Isolation covers config and task records, not the global Herdr workspace. Stop
-other dispatchers for the duration: the preflight/monitor detect occupied global
+Isolation covers config and task records, not the caller's Herdr workspace. Stop
+other dispatchers in that workspace: the preflight/monitor detect occupied
 slots but cannot reserve them atomically across independent XDG state stores.
 Transcript checks recognize literal shell-tool calls, not arbitrary shell/JS
 semantics. Unsupported or ambiguous required evidence fails closed. Private
@@ -459,6 +459,7 @@ class Run(fixture.Run):
         self.categories = []
         self.last_states = {}
         self.delivered_at = {}
+        self.workspace_id = horch.require_caller_context()['workspace_id']
 
     def call(self, argv, *, cleanup=False):
         timeout = 30 if cleanup else min(180, self.deadline - time.monotonic())
@@ -519,18 +520,21 @@ class Run(fixture.Run):
         self.tasks = [t for t, _ in rows]
         return rows
 
-    def global_slots(self):
+    def workspace_slots(self):
         # Normal store is outside our isolated environment. Never call horch list.
-        occupied = horch.active_task_count()
+        occupied = horch.active_task_count(self.workspace_id)
         agents = self.herdr('agent', 'list')['result']['agents']
+        panes = {p['pane_id'] for p in self.herdr(
+            'pane', 'list', '--workspace', self.workspace_id)['result']['panes']}
         isolated_agents = {t['agent'] for t in self.tasks}
-        unmanaged = sum(a.get('name', a.get('agent')) not in isolated_agents | {self.agent}
+        unmanaged = sum(a.get('pane_id') in panes
+                        and a.get('name', a.get('agent')) not in isolated_agents | {self.agent}
                         and str(a.get('name', a.get('agent', ''))).startswith('horch-')
                         for a in agents)
         return max(occupied, unmanaged)
 
     def scenario(self):
-        self.check('global_capacity', self.global_slots() + 2 <= self.args.limit)
+        self.check('workspace_capacity', self.workspace_slots() + 2 <= self.args.limit)
         destination = self.directory / 'config/herdr-orchestrator/workers.toml'
         destination.parent.mkdir(parents=True)
         shutil.copy2(self.args.config_path, destination)
@@ -564,7 +568,7 @@ initial_revision and final_revision for cross-checking.
 '''
         brief = self.directory / 'controller-brief.md'
         brief.write_text(prompt)
-        tab = self.herdr('tab', 'create', '--workspace', os.environ['HERDR_WORKSPACE_ID'],
+        tab = self.herdr('tab', 'create', '--workspace', self.workspace_id,
                          '--cwd', self.worktree, '--label', 'controller-e2e',
                          '--env', 'XDG_CONFIG_HOME=' + self.env['XDG_CONFIG_HOME'],
                          '--env', 'XDG_STATE_HOME=' + self.env['XDG_STATE_HOME'], '--no-focus')
@@ -602,8 +606,8 @@ initial_revision and final_revision for cross-checking.
 
     def check_capacity(self):
         live = sum(not s.get('closed') for _, s in self.scan())
-        if live + self.global_slots() > self.args.limit:
-            raise Failure('global_capacity_exceeded')
+        if live + self.workspace_slots() > self.args.limit:
+            raise Failure('workspace_capacity_exceeded')
 
     def verify(self, line, invoice):
         rows = sorted(self.scan(), key=lambda pair: pair[0]['created_at'])
@@ -831,7 +835,7 @@ def main():
         print(f'Preflight failed; evidence: {path}')
         return 1
     print(f'Run directory: {run.directory}', flush=True)
-    print('Isolation covers config/task records only; keep other dispatchers stopped. Global free slots are monitored.', flush=True)
+    print('Isolation covers config/task records only; keep other dispatchers in this workspace stopped. Workspace free slots are monitored.', flush=True)
     category = None
     try:
         run.scenario()

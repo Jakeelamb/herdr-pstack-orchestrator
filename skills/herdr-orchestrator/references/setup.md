@@ -20,7 +20,7 @@ Run the setup when the user asks for it, or when `horch run` fails with `config_
 
    Automatic approval can deny an action. These runs verified successful workflows; they did not deliberately trigger a denial. Inspect and report any worker problem as described below. Startup trust dialogs are separate from action approval.
 
-4. Ask for `max_active_workers` (default 4) and `notify_after_minutes` (default 180).
+4. Ask for `max_active_workers` per workspace (default 4) and `notify_after_minutes` (default 180).
    The controller needs access to both the configuration directory (`~/.config/herdr-orchestrator/`) and the task directory (`~/.local/state/herdr-orchestrator/`, or their XDG equivalents). Claude Code's `auto` mode completed a skill E2E that read the configured `workers.toml` and task results outside the project. With other permission modes, reads outside the project can prompt; the user can add the directories to `permissions.additionalDirectories` in their Claude Code settings.
 5. Write `~/.config/herdr-orchestrator/workers.toml` (or `$XDG_CONFIG_HOME/herdr-orchestrator/workers.toml`) in the format under "Configuration" below. Show the user the file.
 6. For Pi workers, install Herdr's Pi integration with `herdr integration install pi`. `horch` requires its ready-session signal before submitting a task. Run `horch check --cwd <a directory the workers will work in>`. If Herdr reports the Pi integration as missing, `run` and any `check` batch selecting Pi fail with `pi_integration_missing` before allocating any worker. Unknown or unavailable integration status still uses the live ready-session guard. Successful check output has one `ok` field per worker. For a line with `ok: false`, read `message`, look at the pane it names (see [problem handling](../SKILL.md#problems)), and tell the user. After the user clears a dialog, run `horch close <task-id>` and `horch check <worker>` again.
@@ -82,7 +82,7 @@ args = ["--permission-mode", "auto"]
 
 | Key | Meaning |
 |---|---|
-| `max_active_workers` | Most tasks with an open pane at one time. Default 4. |
+| `max_active_workers` | Most unclosed tasks launched by each workspace at one time. Default 4 per workspace; other workspaces have their own slots. |
 | `notify_after_minutes` | When a task runs longer than this, `horch wait` notifies once. Default 180. |
 | `workers.<name>.harness` | `pi`, `codex`, or `claude`. |
 | `workers.<name>.model` | The model as the harness accepts it on its command line. |

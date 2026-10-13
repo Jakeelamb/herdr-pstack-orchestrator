@@ -37,7 +37,7 @@ Requires Python 3.11+ on Linux/macOS and a controller inside Herdr (`HERDR_ENV=1
 | `detect` | List installed harnesses, versions, Pi providers, and Pi integration status. |
 | `check [<worker> ...] [--cwd <dir>] [--max-seconds <n>]` | Verify configured workers with real tasks; default wait cap 300 seconds. |
 
-Workers open in `horch` tabs in your workspace, at most four panes per tab, without taking focus or using your tab.
+Workers open in `horch` tabs in your workspace, at most four panes per tab, without taking focus or using your tab. `max_active_workers` applies independently to each workspace; controllers sharing a workspace and task store share that workspace's slots. An unclosed task occupies a slot in the workspace that launched it.
 
 Before the first dispatch or after resuming the controller, establish its pane ID from the actual launch context. Check that the shell executing `horch` has that `HERDR_PANE_ID`, then resolve it with `herdr pane current --current`. Shell snapshots can restore another pane's identity. Herdr resolves a moved pane's original ID and returns its live workspace and tab; use those returned IDs rather than launch-time workspace/tab variables.
 

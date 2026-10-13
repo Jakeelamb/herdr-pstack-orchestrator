@@ -37,3 +37,4 @@ e2e/evidence/*
 !e2e/evidence/bundled-install.json
 !e2e/evidence/upstream-sync-0.15.17.json
 !e2e/evidence/upstream-sync-0.15.18.json
+!e2e/evidence/upstream-sync-0.15.21.json

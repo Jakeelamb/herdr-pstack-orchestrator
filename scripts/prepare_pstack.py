@@ -65,6 +65,8 @@ def prepare(source, output):
                 "Before following the original instructions below, read the sibling "
                 "[pstack-herdr](../pstack-herdr/SKILL.md) skill and its required mapping. "
                 "Resolve relative references from this installed skill directory. "
+                "Use a named sibling skill by reading ../<name>/SKILL.md, because "
+                "explicit-only siblings are not in the harness skill list. "
                 "The mapping translates original repository paths to bundled resources; "
                 "no separate upstream checkout is needed. "
                 "The Herdr mapping overrides upstream delegation tools, model defaults, "
@@ -76,7 +78,7 @@ def prepare(source, output):
                 "For setup-pstack, use the adapter's role setup instead of the original "
                 "Cursor rule-writing procedure.\n"
             )
-        entries.append((path, portable_skill(path, preamble), bool(preamble)))
+        entries.append((path, portable_skill(path, preamble) if preamble else None))
 
     for name in ("herdr-orchestrator", "pstack-herdr"):
         if not (ADAPTER.parent / name / "SKILL.md").is_file():
@@ -84,13 +86,14 @@ def prepare(source, output):
 
     output.mkdir(parents=True)
     records = []
-    for path, content, adapted_entry in entries:
+    for path, content in entries:
         target = output / "skills" / path.parent.name
         shutil.copytree(path.parent, target)
-        (target / "SKILL.md").write_text(content)
+        if content is not None:
+            (target / "SKILL.md").write_text(content)
         group = path.relative_to(source).parts[0]
         shutil.copyfile(source / group / "LICENSE", target / "UPSTREAM-LICENSE.txt")
-        records.append({"name": path.parent.name, "adapted": adapted_entry,
+        records.append({"name": path.parent.name, "adapted": content is not None,
                         "source": path.relative_to(source).as_posix(),
                         "source_sha256": hashlib.sha256(path.read_bytes()).hexdigest()})
     for name in ("herdr-orchestrator", "pstack-herdr"):

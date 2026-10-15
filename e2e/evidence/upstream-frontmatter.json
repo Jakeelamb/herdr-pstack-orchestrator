@@ -1,0 +1,230 @@
+{
+  "verdict": "pass",
+  "recorded_at": "2026-10-15T08:39:17.542Z",
+  "source_base_revision": "0e9382c10deafe7feb450bfba8035360f54925fd",
+  "upstream": {
+    "repository": "https://github.com/cursor/plugins.git",
+    "revision": "e5136d82418d2db3165ea1050d17577cd618cc05",
+    "version": "0.15.25"
+  },
+  "scope": "upstream_frontmatter_compatibility_installation_and_catalogs",
+  "versions": {
+    "pi": "1.2.0",
+    "codex": "codex-cli 0.162.1",
+    "python": "Python 3.14.7",
+    "npx": "11.20.0",
+    "git": "git version 2.55.0"
+  },
+  "phase_a": {
+    "source": "Unmodified upstream unslop and typescript-best-practices directories copied into a disposable project before generator changes.",
+    "frontmatter": {
+      "both": {
+        "disable-model-invocation": true
+      },
+      "typescript-best-practices": {
+        "paths": [
+          "**/*.ts",
+          "**/*.tsx"
+        ]
+      }
+    },
+    "pi": {
+      "measured": true,
+      "command": [
+        "pi",
+        "--mode",
+        "rpc",
+        "--no-session",
+        "--no-extensions"
+      ],
+      "request": {
+        "id": "catalog",
+        "type": "get_commands"
+      },
+      "raw_catalog_entries": [
+        {
+          "name": "skill:typescript-best-practices",
+          "description": "TypeScript best practices. Use when reading or editing any .ts or .tsx file.",
+          "source": "skill"
+        },
+        {
+          "name": "skill:unslop",
+          "description": "Cut AI tells from any writing.",
+          "source": "skill"
+        }
+      ],
+      "stderr": "",
+      "model_visible": false,
+      "explicit_invocation": {
+        "unslop": {
+          "expanded": true,
+          "model_visible": false,
+          "stop_reason": "error",
+          "error": "The operation was aborted.",
+          "total_tokens": 0
+        },
+        "typescript-best-practices": {
+          "expanded": true,
+          "model_visible": false,
+          "stop_reason": "error",
+          "error": "The operation was aborted.",
+          "total_tokens": 0
+        }
+      },
+      "explicit_probe": {
+        "command": [
+          "pi",
+          "--mode",
+          "rpc",
+          "--no-session",
+          "--no-extensions",
+          "--provider",
+          "anthropic",
+          "--model",
+          "claude-sonnet-4-6",
+          "-e",
+          "<scratch>/probe.ts"
+        ],
+        "requests": [
+          "/skill:unslop probe-only",
+          "/skill:typescript-best-practices probe-only"
+        ],
+        "method": "A disposable extension records ctx.getSystemPrompt() at session_start and event.prompt at before_agent_start, then calls ctx.abort(). get_messages confirms expanded skill bodies, no model-visible list entries, and aborted zero-token runs. Credentials were removed and only a dummy API key was supplied.",
+        "model_calls": 0
+      }
+    },
+    "codex": {
+      "measured": true,
+      "command": [
+        "codex",
+        "app-server",
+        "--stdio"
+      ],
+      "requests": [
+        {
+          "id": 1,
+          "method": "initialize",
+          "params": {
+            "clientInfo": {
+              "name": "frontmatter_probe",
+              "version": "1.0"
+            }
+          }
+        },
+        {
+          "method": "initialized",
+          "params": {}
+        },
+        {
+          "id": 2,
+          "method": "skills/list",
+          "params": {
+            "cwds": [
+              "<scratch>/probe"
+            ],
+            "forceReload": true
+          }
+        }
+      ],
+      "raw_probe_entries": [
+        {
+          "name": "typescript-best-practices",
+          "description": "TypeScript best practices. Use when reading or editing any .ts or .tsx file.",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        },
+        {
+          "name": "unslop",
+          "description": "Cut AI tells from any writing.",
+          "scope": "repo",
+          "enabled": true,
+          "pluginId": null
+        }
+      ],
+      "errors": [],
+      "warnings": [
+        "WARNING: proceeding, even though we could not create PATH aliases: Refusing to create helper binaries under temporary dir \"/tmp\" (codex_home: AbsolutePathBuf(\"<scratch>/codex\"))"
+      ],
+      "warning_attribution": "Disposable CODEX_HOME location, not skill frontmatter.",
+      "model_visible": "not measured",
+      "explicit_invocation": "not executed; use $name or /skills"
+    },
+    "claude_code": {
+      "measured": false,
+      "documented": true,
+      "source": "https://code.claude.com/docs/en/skills",
+      "meaning": "disable-model-invocation: true keeps the description out of model context, disallows automatic invocation, and permits explicit /name invocation.",
+      "paths": "Preserved without claiming cross-harness activation semantics."
+    },
+    "stop_rule_triggered": false
+  },
+  "counts": {
+    "bundled_entries": 56,
+    "pstack": 51,
+    "team_kit": 3,
+    "local_adapters": 2,
+    "adapted": 19,
+    "non_adapted_byte_identical_to_upstream": 35,
+    "adapted_unchanged_from_base": 0,
+    "retained_explicit_only": 32
+  },
+  "checks": {
+    "installed_catalog": true,
+    "all_files_preserved": true,
+    "claude_entries": true,
+    "pi_catalog": true,
+    "codex_catalog": true,
+    "codex_no_errors": true,
+    "compileall": true,
+    "regeneration_diff_empty": true,
+    "non_adapted_byte_identical": true,
+    "adapted_unchanged": false
+  },
+  "installed_files": 197,
+  "file_differences": [],
+  "installed_tree_sha256": "5d9c6c755776e99c174abd262edb5dc83cf68e09a21b5c3a366a9ff630c3551f",
+  "review_fix_verification": {
+    "source_parent_revision": "e76103cb99ad008d1bb8191eb5e4a2b798584579",
+    "changes": "All 19 adapted preambles now resolve named siblings via ../<name>/SKILL.md; original bodies are unchanged. Bundled compatibility documentation now distinguishes documented invocation and the non-dispatching fan-out boundary.",
+    "prior_installed_tree_sha256": "12ca98fe13485ad7f634930316169e7fc0b335f4b4204d347ade6cd7af636c3e",
+    "checks": "Compilation, clean pinned-source regeneration, disposable worktree-source installation, all six full catalog assertions, and git diff --check passed again. Installed counts remain 56 entries and 197 files; Pi and Codex each discovered 56 entries.",
+    "phase_a": "Historical observations preserved unchanged; the explicit-expansion and model-visibility probes were not rerun."
+  },
+  "driver_sha256": "32b9b7eabe38429a421ec0de0d92bdef8ac1e37c374db4a2acb3c5c8562e469f",
+  "native_catalogs": {
+    "pi": {
+      "discovered_skills": 56
+    },
+    "codex": {
+      "discovered_skills": 56
+    }
+  },
+  "catalog_driver_changed": false,
+  "commands": [
+    "git clone --quiet https://github.com/cursor/plugins.git <scratch>/source",
+    "git -C <scratch>/source checkout --detach e5136d82418d2db3165ea1050d17577cd618cc05",
+    "cp -R <scratch>/source/pstack/skills/{unslop,typescript-best-practices} <scratch>/probe/.agents/skills/",
+    "python3 <scratch>/phase-a.py <worktree>",
+    "curl -fsSL https://code.claude.com/docs/en/skills.md -o <scratch>/claude-skills.md",
+    "python3 scripts/prepare_pstack.py --source <scratch>/source --output <scratch>/package",
+    "diff -r --exclude=__pycache__ skills <scratch>/package/skills",
+    "python3 -m compileall -q skills e2e scripts",
+    "(cd <scratch>/consumer && DISABLE_TELEMETRY=1 npx --yes skills@1.7.1 add <worktree>/skills -s '*' -a claude-code -a codex -a pi -y)",
+    "python3 e2e/skill_catalogs.py <scratch>/consumer",
+    "git diff --check"
+  ],
+  "scope_limits": [
+    "No authenticated model workflow was run; Pi explicit expansion was aborted before provider work.",
+    "Claude Code semantics are documented, not runtime measured.",
+    "Codex enabled catalog entries do not establish implicit-selection behavior or paths filtering.",
+    "Installation used the worktree skills path, not a remote URL; the source remained present.",
+    "Catalog checker remains strict: all 56 bundled entries must appear in both native catalogs."
+  ],
+  "documentation_fix_verification": {
+    "source_parent_revision": "f17bee2",
+    "changes": "Codex automatic-context exclusion is attributed to policy.allow_implicit_invocation in agents/openai.yaml, not disable-model-invocation. The edit touched skills/pstack-herdr/references/compatibility.md, which changes the installed tree hash.",
+    "prior_installed_tree_sha256": "aee50d227525e389a0efd832cf21db24dcccb1c3387ed469a66708bf34220e90",
+    "checks": "Disposable installation with skills@1.7.1 and the full e2e/skill_catalogs.py run passed all six checks: 56 entries and 197 files, Pi and Codex catalogs complete, no Codex skill errors."
+  }
+}

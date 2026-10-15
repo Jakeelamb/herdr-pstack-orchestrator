@@ -2,10 +2,21 @@
   "schema": "horch/workspace-limits-e2e/v1",
   "verdict": "pass",
   "source_hashes": {
-    "horch_sha256": "53eade4403b495add16966aab14c91077f05783f0fed242c9bbbe7fc9abb7d56",
-    "driver_sha256": "4255d4da30e9f728e65378b5d6f38bf3b80523e572a88c8339bb6da92166ccdd"
+    "horch_sha256": "310842e7437d6d8db3394636fa002d318e096b1f5255c36b8a0be2fc54cdb6b5",
+    "driver_sha256": "b17129a4f79e9a1a68fefe79b5be96da78e8927a376305aab94011b26f928723"
   },
   "worker": "glm-flash",
+  "second_worker": "glm",
+  "herdr_versions": {
+    "cli": "herdr 0.9.5",
+    "server": "0.9.5"
+  },
+  "second_model": {
+    "harness": "pi",
+    "provider": "zai",
+    "model": "glm-5.3",
+    "effort": "max"
+  },
   "input_sha256": "46e7948297dd7dab980607ea336922c0592e383c33442ec5332ace8a9f7ac2ff",
   "model": {
     "harness": "pi",
@@ -13,7 +24,7 @@
     "model": "glm-5.3-flash",
     "effort": "max"
   },
-  "seconds": 201.254,
+  "seconds": 342.015,
   "observations": {
     "run_A_1": {
       "state": "running",
@@ -65,6 +76,28 @@
         "problem_present": false
       }
     },
+    "run_B_3": {
+      "state": "running",
+      "error": null,
+      "exit_code": 0,
+      "task_state": {
+        "state": "running",
+        "closed": false,
+        "problem_present": false
+      }
+    },
+    "invalid_batch_check": {
+      "status": "exercised",
+      "workers": [
+        "glm-flash",
+        "glm"
+      ],
+      "states": [
+        "done",
+        "done"
+      ],
+      "started_tasks": 2
+    },
     "run_A_4": {
       "state": "running",
       "error": null,
@@ -77,43 +110,61 @@
     },
     "before_cleanup": [
       {
-        "task_id": "t-2aa610",
+        "task_id": "t-019b6a",
         "state": "done",
         "closed": true,
         "problem_present": false
       },
       {
-        "task_id": "t-6966bc",
+        "task_id": "t-1053cb",
         "state": "done",
         "closed": true,
         "problem_present": false
       },
       {
-        "task_id": "t-77682f",
+        "task_id": "t-1e73e5",
         "state": "done",
         "closed": true,
         "problem_present": false
       },
       {
-        "task_id": "t-90f08b",
+        "task_id": "t-20a3af",
         "state": "done",
         "closed": true,
         "problem_present": false
       },
       {
-        "task_id": "t-9c1728",
+        "task_id": "t-a4c947",
         "state": "done",
         "closed": true,
         "problem_present": false
       },
       {
-        "task_id": "t-d57ae5",
+        "task_id": "t-a63c2f",
         "state": "done",
         "closed": true,
         "problem_present": false
       },
       {
-        "task_id": "t-ebecbd",
+        "task_id": "t-a7d496",
+        "state": "done",
+        "closed": true,
+        "problem_present": false
+      },
+      {
+        "task_id": "t-c07b67",
+        "state": "done",
+        "closed": true,
+        "problem_present": false
+      },
+      {
+        "task_id": "t-c5e858",
+        "state": "done",
+        "closed": true,
+        "problem_present": false
+      },
+      {
+        "task_id": "t-fffa1b",
         "state": "done",
         "closed": true,
         "problem_present": false
@@ -121,6 +172,10 @@
     ]
   },
   "assertions": [
+    {
+      "name": "CLI and server versions recorded",
+      "ok": true
+    },
     {
       "name": "two distinct owned workspaces",
       "ok": true
@@ -226,7 +281,27 @@
       "ok": true
     },
     {
+      "name": "wait CLI succeeds",
+      "ok": true
+    },
+    {
+      "name": "wait reports a normal lifecycle",
+      "ok": true
+    },
+    {
+      "name": "wait reports a normal lifecycle",
+      "ok": true
+    },
+    {
       "name": "delivered worker is closed",
+      "ok": true
+    },
+    {
+      "name": "wait reports a normal lifecycle",
+      "ok": true
+    },
+    {
+      "name": "wait reports a normal lifecycle",
       "ok": true
     },
     {
@@ -242,11 +317,11 @@
       "ok": true
     },
     {
-      "name": "wait reports a normal lifecycle",
+      "name": "delivered worker is closed",
       "ok": true
     },
     {
-      "name": "delivered worker is closed",
+      "name": "wait reports a normal lifecycle",
       "ok": true
     },
     {
@@ -346,11 +421,47 @@
       "ok": true
     },
     {
-      "name": "invalid check reports worker_limit",
+      "name": "invalid check reports not_checked",
       "ok": true
     },
     {
       "name": "invalid check allocates nothing",
+      "ok": true
+    },
+    {
+      "name": "B worker 3 starts",
+      "ok": true
+    },
+    {
+      "name": "B has exactly one real unclosed reservation beside corruption",
+      "ok": true
+    },
+    {
+      "name": "invalid B run reports worker_limit",
+      "ok": true
+    },
+    {
+      "name": "invalid B run allocates nothing",
+      "ok": true
+    },
+    {
+      "name": "targeted B wait reports only the real worker",
+      "ok": true
+    },
+    {
+      "name": "targeted B wait reports only the real worker",
+      "ok": true
+    },
+    {
+      "name": "targeted B wait reports only the real worker",
+      "ok": true
+    },
+    {
+      "name": "targeted B wait delivers and closes within cap",
+      "ok": true
+    },
+    {
+      "name": "phase result identity and arithmetic",
       "ok": true
     },
     {
@@ -374,15 +485,39 @@
       "ok": true
     },
     {
-      "name": "no-ID wait reports only the real worker",
-      "ok": true
-    },
-    {
       "name": "no-ID wait delivers and closes within cap",
       "ok": true
     },
     {
       "name": "phase result identity and arithmetic",
+      "ok": true
+    },
+    {
+      "name": "invalid batch reports both distinct selections",
+      "ok": true
+    },
+    {
+      "name": "invalid batch first worker delivers and closes",
+      "ok": true
+    },
+    {
+      "name": "invalid batch second worker delivers or is not_checked",
+      "ok": true
+    },
+    {
+      "name": "invalid batch accounts for every started task",
+      "ok": true
+    },
+    {
+      "name": "invalid batch leaves no unclosed real tasks",
+      "ok": true
+    },
+    {
+      "name": "invalid batch worker panes are gone",
+      "ok": true
+    },
+    {
+      "name": "invalid batch results have valid identity and completion",
       "ok": true
     },
     {
@@ -399,6 +534,10 @@
     },
     {
       "name": "fresh task has a new identity",
+      "ok": true
+    },
+    {
+      "name": "no-ID wait reports only the real worker",
       "ok": true
     },
     {

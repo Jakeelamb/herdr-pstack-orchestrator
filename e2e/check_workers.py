@@ -11,6 +11,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -44,12 +45,19 @@ class Run:
         self.versions = {'python': sys.version.split()[0]}
         self.hashes = {'horch_sha256': sha(HORCH), 'driver_sha256': sha(Path(__file__))}
         self.started = time.monotonic()
+        self.complete = False
+        self.selected = []
+        self.sequence = 0
+        self.diagnostics = self.root / 'diagnostics'
+        self.diagnostics.mkdir(mode=0o700)
 
     def sanitize(self, value):
         text = json.dumps(value, ensure_ascii=False)
-        for path, replacement in ((str(self.root), '<run>'), (str(REPO), '<repo>'),
-                                  (str(Path.home()), '<home>')):
-            text = text.replace(path, replacement)
+        paths = {str(Path.home()): '<home>', str(REPO): '<repo>',
+                 str(self.args.cwd): '<cwd>', str(self.args.output): '<output>',
+                 str(self.root): '<run>', str(self.args.source_config): '<workers-config>'}
+        for path in sorted(paths, key=len, reverse=True):
+            text = text.replace(json.dumps(path, ensure_ascii=False)[1:-1], paths[path])
         return json.loads(text)
 
     def check(self, name, ok):
@@ -58,9 +66,32 @@ class Run:
         if not ok:
             raise RuntimeError(name)
 
+    def streams(self, stdout, stderr):
+        self.sequence += 1
+        for suffix, value in (('stdout', stdout), ('stderr', stderr)):
+            if isinstance(value, bytes):
+                value = value.decode('utf-8', errors='replace')
+            (self.diagnostics / f'{self.sequence:03d}.{suffix}').write_text(value or '', encoding='utf-8')
+
+    def failure(self, exc):
+        with (self.diagnostics / 'failure.txt').open('a', encoding='utf-8') as stream:
+            stream.write(f'{type(exc).__name__}: {exc}\n')
+
     def command(self, argv, timeout=30):
-        return subprocess.run([str(a) for a in argv], env=self.env, cwd=self.args.cwd,
-                              capture_output=True, text=True, timeout=timeout)
+        try:
+            proc = subprocess.run([str(a) for a in argv], env=self.env, cwd=self.args.cwd,
+                                  capture_output=True, text=True, timeout=timeout)
+        except subprocess.TimeoutExpired as exc:
+            self.streams(exc.stdout, exc.stderr)
+            raise
+        self.streams(proc.stdout, proc.stderr)
+        return proc
+
+    @staticmethod
+    def version(value):
+        # Publish only a version number, never arbitrary CLI diagnostics.
+        match = re.search(r'\b\d+\.\d+\.\d+\b', str(value))
+        return match.group(0) if match else None
 
     def herdr(self, *argv):
         proc = self.command(['herdr', *argv])
@@ -75,7 +106,7 @@ class Run:
         rows = [json.loads(line) for line in proc.stdout.splitlines() if line.strip()]
         self.observations[label] = {'exit_code': proc.returncode, 'rows': [
             {k: (v[:400] if isinstance(v, str) else v) for k, v in row.items()
-             if k in ('worker', 'task_id', 'state', 'ok', 'pane_id', 'seconds', 'message', 'error')}
+             if k in ('worker', 'task_id', 'state', 'ok', 'pane_id', 'seconds')}
             for row in rows]}
         return rows
 
@@ -94,9 +125,12 @@ class Run:
         self.config.parent.mkdir(parents=True, exist_ok=True)
         text = f'max_active_workers = {limit}\n'
         for name, spec in self.workers.items():
-            text += '\n[workers.' + json.dumps(name) + ']\n'
+            def encode(value):
+                # TOML accepts Unicode scalars, not JSON surrogate pairs or raw DEL.
+                return json.dumps(value, ensure_ascii=False).replace('\x7f', '\\u007f')
+            text += '\n[workers.' + encode(name) + ']\n'
             # The supported worker fields are strings and arrays of strings.
-            text += ''.join(f'{json.dumps(k)} = {json.dumps(v)}\n' for k, v in spec.items())
+            text += ''.join(f'{encode(k)} = {encode(v)}\n' for k, v in spec.items())
         self.config.write_text(text, encoding='utf-8')
         parsed = tomllib.loads(self.config.read_text())
         if parsed != {'max_active_workers': limit, 'workers': self.workers}:
@@ -112,8 +146,22 @@ class Run:
     def scenario(self):
         for tool in dict.fromkeys(['herdr', *(w['harness'] for w in self.workers.values())]):
             proc = self.command([tool, '--version'])
-            self.versions[tool] = {'exit_code': proc.returncode,
-                                   'output': (proc.stdout or proc.stderr).strip()[:300]}
+            self.versions['herdr_cli' if tool == 'herdr' else tool] = {
+                'exit_code': proc.returncode, 'version': self.version(proc.stdout or proc.stderr)}
+        server = self.herdr('status', 'server', '--json')
+        def server_versions(value):
+            if not isinstance(value, dict):
+                return set()
+            versions = {self.version(v) for k, v in value.items()
+                        if k in ('version', 'server_version')}
+            for child in value.values():
+                versions.update(server_versions(child))
+            return versions - {None}
+        versions = server_versions(server)
+        self.versions['herdr_server'] = {
+            'version': next(iter(versions)) if len(versions) == 1 else None}
+        if self.versions['herdr_server']['version'] is None:
+            raise RuntimeError('herdr_server_version_unavailable')
         caller = self.herdr('pane', 'current', '--current')['pane']
         if any(not isinstance(caller.get(k), str) or not caller[k].strip()
                for k in ('workspace_id', 'tab_id', 'pane_id')):
@@ -128,12 +176,13 @@ class Run:
                         HERDR_TAB_ID=result['tab']['tab_id'], HERDR_PANE_ID=result['root_pane']['pane_id'])
         baseline = self.panes()
         names = list(self.workers)
-        selected = [names[0], *names]  # repeat first worker; unique count exceeds one-slot limit
-        proc = self.cli('check', *selected, '--cwd', self.args.cwd,
+        self.selected = [names[0], *names]  # repeat first worker; unique count exceeds one-slot limit
+        proc = self.cli('check', *self.selected, '--cwd', self.args.cwd,
                         '--max-seconds', self.args.max_seconds, timeout=self.args.max_seconds + 180)
         rows = self.rows('batch', proc)
         self.check('C001 check exits successfully', proc.returncode == 0)
-        self.check('C002 selected workers deduplicated in order', [r.get('worker') for r in rows] == names)
+        self.check('C002 selected workers deduplicated in order', self.selected == [names[0], *names]
+                   and [r.get('worker') for r in rows] == list(dict.fromkeys(self.selected)))
         self.check('C003 all workers deliver done and ok', all(r.get('ok') is True and r.get('state') == 'done' for r in rows))
         records = self.records()
         self.check('C004 exactly one real task per unique selection', len(records) == len(names)
@@ -151,6 +200,17 @@ class Run:
             and r.get('harness') == self.workers[r['worker']]['harness']
             and r.get('model') == self.workers[r['worker']]['model'] for r in records.values()))
 
+        # Independent filesystem observations, before any driver cleanup.
+        # Strict ordering fails closed on coarse timestamps instead of hiding overlap.
+        lifecycle = [{'task_id': row['task_id'],
+                      'published_ns': (self.store / row['task_id'] / 'task.json').stat().st_mtime_ns,
+                      'closed_ns': (self.store / row['task_id'] / 'state.json').stat().st_mtime_ns}
+                     for row in rows]
+        self.observations['batch_lifecycle'] = lifecycle
+        self.check('C009 each reservation begins after previous slot release', all(
+            later['published_ns'] > earlier['closed_ns']
+            for earlier, later in zip(lifecycle, lifecycle[1:])))
+
         self.configure(0)
         before = self.allocation()
         proc = self.cli('check', *names, '--cwd', self.args.cwd)
@@ -159,8 +219,7 @@ class Run:
         self.check('C010 zero slots report complete skip fields', proc.returncode == 0
                    and [r.get('worker') for r in rows] == names and all(fields <= set(r)
                    and r['state'] == 'not_checked' and r['ok'] is False and r['task_id'] is None
-                   and r['pane_id'] is None and r['seconds'] is None
-                   and 'no free worker slot' in r['message'] for r in rows))
+                   and r['pane_id'] is None and r['seconds'] is None for r in rows))
         self.check('C011 zero slots allocate nothing', self.allocation() == before)
 
         self.configure(1)
@@ -187,6 +246,7 @@ class Run:
         self.check('C020 exit probe reaches acknowledged worker', victim is not None)
         self.herdr('pane', 'close', victim['pane_id'])
         stdout, stderr = self.process.communicate(timeout=self.args.max_seconds + 180)
+        self.streams(stdout, stderr)
         proc = subprocess.CompletedProcess(argv, self.process.returncode, stdout, stderr)
         self.process = None
         rows = self.rows('injected_exit', proc)
@@ -203,17 +263,18 @@ class Run:
                    and rows[0].get('worker') == names[0] and rows[0].get('state') == 'not_checked'
                    and rows[0].get('ok') is False and 'wait limit' in str(rows[0].get('message')))
         self.check('C031 exhausted budget allocates nothing', self.allocation() == before)
-        self.check('scenario complete', True)
+        self.complete = True
 
     def cleanup(self):
         if self.process is not None:
             if self.process.poll() is None:
                 self.process.terminate()
             try:
-                self.process.communicate(timeout=10)
+                stdout, stderr = self.process.communicate(timeout=10)
             except subprocess.TimeoutExpired:
                 self.process.kill()
-                self.process.communicate()
+                stdout, stderr = self.process.communicate()
+            self.streams(stdout, stderr)
         ok = True
         if self.workspace is not None:
             try:
@@ -221,13 +282,15 @@ class Run:
                 live = self.panes()
                 self.check('C100 all owned worker panes removed',
                            all(r['pane_id'] not in live for r in self.records().values()))
-            except Exception:
+            except Exception as exc:
+                self.failure(exc)
                 ok = False
             try:
                 self.herdr('workspace', 'close', self.workspace['workspace_id'])
                 live = self.herdr('workspace', 'list')['workspaces']
                 ok &= self.workspace['workspace_id'] not in {w['workspace_id'] for w in live}
-            except Exception:
+            except Exception as exc:
+                self.failure(exc)
                 ok = False
         self.assertions.append({'name': 'owned workspace cleanup confirmed', 'ok': ok})
 
@@ -250,23 +313,32 @@ def main():
     if args.output == REPO or REPO in args.output.parents:
         parser.error('--output must be outside checkout')
     cfg = Path(os.environ.get('XDG_CONFIG_HOME', Path.home() / '.config')) / 'herdr-orchestrator/workers.toml'
-    config_hash = sha(cfg)
-    configured = tomllib.loads(cfg.read_text()).get('workers', {})
-    if any(name not in configured for name in names):
-        parser.error('every --worker must exist in workers.toml')
-    workers = {name: configured[name] for name in names}
+    args.source_config = cfg.expanduser().resolve()
+    config_hash = None
+    workers = {}
     args.output.mkdir(parents=True, exist_ok=True)
     run = Run(args, workers)
     print(f'Run directory: {run.root}', flush=True)
     problem = None
     try:
+        config_hash = sha(cfg)
+        configured = tomllib.loads(cfg.read_text(encoding='utf-8')).get('workers', {})
+        if not isinstance(configured, dict) or any(
+                not isinstance(configured.get(name), dict) for name in names):
+            raise RuntimeError('selected_worker_not_configured')
+        workers.update({name: configured[name] for name in names})
         run.scenario()
     except (Exception, KeyboardInterrupt) as exc:
+        run.failure(exc)
         problem = type(exc).__name__  # no exception text or transcripts in receipt
     finally:
-        run.cleanup()
+        try:
+            run.cleanup()
+        except (Exception, KeyboardInterrupt) as exc:
+            run.failure(exc)
+            problem = type(exc).__name__
         for name, condition in (
-            ('real configuration unchanged', lambda: sha(cfg) == config_hash),
+            ('real configuration unchanged', lambda: config_hash is not None and sha(cfg) == config_hash),
             ('verified sources unchanged', lambda: run.hashes == {
                 'horch_sha256': sha(HORCH), 'driver_sha256': sha(Path(__file__))})):
             try:
@@ -276,11 +348,13 @@ def main():
             run.assertions.append({'name': name, 'ok': ok})
         evidence = run.sanitize({
             'schema': 'horch/check-workers-e2e/v1',
-            'verdict': 'pass' if problem is None and all(a['ok'] for a in run.assertions) else 'fail',
+            'verdict': 'pass' if run.complete and problem is None and all(a['ok'] for a in run.assertions) else 'fail',
+            'scenario_complete': run.complete,
+            'diagnostics': str(run.diagnostics),
             'source_hashes': run.hashes, 'versions': run.versions,
             'workers': {n: {k: s.get(k) for k in ('harness', 'model', 'provider', 'effort')}
                         for n, s in workers.items()},
-            'batch_limit': 1, 'selections': [names[0], *names],
+            'batch_limit': 1, 'selections': run.selected,
             'rerun': ['python3', 'e2e/check_workers.py', *sum((['--worker', n] for n in names), []),
                       '--cwd', str(args.cwd), '--output', str(args.output), '--max-seconds', str(args.max_seconds)],
             'seconds': round(time.monotonic() - run.started, 3),

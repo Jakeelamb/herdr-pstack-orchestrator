@@ -37,8 +37,8 @@ e2e/evidence/*
 !e2e/evidence/controller-audit-array.json
 !e2e/evidence/controller-array-reanalysis.json
 !e2e/evidence/bundled-install.json
+!e2e/evidence/check-workers.json
 !e2e/evidence/upstream-sync-0.15.17.json
 !e2e/evidence/upstream-sync-0.15.18.json
 !e2e/evidence/upstream-sync-0.15.21.json
 !e2e/evidence/workspace-limits.json
-!e2e/evidence/check-workers.json

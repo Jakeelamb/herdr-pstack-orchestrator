@@ -1,6 +1,6 @@
 ---
 name: herdr-orchestrator
-description: "Delegate tasks to worker agents (Pi, Codex, Claude Code) that run in their own herdr panes, then wait for and read their file results. Use when the user asks to delegate, dispatch, or parallelize work through herdr or horch, to run several models on one task, or to set up herdr workers. Requires HERDR_ENV=1."
+description: "Delegate tasks to worker agents (Pi, Codex, Claude Code) that run in their own herdr panes, then wait for and read their file results. Use when the user asks to delegate, dispatch, or parallelize work through herdr or horch, to run several models on one task, or to set up herdr workers. Requires HERDR_ENV=1 for orchestration. Also use to review how configured workers perform or whether they are efficient."
 ---
 
 # herdr-orchestrator
@@ -26,13 +26,14 @@ Use the absolute path inside this installed skill:
 python3 <skill-dir>/scripts/horch.py <command> ...
 ```
 
-Requires Python 3.11+ on Linux/macOS and a controller inside Herdr (`HERDR_ENV=1`). Pi workers also require `herdr integration install pi` so startup dialogs cannot receive task prompts. Commands print JSON; operational errors use `{"error": "<code>", "message": "<text>"}` and exit 1. CLI help and argument errors use argparse output.
+Requires Python 3.11+ on Linux/macOS and a controller inside Herdr (`HERDR_ENV=1`). Pi workers also require `herdr integration install pi` so startup dialogs cannot receive task prompts. `stats` reads stored history outside Herdr too. Commands print JSON; operational errors use `{"error": "<code>", "message": "<text>"}` and exit 1. CLI help and argument errors use argparse output.
 
 | Command | Purpose |
 |---|---|
 | `run <worker> --brief <file> [--cwd <dir>]` | Start a fresh worker and submit its brief; returns after startup and prompt acknowledgement, before task completion. |
 | `wait [<task-id> ...] [--max-seconds <n>] [--recheck]` | Wait for a state change. No IDs selects all unsettled tasks. See waiting below. |
 | `list` | List task, worker, pane, and state. |
+| `stats [--workspace <id>] [--days <n>]` | Review configured workers from stored facts, without Herdr calls or writes. |
 | `close <task-id>` | Close that task's recorded pane. |
 | `detect` | List installed harnesses, versions, Pi providers, and Pi integration status. |
 | `check [<worker> ...] [--cwd <dir>] [--max-seconds <n>]` | Verify configured workers with real tasks; default wait cap 300 seconds. |
@@ -73,4 +74,5 @@ For a routine progress check, use `herdr agent get <agent-name>` and, if needed,
 
 - **First use or configuration changes:** follow [setup and configuration](references/setup.md), including permission choices, startup dialogs, and `horch check`. Ask one setup question at a time. The user owns `$XDG_CONFIG_HOME/herdr-orchestrator/workers.toml` (default `~/.config/herdr-orchestrator/workers.toml`). A missing config is reported as `config_invalid`.
 - **State/result interpretation, cleanup, or recovery:** read [lifecycle and recovery](references/lifecycle.md).
+- **Worker efficiency, failures, or reminder timing:** read [worker statistics](references/stats.md) before proposing configuration changes.
 - **Worker definitions:** [workers.example.toml](references/workers.example.toml). State lives in `$XDG_STATE_HOME/herdr-orchestrator/tasks/` (default `~/.local/state/herdr-orchestrator/tasks/`) and remains until the user deletes it.

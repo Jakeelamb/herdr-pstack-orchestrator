@@ -18,6 +18,7 @@ import sys
 import tempfile
 import time
 import tomllib
+from datetime import datetime, timezone
 
 REPO = Path(__file__).resolve().parents[1]
 HORCH = REPO / 'skills/herdr-orchestrator/scripts/horch.py'
@@ -45,6 +46,7 @@ class Run:
         self.versions = {'python': sys.version.split()[0]}
         self.hashes = {'horch_sha256': sha(HORCH), 'driver_sha256': sha(Path(__file__))}
         self.started = time.monotonic()
+        self.wall_started = time.time()
         self.complete = False
         self.selected = []
         self.sequence = 0
@@ -258,7 +260,104 @@ class Run:
                    and rows[0].get('worker') == names[0] and rows[0].get('state') == 'not_checked'
                    and rows[0].get('ok') is False and 'wait limit' in str(rows[0].get('message')))
         self.check('C031 exhausted budget allocates nothing', self.allocation() == before)
+        self.stats_phase(names)
         self.complete = True
+
+    def stats_phase(self, names):
+        real = self.records()
+        wall_end = time.time()
+        unused = next(f'stats-unused{i}' for i in range(len(self.workers) + 1)
+                      if f'stats-unused{i}' not in self.workers)
+        self.workers[unused] = dict(self.workers[names[0]])
+        self.configure(1)
+        unknown = next(f'stats-removed{i}' for i in range(len(self.workers) + 1)
+                       if f'stats-removed{i}' not in self.workers)
+        # Select unused IDs without relying on the randomly allocated task IDs.
+        ids = [f't-{n:06x}' for n in range(1, len(real) + 3) if f't-{n:06x}' not in real]
+        invalid_id, removed_id = ids[:2]
+        created = datetime.fromtimestamp(wall_end - 3600, timezone.utc).isoformat()
+        fixture = {'task_id': removed_id, 'nonce': 'stats-fixture', 'worker': unknown,
+                   'agent': 'stats-fixture', 'pane_id': 'stats-fixture-no-pane',
+                   'created_at': created, 'workspace_id': 'stats-other-workspace'}
+        for task_id in (invalid_id, removed_id):
+            directory = self.store / task_id
+            directory.mkdir()
+            task = dict(fixture, task_id=task_id, result_path=str(directory / 'result.json'))
+            if task_id == invalid_id:
+                task['nonce'] = None
+            (directory / 'task.json').write_text(json.dumps(task))
+            (directory / 'state.json').write_text(json.dumps({'state': 'done', 'closed': True}))
+            (directory / 'result.json').write_text(json.dumps({
+                'task_id': task_id, 'nonce': 'stats-fixture', 'status': 'blocked',
+                'summary': 'fixture', 'files': [], 'question': 'Fixture specification question?'}))
+            os.utime(directory / 'result.json', (wall_end - 900, wall_end - 900))
+        before = {str(p.relative_to(self.root)): sha(p) for p in self.root.rglob('*')
+                  if p.is_file() and self.diagnostics not in p.parents}
+        proc = self.cli('stats')
+        scoped_proc = self.cli('stats', '--workspace', self.workspace['workspace_id'])
+        self.check('C040 stats commands return single JSON objects', proc.returncode == scoped_proc.returncode == 0
+                   and len(proc.stdout.splitlines()) == len(scoped_proc.stdout.splitlines()) == 1)
+        whole, scoped = json.loads(proc.stdout), json.loads(scoped_proc.stdout)
+        self.observations['stats'] = whole
+        self.observations['stats_workspace'] = scoped
+        self.check('C041 stats task counts match real dispatches and fixture',
+                   whole['task_count'] == len(real) + 1 and scoped['task_count'] == len(real)
+                   and all(obj['workers'][n]['task_count'] == sum(r['worker'] == n for r in real.values())
+                           for n in names for obj in (whole, scoped)))
+        self.check('C042 stats states and problem rates match scenario', all(
+            obj['workers'][n]['states'] == ({'done': 1, 'exited': 1} if n == names[0] else {'done': 1})
+            and obj['workers'][n]['problem_count'] == (1 if n == names[0] else 0)
+            and obj['workers'][n]['problem_rate'] == (0.5 if n == names[0] else 0)
+            for n in names for obj in (whole, scoped)))
+        self.check('C043 stats delivered result statuses exclude exited probe', all(
+            obj['workers'][n]['result_statuses'] == {'completed': 1} for n in names for obj in (whole, scoped))
+            and whole['workers'][unknown]['result_statuses'] == {'blocked': 1})
+        self.check('C044 stats invalid record listed and excluded in both scopes',
+                   whole['invalid_task_ids'] == scoped['invalid_task_ids'] == [invalid_id])
+        self.check('C045 stats removed worker is unconfigured and workspace filtered',
+                   whole['workers'][unknown]['configured'] is False
+                   and whole['workers'][unknown]['task_count'] == 1 and unknown not in scoped['workers']
+                   and whole['workers'][unknown]['workspaces'] == {'stats-other-workspace': 1})
+        self.check('C046 stats configured unused worker retained in both scopes', all(
+            obj['configured_unused_workers'] == [unused]
+            and obj['workers'][unused]['configured'] is True
+            and obj['workers'][unused]['duration_minutes']['sample_size'] == 0
+            and obj['workers'][unused]['task_count'] == 0 for obj in (whole, scoped)))
+        states = {t: read(self.store / t / 'state.json') for t in real}
+        self.check('C047 new records retain observed first settlement timestamps', all(
+            self.wall_started - 1 <= datetime.fromisoformat(s['settled_at'].replace('Z', '+00:00')).timestamp() <= wall_end
+            for s in states.values()))
+        bounds = {}
+        for task_id, record in real.items():
+            if states[task_id]['state'] != 'done':
+                continue
+            directory = self.store / task_id
+            created_at = datetime.fromisoformat(record['created_at'].replace('Z', '+00:00')).timestamp()
+            bounds[record['worker']] = (
+                max(0, (directory.joinpath('result.json').stat().st_mtime - created_at - 1) / 60),
+                (directory.joinpath('state.json').stat().st_mtime - created_at + 1) / 60)
+        self.observations['stats_duration_bounds_minutes'] = bounds
+        self.check('C048 stats durations fit independently observed filesystem bounds', all(
+            obj['workers'][n]['duration_minutes']['sample_size'] == 1
+            and obj['workers'][n]['duration_minutes']['sources'] == {'settled_at': 1}
+            and obj['workers'][n]['duration_minutes']['max'] <= (wall_end - self.wall_started + 1) / 60
+            and all(bounds[n][0] <= obj['workers'][n]['duration_minutes'][key] <= bounds[n][1]
+                    for key in ('median', 'p90', 'max')) for n in names for obj in (whole, scoped))
+            and whole['workers'][unknown]['duration_minutes'] == {
+                'sample_size': 1, 'median': 45.0, 'p90': 45.0, 'max': 45.0, 'sources': {'result_mtime': 1}})
+        def contains_args(value):
+            if isinstance(value, dict):
+                return 'args' in value or any(contains_args(v) for v in value.values())
+            return isinstance(value, list) and any(contains_args(v) for v in value)
+        self.check('C049 stats never exposes worker args', not contains_args([whole, scoped]))
+        self.check('C050 stats workspace counts and reminder denominator match deliveries',
+                   all(scoped['workers'][n]['workspaces'] == {
+                       self.workspace['workspace_id']: 2 if n == names[0] else 1} for n in names)
+                   and whole['notify_after_minutes']['timed_task_count'] == len(names) + 1
+                   and scoped['notify_after_minutes']['timed_task_count'] == len(names))
+        after = {str(p.relative_to(self.root)): sha(p) for p in self.root.rglob('*')
+                 if p.is_file() and self.diagnostics not in p.parents}
+        self.check('C051 stats leaves isolated config and task store unchanged', before == after)
 
     def cleanup(self):
         if self.process is not None:

@@ -44,6 +44,10 @@ These appear before the worker reads its task. `horch` reports `start_failed` an
 - Claude Code asks "Allow external CLAUDE.md file imports?" when the worker's cwd is a subdirectory of a project whose `CLAUDE.md` imports a file with `@`.
 - Pi 1.1.0 asks "Trust project folder?" when an untrusted directory has project resources, including an empty `.agents/skills` directory in an ancestor. Herdr 0.9.3 can misclassify this dialog as idle. `horch` therefore waits for the Pi integration's session signal and sends no task prompt if it is absent. Trust is path-based; a git worktree outside a trusted directory may need its own decision. The user can choose Pi's `--approve` or `--no-approve` in worker `args` to explicitly allow or ignore project resources for that process; never add those flags to dismiss a dialog automatically.
 
+## Reviewing configured workers
+
+Use `horch stats [--workspace <id>] [--days <n>]` before proposing changes to this file. It reads the store and configuration without Herdr calls or writes, even outside Herdr. See [worker statistics](stats.md) for fields, limitations, and interpreting the numbers with the user.
+
 ## Configuration
 
 

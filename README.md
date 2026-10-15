@@ -78,7 +78,7 @@ HORCH_SCRIPT="$PWD/skills/herdr-orchestrator/scripts/horch.py"
 horch() { python3 "$HORCH_SCRIPT" "$@"; }
 ```
 
-Commands are `run`, `wait`, `list`, `close`, `detect`, and `check`. `detect` reports installed harnesses and Pi integration status; `check` runs real tasks with configured workers. Operational output is JSON; errors use `{"error": ..., "message": ...}` and exit status 1. See the [command guide](skills/herdr-orchestrator/SKILL.md#run-horch).
+Commands are `run`, `wait`, `list`, `close`, `detect`, `check`, and `stats`. `stats [--workspace <id>] [--days <n>]` summarizes stored worker performance without Herdr calls or writes, including outside Herdr; see [worker statistics](skills/herdr-orchestrator/references/stats.md). `detect` reports installed harnesses and Pi integration status; `check` runs real tasks with configured workers. Operational output is JSON; errors use `{"error": ..., "message": ...}` and exit status 1. See the [command guide](skills/herdr-orchestrator/SKILL.md#run-horch).
 
 ## Quickstart
 

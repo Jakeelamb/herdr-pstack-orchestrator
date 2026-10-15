@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """horch - start, watch, and close herdr worker agents.
 
-Core of the herdr-orchestrator skill. Subcommands: run, wait, list, close, detect, check.
+Core of the herdr-orchestrator skill. Subcommands: run, wait, list, close, detect, check, stats.
 Python 3.11+, standard library only. Every command prints JSON on stdout;
 errors are one {"error": code, "message": text} object with exit status 1.
 """
@@ -11,17 +11,19 @@ from __future__ import annotations
 import argparse
 import fcntl
 import json
+import math
 import os
 import re
 import secrets
 import shutil
+import statistics
 import subprocess
 import sys
 import tempfile
 import time
 import tomllib
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 HARNESSES = ("pi", "codex", "claude")
@@ -255,7 +257,14 @@ def default_state():
         "long_notified": False,
         "closed": False,
         "problem": None,
+        "settled_at": None,
     }
+
+
+def mark_settled(state):
+    """Retain the first observation, including across an explicit recheck."""
+    if state["state"] in SETTLED_STATES and not state.get("settled_at"):
+        state["settled_at"] = iso_now()
 
 
 def load_state(directory):
@@ -283,6 +292,8 @@ def save_state(directory, state):
         merged = dict(current if current["closed"] or current["state"] == "done" else state)
         for key in ("closed", "saw_working", "long_notified"):
             merged[key] = bool(current[key] or state[key])
+        merged["settled_at"] = current["settled_at"] or state.get("settled_at")
+        mark_settled(merged)
         write_json(directory / "state.json", merged)
         state.update(merged)
 
@@ -428,7 +439,8 @@ def load_config():
             "args": extra,
             "description": spec.get("description"),
         }
-    return {"max_active_workers": max_active, "notify_after_minutes": notify_minutes, "workers": workers}
+    return {"max_active_workers": max_active, "notify_after_minutes": notify_minutes,
+            "workers": workers, "roles": data.get("roles", {})}
 
 
 # ---------------------------------------------------------------------------
@@ -936,6 +948,7 @@ def poll_round(infos, previous, config):
                               f"{config['notify_after_minutes']} minutes; still waiting")
                 elif state["problem"] and old_state != state["state"]:
                     notice = state["problem"]
+                mark_settled(state)
                 write_json(directory / "state.json", state)
         if cleanup:
             cleanup_error = None
@@ -1047,6 +1060,160 @@ def wait_until_change(infos, config, max_seconds):
         gap = POLL_SECONDS if deadline is None else min(POLL_SECONDS, deadline - now)
         if gap > 0:
             time.sleep(gap)
+
+
+# ---------------------------------------------------------------------------
+# read-only worker statistics
+# ---------------------------------------------------------------------------
+
+
+def stats_timestamp(value):
+    if not isinstance(value, str):
+        raise ValueError("timestamp must be a string")
+    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if parsed.tzinfo is None:
+        raise ValueError("timestamp needs a timezone")
+    return parsed.astimezone(timezone.utc)
+
+
+def duration_summary(samples, sources):
+    ordered = sorted(samples)
+    return {
+        "sample_size": len(ordered),
+        "median": statistics.median(ordered) if ordered else None,
+        "p90": ordered[math.ceil(len(ordered) * 0.9) - 1] if ordered else None,
+        "max": ordered[-1] if ordered else None,
+        "sources": dict(sorted(sources.items())),
+    }
+
+
+def cmd_stats(args):
+    # No Herdr calls, state locks, or writes: a per-record view, not a snapshot.
+    now = datetime.now(timezone.utc)
+    if args.workspace is not None and not args.workspace.strip():
+        fail("invalid_arguments", "--workspace must not be blank")
+    try:
+        if args.days is not None and args.days <= 0:
+            raise ValueError("nonpositive days")
+        cutoff = now - timedelta(days=args.days) if args.days is not None else None
+    except (ValueError, OverflowError):
+        fail("invalid_arguments", "--days must be a positive integer within datetime range")
+    config = load_config()
+    roles = config["roles"]
+    if not isinstance(roles, dict):
+        fail("config_invalid", "[roles] must be a table")
+    missing_roles = {}
+    for role, assigned in sorted(roles.items()):
+        names = [assigned] if isinstance(assigned, str) else assigned
+        if not isinstance(names, list) or not all(isinstance(n, str) for n in names):
+            fail("config_invalid", "role assignments must be worker names or lists of names")
+        missing = sorted(set(names) - config["workers"].keys())
+        if missing:
+            missing_roles[role] = missing
+    workers = {}
+    samples = {}
+    invalid = []
+    timings = []
+
+    def worker_row(name):
+        if name not in workers:
+            spec = config["workers"].get(name)
+            workers[name] = {
+                "configured": spec is not None,
+                **{key: spec.get(key) if spec else None for key in ("harness", "model", "effort")},
+                "task_count": 0, "states": {}, "result_statuses": {},
+                "problem_count": 0, "problem_rate": None, "last_use": None,
+                "workspaces": {}, "unknown_workspace_count": 0,
+                "duration_excluded_count": 0,
+            }
+            samples[name] = ([], {})
+        return workers[name]
+
+    for name in config["workers"]:
+        worker_row(name)
+    for task_id in all_task_ids():
+        directory = task_dir(task_id)
+        try:
+            task = load_task(directory, task_id)
+            created = stats_timestamp(task["created_at"])
+        except TaskMissingError:
+            continue
+        except (TaskInvalidError, ValueError, OverflowError):
+            if directory.is_dir():
+                invalid.append(task_id)
+            continue
+        if ((args.workspace is not None and task.get("workspace_id") != args.workspace)
+                or (cutoff is not None and created < cutoff)):
+            continue
+        state = read_json(directory / "state.json")
+        if (not isinstance(state, dict) or not isinstance(state.get("state"), str)
+                or state["state"] not in SETTLED_STATES | {"running"}):
+            if directory.is_dir():
+                invalid.append(task_id)
+            continue
+        result = read_json(directory / "result.json")
+        minutes, source = None, None
+        if state["state"] == "done" and validate_result(result, task) == "valid":
+            try:
+                if state.get("settled_at") is not None:
+                    ended = stats_timestamp(state["settled_at"])
+                    source = "settled_at"
+                else:
+                    ended = datetime.fromtimestamp((directory / "result.json").stat().st_mtime, timezone.utc)
+                    source = "result_mtime"
+                minutes = (ended - created).total_seconds() / 60
+                if minutes < 0 or ended > now:
+                    minutes = None
+            except (OSError, ValueError, OverflowError):
+                pass
+        if not directory.is_dir():
+            continue
+        row = worker_row(task["worker"])
+        row["task_count"] += 1
+        name = state["state"]
+        row["states"][name] = row["states"].get(name, 0) + 1
+        row["problem_count"] += name != "done"
+        last = row["last_use"]
+        if last is None or created > stats_timestamp(last):
+            row["last_use"] = created.isoformat().replace("+00:00", "Z")
+        workspace = task.get("workspace_id")
+        if workspace is None:
+            row["unknown_workspace_count"] += 1
+        else:
+            row["workspaces"][workspace] = row["workspaces"].get(workspace, 0) + 1
+        if name == "done":
+            if validate_result(result, task) == "valid":
+                status = result["status"]
+                row["result_statuses"][status] = row["result_statuses"].get(status, 0) + 1
+            if minutes is None:
+                row["duration_excluded_count"] += 1
+        if minutes is not None:
+            values, sources = samples[task["worker"]]
+            values.append(minutes)
+            sources[source] = sources.get(source, 0) + 1
+            timings.append(minutes)
+    for name, row in workers.items():
+        row["problem_rate"] = row["problem_count"] / row["task_count"] if row["task_count"] else None
+        row["duration_minutes"] = duration_summary(*samples[name])
+
+    def above(threshold):
+        count = sum(value > threshold for value in timings)
+        return {"minutes": threshold, "count": count,
+                "share": count / len(timings) if timings else None}
+
+    emit({
+        "scope": {"workspace_id": args.workspace, "days": args.days,
+                  "created_since": cutoff.isoformat().replace("+00:00", "Z") if cutoff else None},
+        "task_count": sum(row["task_count"] for row in workers.values()),
+        "workers": dict(sorted(workers.items())),
+        "configured_unused_workers": sorted(name for name, row in workers.items()
+                                            if row["configured"] and not row["task_count"]),
+        "roles_with_unconfigured_workers": missing_roles,
+        "invalid_task_ids": invalid,
+        "notify_after_minutes": {"timed_task_count": len(timings),
+                                 "current": above(config["notify_after_minutes"]),
+                                 "thresholds": [above(n) for n in (15, 30, 45, 60, 90)]},
+    })
 
 
 # ---------------------------------------------------------------------------
@@ -1302,6 +1469,11 @@ def build_parser():
 
     p_list = sub.add_parser("list", help="print every task as one JSON line, oldest first")
     p_list.set_defaults(func=cmd_list)
+
+    p_stats = sub.add_parser("stats", help="summarize stored worker performance without Herdr or writes")
+    p_stats.add_argument("--workspace", help="only tasks created in this workspace")
+    p_stats.add_argument("--days", type=int, help="only tasks created in the last n days")
+    p_stats.set_defaults(func=cmd_stats)
 
     p_close = sub.add_parser("close", help="close the pane of a task horch started")
     p_close.add_argument("task_id", help="task to close")

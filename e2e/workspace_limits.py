@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify workspace quotas with real Herdr and one configured model worker.
+"""Verify workspace quotas with real Herdr and configured model workers.
 
 Creates two owned workspaces, shares an isolated task store, and retains a
 rerunnable receipt outside the checkout. Never changes worker auth or trust.
@@ -30,9 +30,11 @@ def sha(path):
 
 
 class Run:
-    def __init__(self, args, worker):
+    def __init__(self, args, worker, second_worker):
         self.args = args
         self.worker = worker
+        self.second_worker = second_worker
+        self.versions = {}
         self.root = Path(tempfile.mkdtemp(prefix='horch-workspace-limits-', dir=args.output))
         self.env = dict(os.environ, XDG_CONFIG_HOME=str(self.root / 'config'),
                         XDG_STATE_HOME=str(self.root / 'state'))
@@ -135,7 +137,17 @@ Use at most three shell calls, finish promptly, and write result.json last.
         cfg.parent.mkdir(parents=True)
         text = 'max_active_workers = 2\n[workers.' + json.dumps(self.args.worker) + ']\n'
         text += ''.join(f'{key} = {json.dumps(value)}\n' for key, value in self.worker.items())
+        if self.second_worker is not None:
+            text += '[workers.' + json.dumps(self.args.second_worker) + ']\n'
+            text += ''.join(f'{key} = {json.dumps(value)}\n' for key, value in self.second_worker.items())
         cfg.write_text(text)
+        proc = self.invoke('herdr-cli-version', ['herdr', '--version'], timeout=30)
+        self.versions['cli'] = (proc.stdout or proc.stderr).strip() if proc.returncode == 0 else None
+        proc = self.invoke('herdr-server-version', ['herdr', 'status', 'server', '--json'], timeout=30)
+        status = json.loads(proc.stdout) if proc.returncode == 0 else {}
+        self.versions['server'] = status.get('version')
+        self.check('CLI and server versions recorded', bool(self.versions['cli'])
+                   and isinstance(self.versions['server'], str) and bool(self.versions['server']))
         (self.root / 'input.json').write_text(json.dumps({
             'lines': [{'quantity': 7, 'unit_price_cents': 137, 'discount_bp': 250},
                       {'quantity': 2, 'unit_price_cents': 1000, 'discount_bp': 500}],
@@ -225,10 +237,27 @@ Use at most three shell calls, finish promptly, and write result.json last.
             proc, rows = self.cli('invalid-' + command, 'A', *argv,
                                   '--cwd', self.args.cwd, timeout=30)
             row = rows[0] if len(rows) == 1 else {}
-            self.check('invalid ' + command + ' reports worker_limit',
-                       proc.returncode != 0 and row.get('error') == 'worker_limit'
-                       and planted.name in row.get('message', '') and 'horch list' in row.get('message', ''))
+            expected = (proc.returncode != 0 and row.get('error') == 'worker_limit'
+                        if command == 'run' else proc.returncode == 0
+                        and row.get('worker') == self.args.worker and row.get('state') == 'not_checked'
+                        and row.get('ok') is False and row.get('task_id') is None)
+            self.check('invalid ' + command + ' reports ' + ('worker_limit' if command == 'run' else 'not_checked'),
+                       expected and planted.name in row.get('message', '')
+                       and 'horch list' in row.get('message', ''))
             self.check('invalid ' + command + ' allocates nothing', before == self.allocation())
+        b = self.start('B', 3)
+        self.check('B has exactly one real unclosed reservation beside corruption', sum(
+            t.get('workspace_id') == self.workspaces['B']['workspace']
+            and not read(Path(t['task_dir']) / 'state.json')['closed'] for t in self.records()) == 1)
+        before = self.allocation()
+        proc, rows = self.cli('invalid-B-run', 'B', 'run', self.args.worker, '--cwd', self.args.cwd,
+                              '--brief', self.root / 'brief-B-3.md', timeout=30)
+        row = rows[0] if len(rows) == 1 else {}
+        self.check('invalid B run reports worker_limit', proc.returncode != 0
+                   and row.get('error') == 'worker_limit' and planted.name in row.get('message', '')
+                   and 'horch list' in row.get('message', ''))
+        self.check('invalid B run allocates nothing', before == self.allocation())
+        self.deliver_phase_task(b, targeted=True)
         before = self.allocation()
         proc, rows = self.cli('invalid-close', 'A', 'close', planted.name, timeout=30)
         row = rows[0] if len(rows) == 1 else {}
@@ -243,6 +272,7 @@ Use at most three shell calls, finish promptly, and write result.json last.
         self.check('targeted invalid wait still fails', proc.returncode != 0 and len(rows) == 1
                    and rows[0].get('error') == 'task_invalid')
         self.deliver_phase_task(task)
+        self.invalid_batch_check(planted.name)
         before = self.allocation()['tasks']
         self.check('only owned planted files remain', original == {
             p.name: p.read_bytes() for p in planted.iterdir()})
@@ -256,16 +286,50 @@ Use at most three shell calls, finish promptly, and write result.json last.
         proc, rows = self.cli('empty-wait', 'A', 'wait', '--max-seconds', '1', timeout=30)
         self.check('no unsettled tasks leaves wait empty', proc.returncode == 0 and not rows)
 
-    def deliver_phase_task(self, task):
+    def invalid_batch_check(self, invalid_id):
+        if self.second_worker is None:
+            self.observations['invalid_batch_check'] = {'status': 'skipped',
+                'reason': 'requires --second-worker distinct from --worker; repeated names deduplicate'}
+            return
+        before = {t['task_id'] for t in self.records()}
+        proc, rows = self.cli('invalid-batch-check', 'A', 'check', self.args.worker,
+                              self.args.second_worker, '--cwd', self.args.cwd,
+                              '--max-seconds', str(self.args.max_seconds), timeout=self.args.max_seconds + 180)
+        self.check('invalid batch reports both distinct selections', proc.returncode == 0 and len(rows) == 2
+                   and [r.get('worker') for r in rows] == [self.args.worker, self.args.second_worker])
+        self.check('invalid batch first worker delivers and closes', rows[0].get('ok') is True
+                   and rows[0].get('state') == 'done' and rows[0].get('pane_id') is None)
+        second = rows[1]
+        self.check('invalid batch second worker delivers or is not_checked',
+                   (second.get('ok') is True and second.get('state') == 'done' and second.get('pane_id') is None)
+                   or (second.get('state') == 'not_checked' and second.get('ok') is False
+                       and second.get('task_id') is None and second.get('pane_id') is None
+                       and invalid_id in second.get('message', '') and 'horch list' in second.get('message', '')))
+        created = [t for t in self.records() if t['task_id'] not in before]
+        self.check('invalid batch accounts for every started task', {t['task_id'] for t in created}
+                   == {r['task_id'] for r in rows if r.get('task_id')} and len(created) in (1, 2))
+        self.check('invalid batch leaves no unclosed real tasks', all(
+            read(Path(t['task_dir']) / 'state.json')['closed'] for t in self.records()))
+        live = set(self.allocation()['panes']['A'])
+        self.check('invalid batch worker panes are gone', all(t['pane_id'] not in live for t in created))
+        self.check('invalid batch results have valid identity and completion', all(
+            (r := read(Path(t['task_dir']) / 'result.json')).get('task_id') == t['task_id']
+            and r.get('nonce') == t['nonce'] and r.get('status') == 'completed' for t in created))
+        self.observations['invalid_batch_check'] = {'status': 'exercised',
+            'workers': [r['worker'] for r in rows], 'states': [r['state'] for r in rows],
+            'started_tasks': len(created)}
+
+    def deliver_phase_task(self, task, targeted=False):
         deadline = time.monotonic() + self.args.max_seconds
         delivered = False
         while not delivered and time.monotonic() < deadline:
-            proc, rows = self.cli('invalid-phase-wait', 'A', 'wait', '--max-seconds', '30', timeout=60)
-            self.check('no-ID wait reports only the real worker', proc.returncode == 0 and len(rows) == 1
+            ids = [task['task_id']] if targeted else []
+            proc, rows = self.cli('invalid-phase-wait', 'A', 'wait', *ids, '--max-seconds', '30', timeout=60)
+            self.check(('targeted B' if targeted else 'no-ID') + ' wait reports only the real worker', proc.returncode == 0 and len(rows) == 1
                        and rows[0].get('task_id') == task['task_id']
                        and rows[0].get('state') in ('running', 'long_running', 'done'))
             delivered = rows[0].get('state') == 'done' and rows[0].get('closed') is True
-        self.check('no-ID wait delivers and closes within cap', delivered)
+        self.check(('targeted B' if targeted else 'no-ID') + ' wait delivers and closes within cap', delivered)
         directory = Path(task['task_dir'])
         record, result = read(directory / 'task.json'), read(directory / 'result.json')
         self.check('phase result identity and arithmetic', result.get('task_id') == record['task_id']
@@ -315,6 +379,7 @@ Use at most three shell calls, finish promptly, and write result.json last.
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--worker', required=True, help='existing authenticated configured worker')
+    parser.add_argument('--second-worker', help='distinct authenticated configured worker; required for invalid-record batching sub-case')
     parser.add_argument('--cwd', type=Path, default=Path.cwd(), help='existing trusted checkout; read only')
     parser.add_argument('--output', type=Path, required=True, help='artifact parent outside repository')
     parser.add_argument('--max-seconds', type=int, default=300, help='completion wait cap')
@@ -330,9 +395,14 @@ def main():
     worker = tomllib.loads(cfg.read_text()).get('workers', {}).get(args.worker)
     if not worker:
         parser.error('--worker must exist in workers.toml')
+    second_worker = None
+    if args.second_worker:
+        second_worker = tomllib.loads(cfg.read_text()).get('workers', {}).get(args.second_worker)
+        if not second_worker or args.second_worker == args.worker:
+            parser.error('--second-worker must exist and differ from --worker')
     config_hash = sha(cfg)
     args.output.mkdir(parents=True, exist_ok=True)
-    run = Run(args, worker)
+    run = Run(args, worker, second_worker)
     print(f'Run directory: {run.root}', flush=True)
     problem = None
     try:
@@ -350,6 +420,9 @@ def main():
         evidence = {'schema': 'horch/workspace-limits-e2e/v1',
                     'verdict': 'pass' if not problem and all(a['ok'] for a in run.assertions) else 'fail',
                     'source_hashes': run.hashes, 'worker': args.worker,
+                    'second_worker': args.second_worker, 'herdr_versions': run.versions,
+                    'second_model': ({key: second_worker.get(key) for key in ('harness', 'provider', 'model', 'effort')}
+                                     if second_worker else None),
                     'input_sha256': run.input_hash,
                     'model': {key: worker.get(key) for key in ('harness', 'provider', 'model', 'effort')},
                     'seconds': round(time.monotonic() - run.started, 3),

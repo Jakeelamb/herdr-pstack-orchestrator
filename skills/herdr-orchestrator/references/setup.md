@@ -27,13 +27,22 @@ Run the setup when the user asks for it, or when `horch run` fails with `config_
 
 ## Caller context
 
-`run` and `check` require `HERDR_ENV=1` and a nonblank `HERDR_PANE_ID`. They resolve the caller with `herdr pane current --current` and use its returned workspace and tab for placement. Missing or unavailable caller panes produce `caller_context_invalid` before task allocation; an unavailable Herdr service remains a `herdr_error`. Reject a blank pane ID before using `--current`: Herdr 0.9.3 can otherwise fall back to the focused pane.
+`run` and `check` require `HERDR_ENV=1` and a nonblank caller pane ID: `--caller-pane` when given, otherwise `HERDR_PANE_ID`. Herdr's `--current` only reads `HERDR_PANE_ID`; it does not check that the pane hosts the caller. `horch` therefore proves the caller before task allocation:
 
-A harness shell snapshot can restore another pane's ID even when the controller process was launched correctly. Confirm the actual controller's identity from its launch context, restore that `HERDR_PANE_ID` in the shell running `horch`, and resolve it through `pane current --current`. Never substitute the currently focused pane. If the controller identity cannot be established, report the mismatch and leave dispatch stopped.
+1. The named pane's shell (`herdr pane process-info`, `shell_pid`) must be an ancestor of the `horch` process. Then its live workspace and tab are used for placement.
+2. If another pane's shell is the ancestor, the ID is stale. The error names the pane that actually hosts `horch`; rerun with `HERDR_PANE_ID=<that pane>` if it is this controller.
+3. If no pane's shell is an ancestor, the environment came from elsewhere, so `HERDR_PANE_ID` is rejected even when it happens to be right. Only an explicit `--caller-pane` is accepted, and that pane's foreground must run the controller's harness. When the controller exports `CODEX_THREAD_ID` or `CLAUDE_CODE_SESSION_ID` and the pane reports a session for that harness, the two must match.
 
-Moving a pane is different from restoring another pane's shell snapshot. Herdr preserves the moved terminal's launch-time ID as an alias; its live workspace/tab may legitimately differ from the inherited environment. No manual refresh of those two variables is needed. See the official [agent automation guide](https://github.com/herdrdev/herdr/blob/v0.9.3/docs/next/website/src/content/docs/agent-automation.mdx).
+Missing or unavailable caller panes also produce `caller_context_invalid`; an unavailable Herdr service remains a `herdr_error`. Never substitute the currently focused pane.
 
-This check cannot prove ownership when a snapshot names another still-live pane. Verify identity when resuming; do not relocate workers and edit task records as routine recovery.
+A shared agent daemon reaches case 3. Codex 0.162 runs a conversation's tools in a `codex app-server` process with parent PID 1 that keeps the environment of the pane that started it, so every Codex conversation using that daemon sees that pane's ID. Herdr's Codex hook runs there too, so Herdr can attach a Codex session to the wrong pane. Before passing `--caller-pane`, confirm the controller pane and record the evidence for the user:
+
+- `herdr pane list` and `herdr pane process-info --pane <id>`: the candidate pane's foreground runs the controller's harness in the conversation's working directory. A pane whose foreground is a plain shell is not the controller.
+- If more than one pane runs that harness, read each candidate with `herdr pane read <id> --source visible` and match text unique to this conversation, such as your latest command. If no single pane matches, report the candidates and leave dispatch stopped.
+
+Pass the confirmed ID to every `run` and `check` in this conversation. Recheck it after resuming the controller; do not relocate workers and edit task records as routine recovery.
+
+Moving a pane is different from a stale ID. Herdr preserves the moved terminal's launch-time ID as an alias and the shell keeps its process, so the check above still passes and the live workspace/tab are used. See the official [CLI reference](https://raw.githubusercontent.com/herdrdev/herdr/v0.9.5/docs/next/website/src/content/docs/cli-reference.mdx).
 
 ## Dialogs that stop a worker before it starts
 

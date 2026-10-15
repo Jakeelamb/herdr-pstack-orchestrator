@@ -30,4 +30,14 @@ For a worker placed in the wrong workspace because of stale shell context, use t
 python3 e2e/caller_context.py --controller-pane <verified-controller-pane> --output "$proof"
 ```
 
-Confirm the controller's actual identity before supplying the pane ID. The driver reads live Herdr state and exercises `run` and `check`. Caller cases stop at an empty isolated configuration; configuration cases stop at a missing brief or unknown worker. Unavailable or blank caller identities must fail without falling back to focus; stale workspace/tab variables with a valid pane must resolve to live context and reach the configuration check. Configuration cases cover workers with and without descriptions, a non-string description, and multiple roles naming one worker. Read the printed receipt and require every check to pass. Keep the retained artifact directory; there are no owned panes to close. This checks preflight only, not a real pane move, model launch, or controller routing decisions.
+Run the driver from the controller pane's own process tree; `horch` now rejects a pane ID it cannot prove. The driver reads live Herdr state and exercises `run` and `check`. Caller cases stop at an empty isolated configuration; configuration cases stop at a missing brief or unknown worker. Unavailable or blank caller identities must fail without falling back to focus; stale workspace/tab variables with a valid pane must resolve to live context and reach the configuration check. Configuration cases cover workers with and without descriptions, a non-string description, and multiple roles naming one worker. Read the printed receipt and require every check to pass. Keep the retained artifact directory; there are no owned panes to close. This checks preflight only, not a real pane move, model launch, or controller routing decisions.
+
+## Caller identity
+
+For a worker placed in another live pane's workspace, including a controller whose tools run in a shared agent daemon, use:
+
+```bash
+python3 e2e/caller_identity.py --controller-pane <verified-controller-pane> --output "$proof"
+```
+
+Run it from the controller pane itself. It creates and closes one scratch tab and one scratch workspace in Herdr. Require `verdict: pass` and `cleanup_ok: true` in the printed artifact. The detached cases simulate a daemon with `setsid`; they do not drive a real Codex app-server. The session-mismatch case needs a controller pane that reports a session for its harness and fails with a precondition check otherwise.

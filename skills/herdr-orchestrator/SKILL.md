@@ -30,19 +30,19 @@ Requires Python 3.11+ on Linux/macOS and a controller inside Herdr (`HERDR_ENV=1
 
 | Command | Purpose |
 |---|---|
-| `run <worker> --brief <file> [--cwd <dir>]` | Start a fresh worker and submit its brief; returns after startup and prompt acknowledgement, before task completion. |
+| `run <worker> --brief <file> [--cwd <dir>] [--caller-pane <id>]` | Start a fresh worker and submit its brief; returns after startup and prompt acknowledgement, before task completion. |
 | `wait [<task-id> ...] [--max-seconds <n>] [--recheck]` | Wait for a state change. No IDs selects all unsettled tasks. See waiting below. |
 | `list` | List task, worker, pane, and state. |
 | `stats [--workspace <id>] [--days <n>]` | Review configured workers from stored facts, without Herdr calls or writes. |
 | `close <task-id>` | Close that task's recorded pane. |
 | `detect` | List installed harnesses, versions, Pi providers, and Pi integration status. |
-| `check [<worker> ...] [--cwd <dir>] [--max-seconds <n>]` | Verify configured workers with real tasks; default wait cap 300 seconds. |
+| `check [<worker> ...] [--cwd <dir>] [--max-seconds <n>] [--caller-pane <id>]` | Verify configured workers with real tasks; default wait cap 300 seconds. |
 
 Workers open in `horch` tabs in your workspace, at most four panes per tab, without taking focus or using your tab. `max_active_workers` applies independently to each workspace; controllers sharing a workspace and task store share that workspace's slots. An unclosed task occupies a slot in the workspace that launched it.
 
-Before the first dispatch or after resuming the controller, establish its pane ID from the actual launch context. Check that the shell executing `horch` has that `HERDR_PANE_ID`, then resolve it with `herdr pane current --current`. Shell snapshots can restore another pane's identity. Herdr resolves a moved pane's original ID and returns its live workspace and tab; use those returned IDs rather than launch-time workspace/tab variables.
+`HERDR_PANE_ID` is a claim, not proof of which pane hosts this conversation. Shell snapshots and shared agent daemons can carry another live pane's ID. `run` and `check` therefore require the named pane's shell to be an ancestor of the `horch` process, then place workers in Herdr's live workspace and tab for that pane. A moved pane's launch-time ID still resolves.
 
-`run` and `check` reject missing or unavailable caller panes before dispatch and use Herdr's live workspace and tab for placement. On `caller_context_invalid`, follow [caller context recovery](references/setup.md#caller-context). Do not choose a workspace from UI focus or create replacement panes to work around the error.
+On `caller_context_invalid`, follow [caller context recovery](references/setup.md#caller-context). If the message says `horch` is outside every pane's process tree (for example, Codex tools run by a shared `codex app-server`), confirm the controller pane as described there and pass `--caller-pane <id>` to every `run` and `check`. Do not choose a workspace from UI focus or create replacement panes to work around the error.
 
 ## Delegate and verify
 

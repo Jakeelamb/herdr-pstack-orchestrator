@@ -1170,9 +1170,10 @@ def cmd_stats(args):
             continue
         row = worker_row(task["worker"])
         row["task_count"] += 1
-        name = state["state"]
+        name = ("closed_before_done" if state.get("closed") and state["state"] not in SETTLED_STATES
+                else state["state"])
         row["states"][name] = row["states"].get(name, 0) + 1
-        row["problem_count"] += name != "done"
+        row["problem_count"] += name not in {"done", "closed_before_done"}
         last = row["last_use"]
         if last is None or created > stats_timestamp(last):
             row["last_use"] = created.isoformat().replace("+00:00", "Z")

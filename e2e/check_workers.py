@@ -359,6 +359,48 @@ class Run:
                  if p.is_file() and self.diagnostics not in p.parents}
         self.check('C051 stats leaves isolated config and task store unchanged', before == after)
 
+        # Real cancellation, after the original checks so their coverage stays intact.
+        brief = self.root / 'cancel-brief.md'
+        brief.write_text('This is a cancellation probe. Run sleep 120 before writing any result. '
+                         'Do not edit the checkout. The controller will close your pane.\n')
+        proc = self.cli('run', names[0], '--brief', brief, '--cwd', self.args.cwd, timeout=180)
+        rows = self.rows('cancel_run', proc)
+        self.check('C052 cancellation probe starts one real running worker',
+                   proc.returncode == 0 and len(rows) == 1
+                   and set(self.records()) - set(real) - {invalid_id, removed_id} == {rows[0]['task_id']})
+        task_id = rows[0]['task_id']
+        directory = self.store / task_id
+        state = read(directory / 'state.json')
+        self.check('C053 cancellation probe is open and running before close',
+                   state['state'] == 'running' and not state['closed']
+                   and not (directory / 'result.json').exists()
+                   and self.records()[task_id]['pane_id'] in self.panes())
+        proc = self.cli('close', task_id)
+        self.rows('cancel_close', proc)
+        state = read(directory / 'state.json')
+        self.check('C054 close cancels running probe without settling it',
+                   proc.returncode == 0 and state['closed'] is True and state['state'] == 'running'
+                   and state.get('settled_at') is None
+                   and self.records()[task_id]['pane_id'] not in self.panes())
+        for check_id, label, previous, argv in (
+                ('C055', 'stats_after_cancel', whole, ()),
+                ('C056', 'stats_workspace_after_cancel', scoped, ('--workspace', self.workspace['workspace_id']))):
+            proc = self.cli('stats', *argv)
+            current = json.loads(proc.stdout)
+            self.observations[label] = current
+            # Compare the entire output: only the cancellation count, task totals,
+            # workspace count, last-use and the all-task problem denominator change.
+            expected = json.loads(json.dumps(previous))
+            expected['task_count'] += 1
+            row = expected['workers'][names[0]]
+            row['task_count'] += 1
+            row['states']['closed_before_done'] = 1
+            row['workspaces'][self.workspace['workspace_id']] += 1
+            row['last_use'] = self.records()[task_id]['created_at']
+            row['problem_rate'] = row['problem_count'] / row['task_count']
+            self.check(f'{check_id} {label} counts cancellation, not running or problems',
+                       proc.returncode == 0 and current == expected)
+
     def cleanup(self):
         if self.process is not None:
             if self.process.poll() is None:

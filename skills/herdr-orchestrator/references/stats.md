@@ -23,8 +23,8 @@ Concurrent controllers can change records during the scan; it is not a snapshot.
 - `task_count`, `states`, `result_statuses`: stored task states and valid,
   nonce-bound result statuses, only delivered (`done`) results for the latter.
   Early, missing, and invalid results are not counted as delivered outcomes.
-- `problem_count` and `problem_rate` count states other than done, including
-  running tasks; the rate is a fraction of tasks, not a model failure probability.
+- Closed tasks whose stored state is not settled count as `states.closed_before_done` (cancellations), not `running`; closed settled tasks keep their outcomes.
+- `problem_count` and `problem_rate` count states other than `done` and `closed_before_done`, including unclosed running tasks; the rate divides by all in-scope tasks, including cancellations, and is not a model failure probability.
 - `last_use` is the latest created_at; `workspaces` counts recorded workspace IDs.
   Legacy records contribute to `unknown_workspace_count`, not workspace filters.
 - `duration_minutes`: sample_size, median, nearest-rank p90, max, and `sources`

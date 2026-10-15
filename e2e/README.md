@@ -87,10 +87,15 @@ The driver uses Herdr's supported `PI_CODING_AGENT_DIR` override with an empty d
 ## Evidence and source attribution
 
 - [controller-e2e.json](evidence/controller-e2e.json): a fresh invocation of the final driver passed 47/47 in 736.836 seconds. The six-task scenario, original transcript audit, source/configuration integrity, and actual pane cleanup passed together. Six yielded waits resumed through 23 handle calls, with no short caps. This supersedes the earlier verification gap without changing the historical failed receipts.
+- [check-workers.json](evidence/check-workers.json): a fresh 37/37 worker-setup pass with real Pi workers, including the `horch stats` phase and a worker closed while running.
+- [workspace-limits.json](evidence/workspace-limits.json): a fresh 49/49 workspace-quota pass, five real Pi tasks across two workspaces sharing one task store.
+- [invalid-task-records.json](evidence/invalid-task-records.json): a fresh 101/101 pass over planted invalid records with real Pi tasks, including a two-worker `check` beside the malformed record.
 - [pi-preflight.json](evidence/pi-preflight.json): 15/15 real integration-preflight and worker-delivery checks, with missing integration rejected in about 0.05 seconds before allocation.
 - [pi-controller.json](evidence/pi-controller.json): the original historical Pi-controller 10/10 receipt, with original artifact hashes and explicit source attribution. It predates the updated wait guidance and is not a v0.1.1 test.
-- [verification.json](evidence/verification.json): development runs, tested versions, source hashes, and limits.
+- [verification.json](evidence/verification.json): development runs, including the historical Codex and Claude Code controller records, tested versions, source hashes, and limits.
 - [review-e2e.json](evidence/review-e2e.json): the release-era public six-task driver pass and its observed outputs.
+- [upstream-sync-0.15.25.json](evidence/upstream-sync-0.15.25.json): the current 56-entry 0.15.25 bundle installed from a local source copy, all 197 files preserved, and native Pi/Codex discovery.
+- [skill-discovery.json](evidence/skill-discovery.json): native Pi/Codex catalog checks and the recorded original `how` invocation, a Pi controller with three explorer tasks and one explainer task.
 - [relocation-e2e.json](evidence/relocation-e2e.json): the historical failing attempt after moving the driver. It failed at initial worker acknowledgement (`not_started` / Herdr `agent_prompt_stalled`), before implementation. Three attempts stopped there. The [subsequent investigation](startup-findings.md) identified the trust-dialog cause; this receipt remains unchanged.
 - [startup-diagnosis.json](evidence/startup-diagnosis.json): sanitized failure, withheld-prompt dialog observation, and successful unchanged-code control after removing the leftover empty directory.
 - [pi-startup.json](evidence/pi-startup.json): the fixed guard passed 11/11 checks with a real trust dialog, unchanged trust decisions, fresh explicitly declined-resource work, and confirmed cleanup.
@@ -106,7 +111,7 @@ The driver uses Herdr's supported `PI_CODING_AGENT_DIR` override with an empty d
 
 Historical evidence keeps its original source attribution. Moving the driver changes its hash; it does not retroactively change which code an earlier run exercised. The CLI itself is unchanged by the relocation.
 
-`review_loop.py` controls `horch` directly; `controller_loop.py` tests an AI controller following `herdr-orchestrator`. Neither exercises the pstack rubric. Earlier controller/pstack development runs remain attributed to their original sources. GitHub Actions checks Python compatibility, configuration parsing, and installation into Claude Code, Codex, and Pi. Historical package CI also covered Python 3.11/3.14, installed-file comparisons, and regeneration from the then-pinned upstream source. Authenticated model E2Es run locally.
+`review_loop.py` controls `horch` directly; `controller_loop.py` tests an AI controller following `herdr-orchestrator`. Neither exercises the pstack rubric. Earlier controller/pstack development runs remain attributed to their original sources. GitHub Actions checks Python compatibility, configuration parsing, and installation into Claude Code, Codex, and Pi. Earlier package CI runs recorded Python 3.11/3.14, installed-file comparisons, and regeneration from the then-pinned upstream source. Authenticated model E2Es run locally.
 
 ## Reproduce original skill discovery
 

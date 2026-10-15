@@ -60,7 +60,12 @@ cd herdr-pstack-orchestrator
 python3 skills/herdr-orchestrator/scripts/horch.py detect
 ```
 
-For manual installation, symlink each skill from the clone into your harness's skills directory, for example `~/.claude/skills/herdr-orchestrator`.
+For manual installation, symlink each skill into your harness's skills directory. This example installs the core skill for Claude Code:
+
+```bash
+mkdir -p ~/.claude/skills
+ln -s "$PWD/skills/herdr-orchestrator" ~/.claude/skills/herdr-orchestrator
+```
 
 `horch` is a plain script. For the manual examples below, define this shell function from the clone:
 
@@ -69,7 +74,7 @@ HORCH_SCRIPT="$PWD/skills/herdr-orchestrator/scripts/horch.py"
 horch() { python3 "$HORCH_SCRIPT" "$@"; }
 ```
 
-Commands are `run`, `wait`, `list`, `close`, `detect`, `check`, and `stats`. `detect` reports installed harnesses and Pi integration status; `check` runs real tasks with configured workers. Output is JSON; errors use `{"error": ..., "message": ...}` and exit status 1. See the [command guide](skills/herdr-orchestrator/SKILL.md#run-horch).
+Commands are `run`, `wait`, `list`, `close`, `detect`, `check`, and `stats`. `detect` reports installed harnesses and Pi integration status; `check` runs real tasks with configured workers. Operational output is JSON; operational errors use `{"error": ..., "message": ...}` and exit status 1. CLI help and argument errors use argparse output. See the [command guide](skills/herdr-orchestrator/SKILL.md#run-horch).
 
 `horch stats` summarizes stored worker performance without Herdr calls or writes; see [worker statistics](skills/herdr-orchestrator/references/stats.md).
 
@@ -105,11 +110,29 @@ The copied example defines one worker per harness (`glm`, `gpt`, `haiku`). Names
 
 The controller never answers worker dialogs, so the permission flags you choose are the worker's authorization; automatic approval can still deny an action, and denial handling is unverified. Verified flag choices and dialog handling are in [setup and dialog handling](skills/herdr-orchestrator/references/setup.md).
 
-Other keys: `max_active_workers` (default 4) caps unclosed tasks per workspace and is shared by controllers that share the task store; `notify_after_minutes` (default 180) reports elapsed time, not useful progress. An optional `[roles]` table selects workers for pstack, and a worker can carry an optional `description` of its intended tasks. Task directories live under `~/.local/state/herdr-orchestrator/tasks/`, or the corresponding `$XDG_STATE_HOME` path, until you delete them. Every key is documented in [configuration](skills/herdr-orchestrator/references/setup.md#configuration).
+Other keys are documented in [configuration](skills/herdr-orchestrator/references/setup.md#configuration):
+
+- `max_active_workers` (default 4) caps unclosed tasks per workspace. Controllers in the same workspace share that cap when they share the task store.
+- `notify_after_minutes` (default 180) reports elapsed time, not useful progress.
+- An optional `[roles]` table selects workers for pstack.
+- A worker can carry an optional `description` of its intended tasks.
+
+Task directories live under `~/.local/state/herdr-orchestrator/tasks/`, or the corresponding `$XDG_STATE_HOME` path, until you delete them.
 
 ## How delegation works
 
 The controller sends a complete brief with `horch run`, waits for the structured result with `horch wait`, and verifies the outcome before reporting back. Commands, waiting rules, and recovery are in the [herdr-orchestrator skill](skills/herdr-orchestrator/SKILL.md).
+
+`horch wait` has no default time cap. Run it in a background command or a yielded shell session so the controller can post updates while waiting; with blocking-only tools, use `--max-seconds 300` and a longer tool timeout. The cap ends the wait call, not the worker. For parallel work, launch each task first, then wait on the returned IDs.
+
+After `done`, read the separate `status` inside `result.json`: verify a `completed` claim, inspect a `failed` report, and relay a `blocked` question to the user, then start a fresh task with their answer. A `blocked` status means the worker delivered a question and its turn ended. A `blocked` task state means the worker is stopped at a dialog, and the pane stays open for inspection.
+
+`horch wait` withholds summaries, files, and questions until the turn ends, so wait for `done` before consuming a result. A worker can write files while it runs, and closing a running worker cancels it. The full state and status tables and the recovery steps are in [task lifecycle and recovery](skills/herdr-orchestrator/references/lifecycle.md).
+
+The Quickstart delegates through the agent skill. To drive `horch` by hand instead, use the manual example below.
+
+<details>
+<summary>Manual delegation example, driving <code>horch</code> by hand</summary>
 
 First create a separate checkout and branch for the writer. A worktree separates edits; it is not a security sandbox.
 
@@ -143,8 +166,6 @@ horch run gpt --brief /tmp/fix-login.md --cwd ~/src/myapp-fix-login
 horch wait t-0a1b2c  # use the task_id returned by run
 ```
 
-`horch wait` has no default time cap. Run it in a background command or a yielded shell session so the controller can post updates while waiting; with blocking-only tools, use `--max-seconds 300` and a longer tool timeout. The cap ends the wait call, not the worker. For parallel work, launch each task first, then wait on the returned IDs.
-
 `horch wait` reports task states:
 
 | State | Meaning |
@@ -154,7 +175,7 @@ horch wait t-0a1b2c  # use the task_id returned by run
 | `done` | The turn ended with a valid `result.json`. |
 | `blocked`, `start_failed`, `not_started`, `exited`, `result_missing`, `result_invalid` | Problems; the pane stays open for inspection. |
 
-After `done`, read the separate `status` inside `result.json`: verify a `completed` claim, inspect a `failed` report, and relay a `blocked` question in a fresh task. `horch wait` withholds summaries, files, and questions until the turn ends, so wait for `done` before consuming a result; a worker can write files while it runs, and closing a running worker cancels it. The full state and status tables and the recovery steps are in [task lifecycle and recovery](skills/herdr-orchestrator/references/lifecycle.md).
+</details>
 
 ## Optional: original pstack through Herdr
 
@@ -183,9 +204,9 @@ Cursor modes, hooks, `/loop`, cloud execution, and unavailable MCP or app-drivin
 
 ## Verification
 
-Runtime checks run on Linux with real Pi, Codex, and Claude Code workers. The verified set covers worker setup, the implementation and review loop, a controller-level run, workspace limits, invalid record handling, and Pi preflight. The 0.15.25 bundle passed a local installation check and native discovery in the Pi and Codex catalogs.
+Runtime checks run on Linux with real Pi workers. Real Codex and Claude Code controller runs are also recorded. The verified set covers worker setup, the implementation and review loop, a controller-level run, workspace limits, invalid record handling, and Pi preflight. The 0.15.25 bundle passed a local installation check and native discovery in the Pi and Codex catalogs. A receipt for each verified claim is linked in [evidence and source attribution](e2e/README.md#evidence-and-source-attribution).
 
-Not verified: macOS, deliberate approval denial, task turns longer than 30 minutes, and Claude Code native discovery, which was not measured although installation was checked. Most pstack playbooks remain unverified at runtime beyond one recorded `how` run: updated workflows, `ketchup`, other original skills, and `poteto-mode` playbooks. Discovery does not prove workflow execution.
+Not verified: macOS, deliberate approval denial, task turns longer than 30 minutes, and Claude Code native discovery, which was not measured although installation was checked. Apart from one recorded `how` run, most pstack playbooks remain unverified at runtime: updated workflows, `ketchup`, other original skills, and `poteto-mode` playbooks. Discovery does not prove workflow execution.
 
 Historical receipts keep their original source attribution in [evidence and source attribution](e2e/README.md#evidence-and-source-attribution). To rerun the checks, use [verify-herdr-orchestrator](.agents/skills/verify-herdr-orchestrator/SKILL.md).
 
@@ -199,7 +220,7 @@ Send reproduction steps, relevant versions, and sanitized evidence with a bug re
 
 Controllers deliver changes on a feature branch and open or update a PR by default. Merging into `main` or enabling auto-merge requires an explicit user request, even when an upstream playbook calls for autonomous shipping.
 
-Release tags use `vYYYY.MM.DD.N`, the UTC date plus a daily index from `1` (`v2026.10.10.1`, then `v2026.10.10.2`). Publish from verified `main` after an explicit release request; existing tags stay unchanged.
+Release tags use `vYYYY.MM.DD.N`, the UTC date plus a daily index from `1` (`v2026.10.10.1`, then `v2026.10.10.2`). Publish from verified `main` after an explicit release request. Existing tags stay unchanged, and the upstream pstack version is tracked separately.
 
 ## Credits
 

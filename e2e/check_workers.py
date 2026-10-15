@@ -287,7 +287,8 @@ class Run:
             if task_id == invalid_id:
                 task['nonce'] = None
             (directory / 'task.json').write_text(json.dumps(task))
-            (directory / 'state.json').write_text(json.dumps({'state': 'done', 'closed': True}))
+            (directory / 'state.json').write_text(json.dumps({
+                'state': 'done', 'closed': True, 'long_notified': task_id == removed_id}))
             (directory / 'result.json').write_text(json.dumps({
                 'task_id': task_id, 'nonce': 'stats-fixture', 'status': 'blocked',
                 'summary': 'fixture', 'files': [], 'question': 'Fixture specification question?'}))
@@ -460,6 +461,17 @@ class Run:
                    and recent['workers'][unknown]['duration_minutes'] == {
                        'sample_size': 2, 'median': 27.5, 'p90': 45.0, 'max': 45.0,
                        'sources': {'first_done_at': 1, 'result_mtime': 1}})
+        fired = {n: sum(s.get('long_notified') is True for t, s in states.items()
+                        if real[t]['worker'] == n) for n in names}
+        self.check('C063 stored reminder firings count flags per worker and in scope',
+                   all(obj['workers'][n]['reminder_fired'] == fired[n]
+                       for obj in (whole, scoped, extended, recent) for n in names)
+                   and all(obj['workers'][unknown]['reminder_fired'] == 1
+                           and obj['reminder_fired'] == sum(fired.values()) + 1
+                           for obj in (whole, extended, recent))
+                   and scoped['reminder_fired'] == sum(fired.values())
+                   and all(obj['workers'][unused]['reminder_fired'] == 0
+                           for obj in (whole, scoped, extended, recent)))
         # A current threshold equal to a standard bucket must appear exactly once.
         self.config.write_text(self.config.read_text().replace('notify_after_minutes = 20',
                                                              'notify_after_minutes = 45'))

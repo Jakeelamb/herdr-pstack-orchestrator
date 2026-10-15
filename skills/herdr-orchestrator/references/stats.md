@@ -40,6 +40,10 @@ Concurrent controllers can change records during the scan; it is not a snapshot.
 - `invalid_task_ids` lists malformed task/state records excluded from numbers.
   Known raw workspace/date metadata narrows invalid-record scope; unknown scope
   remains visible. Missing task/state files during publication/removal are skipped.
+- `reminder_fired` counts in-scope tasks with stored `long_notified: true`, per
+  worker and in total; unlike the delivered-duration estimate, this flag records
+  only reminders where a `wait` observed the task past the threshold configured
+  at that time.
 - `delivered_duration_estimate` gives timed_task_count and count/share strictly
   above the configured reminder threshold (`current`) and 15/30/45/60/90 minutes
   (`thresholds`, excluding current). This estimates delivered-duration tails,

@@ -1126,7 +1126,7 @@ def cmd_stats(args):
             workers[name] = {
                 "configured": spec is not None,
                 **{key: spec.get(key) if spec else None for key in ("harness", "model", "effort", "provider")},
-                "task_count": 0, "states": {}, "result_statuses": {},
+                "task_count": 0, "reminder_fired": 0, "states": {}, "result_statuses": {},
                 "problem_count": 0, "problem_rate": None, "unclosed_running": 0, "last_use": None,
                 "workspaces": {}, "unknown_workspace_count": 0,
                 "duration_excluded_count": 0, "duration_samples": [],
@@ -1193,6 +1193,7 @@ def cmd_stats(args):
             continue
         row = worker_row(task["worker"])
         row["task_count"] += 1
+        row["reminder_fired"] += state.get("long_notified") is True
         name = ("closed_before_done" if state.get("closed") and state["state"] not in SETTLED_STATES
                 else state["state"])
         row["states"][name] = row["states"].get(name, 0) + 1
@@ -1233,6 +1234,7 @@ def cmd_stats(args):
         "scope": {"workspace_id": args.workspace, "days": args.days,
                   "created_since": cutoff.isoformat().replace("+00:00", "Z") if cutoff else None},
         "task_count": sum(row["task_count"] for row in workers.values()),
+        "reminder_fired": sum(row["reminder_fired"] for row in workers.values()),
         "workers": dict(sorted(workers.items())),
         "configured_unused_workers": sorted(name for name, row in workers.items()
                                             if row["configured"] and not row["task_count"]),

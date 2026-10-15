@@ -106,11 +106,13 @@ The driver uses Herdr's supported `PI_CODING_AGENT_DIR` override with an empty d
 
 Historical evidence keeps its original source attribution. Moving the driver changes its hash; it does not retroactively change which code an earlier run exercised. The CLI itself is unchanged by the relocation.
 
-`review_loop.py` controls `horch` directly; `controller_loop.py` tests an AI controller following `herdr-orchestrator`. Neither exercises the pstack rubric. Earlier controller/pstack development runs remain attributed to their original sources. GitHub Actions checks Python compatibility, configuration parsing, and installation into Claude Code, Codex, and Pi. Authenticated model E2Es run locally.
+`review_loop.py` controls `horch` directly; `controller_loop.py` tests an AI controller following `herdr-orchestrator`. Neither exercises the pstack rubric. Earlier controller/pstack development runs remain attributed to their original sources. GitHub Actions checks Python compatibility, configuration parsing, and installation into Claude Code, Codex, and Pi. Historical package CI also covered Python 3.11/3.14, installed-file comparisons, and regeneration from the then-pinned upstream source. Authenticated model E2Es run locally.
 
 ## Reproduce original skill discovery
 
 [upstream-frontmatter.json](evidence/upstream-frontmatter.json) records upstream frontmatter preservation, regeneration, installation, and native Pi/Codex catalogs. Its Phase A measured Pi model visibility and explicit expansion for `unslop` and `typescript-best-practices`, aborting before provider work, plus enabled Codex catalog entries. Codex explicit invocation, implicit selection, `paths:` activation, Claude Code runtime behavior, and model workflows were not measured; Codex/Claude invocation semantics are documented only. The local Pi probe script and extension are not distributed; those observations are supporting evidence, not an additional portable test command. The distributed `skill_catalogs.py` reproduces installation/catalog checks only.
+
+[upstream-sync-0.15.25.json](evidence/upstream-sync-0.15.25.json) records the current 56-entry pstack 0.15.25 bundle installed from a local source copy, all 197 files preserved for Codex, Pi, and Claude Code after that copy was deleted, and native Pi/Codex discovery. Claude Code installation was checked; native discovery was not measured.
 
 [upstream-sync-0.15.24.json](evidence/upstream-sync-0.15.24.json) records the 56-entry pstack 0.15.24 bundle installed from a local source copy, all 197 files preserved after that copy was deleted, and native Pi/Codex discovery. Regeneration from the pinned source, the upstream freshness check, and cleanup passed. The new `in-your-own-words` and `sharpen` entries were discovered; updated workflows and upstream scripts were source-reviewed but not exercised at runtime.
 
@@ -122,7 +124,7 @@ Historical evidence keeps its original source attribution. Moving the driver cha
 
 [bundled-install.json](evidence/bundled-install.json) records the historical 53-entry pstack 0.15.15 bundle installed from a commit-pinned GitHub URL, all 190 files preserved, native Pi/Codex discovery, and a separate local installation checked after its temporary source was deleted. It retains its exact source/driver hashes and cleanup.
 
-[skill-discovery.json](evidence/skill-discovery.json) records the real 56-entry Pi/Codex catalog checks, preserved original content/resources/licenses, a fresh original `how` invocation with four delivered and closed workers, and real current/older-pin upstream comparisons. The receipt discloses the evaluation controller's corrected tab placement, the user's mid-run role change, and the limited scope of the source walkthrough. The trace review was manual; full transcripts remain private. These results do not validate other original workflows.
+[skill-discovery.json](evidence/skill-discovery.json) records the real 56-entry Pi/Codex catalog checks, preserved original content/resources/licenses, a fresh original `how` invocation with four delivered and closed workers (a Pi controller; three explorer tasks and one explainer task), and real current/older-pin upstream comparisons. The receipt discloses the evaluation controller's corrected tab placement, the user's mid-run role change, and the limited scope of the source walkthrough. The trace review was manual; full transcripts remain private. These results do not validate other original workflows.
 
 The current bundle is installed in one command. For an isolated installation, use a new directory and omit `-g`:
 

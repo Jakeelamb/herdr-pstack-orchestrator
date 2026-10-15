@@ -199,7 +199,7 @@ Wait for `state: "done"` before consuming a result. A worker can write files whi
 
 ## Optional: original pstack through Herdr
 
-The adapter tracks [original pstack](https://github.com/cursor/plugins/tree/e5136d82418d2db3165ea1050d17577cd618cc05/pstack) 0.15.25. The bundle contains 56 installable entries: 51 pstack skills, three team-kit dependencies, and two Herdr adapters. It preserves supporting files and licenses. Workflow entries load the Herdr mapping; pure guidance keeps its original body.
+The adapter tracks [original pstack](https://github.com/cursor/plugins/tree/e5136d82418d2db3165ea1050d17577cd618cc05/pstack) 0.15.25. The bundle contains 56 installable entries: 51 pstack skills, three team-kit dependencies, and two Herdr adapters. It preserves supporting files and licenses. The nineteen adapted workflow entries load the Herdr mapping; other upstream skills keep their complete original `SKILL.md`, including frontmatter.
 
 After installation, start a fresh session and invoke a skill directly:
 
@@ -208,7 +208,7 @@ Use poteto-mode for this goal: ...
 Done means: ...
 ```
 
-You can also ask `Use interrogate to review this branch.` Independent skills such as `unslop` are discoverable too. Review conflicts with existing skill names when installing. The bundle removes upstream explicit-only flags so harnesses can select skills implicitly. It excludes Cursor-specific `make-bot-ui`, `poteto-help`, and `setup-pstack`; role setup uses `workers.toml`. See the [selection and compatibility notes](skills/pstack-herdr/references/compatibility.md).
+You can also ask `Use interrogate to review this branch.` Independent skills such as `unslop` remain installed with upstream's explicit-only flag. Invoke them with `/skill:unslop` in Pi, `$unslop` in Codex (or select through `/skills`), or `/unslop` in Claude Code. Pi hides them from implicit model selection but keeps their commands; Codex lists them as enabled, though its implicit-selection behavior was not measured. Claude Code's explicit-only behavior is documented, not runtime measured. Review conflicts with existing skill names when installing. It excludes Cursor-specific `make-bot-ui`, `poteto-help`, and `setup-pstack`; role setup uses `workers.toml`. See the [selection and compatibility notes](skills/pstack-herdr/references/compatibility.md).
 
 All three controller harnesses read roles directly from `workers.toml`. Configure only the roles the chosen workflow needs. For the implementation/review loop:
 

@@ -76,7 +76,7 @@ def prepare(source, output):
                 "For setup-pstack, use the adapter's role setup instead of the original "
                 "Cursor rule-writing procedure.\n"
             )
-        entries.append((path, portable_skill(path, preamble), bool(preamble)))
+        entries.append((path, portable_skill(path, preamble) if preamble else None, bool(preamble)))
 
     for name in ("herdr-orchestrator", "pstack-herdr"):
         if not (ADAPTER.parent / name / "SKILL.md").is_file():
@@ -87,7 +87,8 @@ def prepare(source, output):
     for path, content, adapted_entry in entries:
         target = output / "skills" / path.parent.name
         shutil.copytree(path.parent, target)
-        (target / "SKILL.md").write_text(content)
+        if adapted_entry:
+            (target / "SKILL.md").write_text(content)
         group = path.relative_to(source).parts[0]
         shutil.copyfile(source / group / "LICENSE", target / "UPSTREAM-LICENSE.txt")
         records.append({"name": path.parent.name, "adapted": adapted_entry,

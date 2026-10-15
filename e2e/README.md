@@ -87,7 +87,7 @@ The driver uses Herdr's supported `PI_CODING_AGENT_DIR` override with an empty d
 ## Evidence and source attribution
 
 - [controller-e2e.json](evidence/controller-e2e.json): a fresh invocation of the final driver passed 47/47 in 736.836 seconds. The six-task scenario, original transcript audit, source/configuration integrity, and actual pane cleanup passed together. Six yielded waits resumed through 23 handle calls, with no short caps. This supersedes the earlier verification gap without changing the historical failed receipts.
-- [check-workers.json](evidence/check-workers.json): a fresh 37/37 worker-setup pass with real Pi workers, including the `horch stats` phase and a worker closed while running.
+- [check-workers.json](evidence/check-workers.json): a fresh 44/44 worker-setup pass with real Pi workers, including the `horch stats` phase and a worker closed while running.
 - [workspace-limits.json](evidence/workspace-limits.json): a fresh 49/49 workspace-quota pass, five real Pi tasks across two workspaces sharing one task store.
 - [invalid-task-records.json](evidence/invalid-task-records.json): a fresh 101/101 pass over planted invalid records with real Pi tasks, including a two-worker `check` beside the malformed record.
 - [pi-preflight.json](evidence/pi-preflight.json): 15/15 real integration-preflight and worker-delivery checks, with missing integration rejected in about 0.05 seconds before allocation.

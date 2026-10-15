@@ -166,7 +166,7 @@
     "local_adapters": 2,
     "adapted": 19,
     "non_adapted_byte_identical_to_upstream": 35,
-    "adapted_unchanged_from_base": 19,
+    "adapted_unchanged_from_base": 0,
     "retained_explicit_only": 32
   },
   "checks": {
@@ -179,11 +179,18 @@
     "compileall": true,
     "regeneration_diff_empty": true,
     "non_adapted_byte_identical": true,
-    "adapted_unchanged": true
+    "adapted_unchanged": false
   },
   "installed_files": 197,
   "file_differences": [],
-  "installed_tree_sha256": "12ca98fe13485ad7f634930316169e7fc0b335f4b4204d347ade6cd7af636c3e",
+  "installed_tree_sha256": "aee50d227525e389a0efd832cf21db24dcccb1c3387ed469a66708bf34220e90",
+  "review_fix_verification": {
+    "source_parent_revision": "e76103cb99ad008d1bb8191eb5e4a2b798584579",
+    "changes": "All 19 adapted preambles now resolve named siblings via ../<name>/SKILL.md; original bodies are unchanged. Bundled compatibility documentation now distinguishes documented invocation and the non-dispatching fan-out boundary.",
+    "prior_installed_tree_sha256": "12ca98fe13485ad7f634930316169e7fc0b335f4b4204d347ade6cd7af636c3e",
+    "checks": "Compilation, clean pinned-source regeneration, disposable worktree-source installation, all six full catalog assertions, and git diff --check passed again. Installed counts remain 56 entries and 197 files; Pi and Codex each discovered 56 entries.",
+    "phase_a": "Historical observations preserved unchanged; the explicit-expansion and model-visibility probes were not rerun."
+  },
   "driver_sha256": "32b9b7eabe38429a421ec0de0d92bdef8ac1e37c374db4a2acb3c5c8562e469f",
   "native_catalogs": {
     "pi": {

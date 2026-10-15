@@ -94,6 +94,6 @@ args = ["--permission-mode", "auto"]
 | `workers.<name>.effort` | Optional reasoning effort. |
 | `workers.<name>.description` | Optional string describing intended tasks and boundaries for the controller. |
 | `workers.<name>.args` | Optional extra arguments, such as permission flags. They come last. |
-| `roles` | Optional. Read only by the `pstack-herdr` skill. |
+| `roles` | Optional. Used by `pstack-herdr` for routing and `horch stats` to report unconfigured assignments. |
 
 A worker name matches `[a-z][a-z0-9-]{0,15}`. Task directories live in `$XDG_STATE_HOME/herdr-orchestrator/tasks/`, by default `~/.local/state/herdr-orchestrator/tasks/`, and stay until the user deletes them.

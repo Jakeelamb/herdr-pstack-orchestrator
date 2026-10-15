@@ -258,13 +258,17 @@ def default_state():
         "closed": False,
         "problem": None,
         "settled_at": None,
+        "first_done_at": None,
     }
 
 
 def mark_settled(state):
-    """Retain the first observation, including across an explicit recheck."""
+    """Retain independent first settlement and delivery observations across recheck."""
+    observed = iso_now()
     if state["state"] in SETTLED_STATES and not state.get("settled_at"):
-        state["settled_at"] = iso_now()
+        state["settled_at"] = observed
+    if state["state"] == "done" and not state.get("first_done_at"):
+        state["first_done_at"] = observed
 
 
 def load_state(directory):
@@ -292,7 +296,8 @@ def save_state(directory, state):
         merged = dict(current if current["closed"] or current["state"] == "done" else state)
         for key in ("closed", "saw_working", "long_notified"):
             merged[key] = bool(current[key] or state[key])
-        merged["settled_at"] = current["settled_at"] or state.get("settled_at")
+        for key in ("settled_at", "first_done_at"):
+            merged[key] = current[key] or state.get(key)
         mark_settled(merged)
         write_json(directory / "state.json", merged)
         state.update(merged)
@@ -1120,11 +1125,11 @@ def cmd_stats(args):
             spec = config["workers"].get(name)
             workers[name] = {
                 "configured": spec is not None,
-                **{key: spec.get(key) if spec else None for key in ("harness", "model", "effort")},
+                **{key: spec.get(key) if spec else None for key in ("harness", "model", "effort", "provider")},
                 "task_count": 0, "states": {}, "result_statuses": {},
-                "problem_count": 0, "problem_rate": None, "last_use": None,
+                "problem_count": 0, "problem_rate": None, "unclosed_running": 0, "last_use": None,
                 "workspaces": {}, "unknown_workspace_count": 0,
-                "duration_excluded_count": 0,
+                "duration_excluded_count": 0, "duration_samples": [],
             }
             samples[name] = ([], {})
         return workers[name]
@@ -1133,6 +1138,21 @@ def cmd_stats(args):
         worker_row(name)
     for task_id in all_task_ids():
         directory = task_dir(task_id)
+        # Missing files are normal during publication/removal; existing corrupt
+        # files remain diagnostic. Raw metadata is used only to narrow scope.
+        if not (directory / "task.json").exists():
+            continue
+        raw = read_json(directory / "task.json")
+        if isinstance(raw, dict):
+            workspace = raw.get("workspace_id")
+            if (args.workspace is not None and isinstance(workspace, str)
+                    and workspace != args.workspace):
+                continue
+            try:
+                if cutoff is not None and stats_timestamp(raw.get("created_at")) < cutoff:
+                    continue
+            except (ValueError, OverflowError):
+                pass
         try:
             task = load_task(directory, task_id)
             created = stats_timestamp(task["created_at"])
@@ -1145,6 +1165,8 @@ def cmd_stats(args):
         if ((args.workspace is not None and task.get("workspace_id") != args.workspace)
                 or (cutoff is not None and created < cutoff)):
             continue
+        if not (directory / "state.json").exists():
+            continue
         state = read_json(directory / "state.json")
         if (not isinstance(state, dict) or not isinstance(state.get("state"), str)
                 or state["state"] not in SETTLED_STATES | {"running"}):
@@ -1153,11 +1175,12 @@ def cmd_stats(args):
             continue
         result = read_json(directory / "result.json")
         minutes, source = None, None
-        if state["state"] == "done" and validate_result(result, task) == "valid":
+        valid_result = state["state"] == "done" and validate_result(result, task) == "valid"
+        if valid_result:
             try:
-                if state.get("settled_at") is not None:
-                    ended = stats_timestamp(state["settled_at"])
-                    source = "settled_at"
+                if state.get("first_done_at") is not None:
+                    ended = stats_timestamp(state["first_done_at"])
+                    source = "first_done_at"
                 else:
                     ended = datetime.fromtimestamp((directory / "result.json").stat().st_mtime, timezone.utc)
                     source = "result_mtime"
@@ -1173,7 +1196,8 @@ def cmd_stats(args):
         name = ("closed_before_done" if state.get("closed") and state["state"] not in SETTLED_STATES
                 else state["state"])
         row["states"][name] = row["states"].get(name, 0) + 1
-        row["problem_count"] += name not in {"done", "closed_before_done"}
+        row["problem_count"] += name in SETTLED_STATES - {"done"}
+        row["unclosed_running"] += name == "running"
         last = row["last_use"]
         if last is None or created > stats_timestamp(last):
             row["last_use"] = created.isoformat().replace("+00:00", "Z")
@@ -1183,7 +1207,7 @@ def cmd_stats(args):
         else:
             row["workspaces"][workspace] = row["workspaces"].get(workspace, 0) + 1
         if name == "done":
-            if validate_result(result, task) == "valid":
+            if valid_result:
                 status = result["status"]
                 row["result_statuses"][status] = row["result_statuses"].get(status, 0) + 1
             if minutes is None:
@@ -1193,8 +1217,11 @@ def cmd_stats(args):
             values.append(minutes)
             sources[source] = sources.get(source, 0) + 1
             timings.append(minutes)
+            row["duration_samples"].append({"task_id": task_id, "minutes": minutes,
+                                            "endpoint_source": source})
     for name, row in workers.items():
-        row["problem_rate"] = row["problem_count"] / row["task_count"] if row["task_count"] else None
+        settled_count = row["problem_count"] + row["states"].get("done", 0)
+        row["problem_rate"] = row["problem_count"] / settled_count if settled_count else None
         row["duration_minutes"] = duration_summary(*samples[name])
 
     def above(threshold):
@@ -1211,9 +1238,10 @@ def cmd_stats(args):
                                             if row["configured"] and not row["task_count"]),
         "roles_with_unconfigured_workers": missing_roles,
         "invalid_task_ids": invalid,
-        "notify_after_minutes": {"timed_task_count": len(timings),
-                                 "current": above(config["notify_after_minutes"]),
-                                 "thresholds": [above(n) for n in (15, 30, 45, 60, 90)]},
+        "delivered_duration_estimate": {"timed_task_count": len(timings),
+                                        "current": above(config["notify_after_minutes"]),
+                                        "thresholds": [above(n) for n in (15, 30, 45, 60, 90)
+                                                       if n != config["notify_after_minutes"]]},
     })
 
 
@@ -1386,7 +1414,7 @@ def cmd_check(args):
     deadline = time.monotonic() + args.max_seconds
     pending = list(names)
     started = {}
-    settled_at = {}
+    settled_times = {}
     capacity_invalid = set()
     while pending or any(not info["state"]["closed"] and info["state"]["state"] not in SETTLED_STATES
                          for info, _ in started.values()):
@@ -1402,15 +1430,15 @@ def cmd_check(args):
             info = make_info(run["task_id"])
             started[name] = (info, began)
             if info["state"]["closed"] or info["state"]["state"] in SETTLED_STATES:
-                settled_at[name] = time.monotonic()
+                settled_times[name] = time.monotonic()
         waiting = [info for info, _ in started.values()
                    if not info["state"]["closed"] and info["state"]["state"] not in SETTLED_STATES]
         if time.monotonic() >= deadline or (not waiting and pending):
             break  # out of time, or problem panes hold every slot
         wait_until_change(waiting, config, deadline - time.monotonic())
         for name, (info, _) in started.items():
-            if name not in settled_at and (info["state"]["closed"] or info["state"]["state"] in SETTLED_STATES):
-                settled_at[name] = time.monotonic()
+            if name not in settled_times and (info["state"]["closed"] or info["state"]["state"] in SETTLED_STATES):
+                settled_times[name] = time.monotonic()
     for name in names:
         if name not in started:
             message = ("check wait limit reached before this worker could start" if time.monotonic() >= deadline
@@ -1439,7 +1467,7 @@ def cmd_check(args):
             "ok": state == "done" and status == "completed" and info["state"]["closed"]
                   and result_verdict(info["dir"], info["task"]) == "valid",
             "pane_id": None if info["state"]["closed"] else info["task"]["pane_id"],
-            "seconds": round(settled_at.get(name, time.monotonic()) - began),
+            "seconds": round(settled_times.get(name, time.monotonic()) - began),
             "message": message,
         })
 

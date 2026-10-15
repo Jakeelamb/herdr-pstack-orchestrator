@@ -268,7 +268,8 @@ class Run:
         wall_end = time.time()
         unused = next(f'stats-unused{i}' for i in range(len(self.workers) + 1)
                       if f'stats-unused{i}' not in self.workers)
-        self.workers[unused] = dict(self.workers[names[0]])
+        self.workers[unused] = {'harness': 'pi', 'model': 'stats-model',
+                                'effort': 'high', 'provider': 'stats-provider'}
         self.configure(1)
         unknown = next(f'stats-removed{i}' for i in range(len(self.workers) + 1)
                        if f'stats-removed{i}' not in self.workers)
@@ -291,6 +292,9 @@ class Run:
                 'task_id': task_id, 'nonce': 'stats-fixture', 'status': 'blocked',
                 'summary': 'fixture', 'files': [], 'question': 'Fixture specification question?'}))
             os.utime(directory / 'result.json', (wall_end - 900, wall_end - 900))
+        # Top-level threshold and a dangling role, without changing worker definitions.
+        self.config.write_text('notify_after_minutes = 20\n' + self.config.read_text()
+                               + f'\n[roles]\nreview = ["{unknown}"]\n')
         before = {str(p.relative_to(self.root)): sha(p) for p in self.root.rglob('*')
                   if p.is_file() and self.diagnostics not in p.parents}
         proc = self.cli('stats')
@@ -312,8 +316,8 @@ class Run:
         self.check('C043 stats delivered result statuses exclude exited probe', all(
             obj['workers'][n]['result_statuses'] == {'completed': 1} for n in names for obj in (whole, scoped))
             and whole['workers'][unknown]['result_statuses'] == {'blocked': 1})
-        self.check('C044 stats invalid record listed and excluded in both scopes',
-                   whole['invalid_task_ids'] == scoped['invalid_task_ids'] == [invalid_id])
+        self.check('C044 stats invalid record listed globally and excluded from other workspace',
+                   whole['invalid_task_ids'] == [invalid_id] and scoped['invalid_task_ids'] == [])
         self.check('C045 stats removed worker is unconfigured and workspace filtered',
                    whole['workers'][unknown]['configured'] is False
                    and whole['workers'][unknown]['task_count'] == 1 and unknown not in scoped['workers']
@@ -326,7 +330,9 @@ class Run:
         states = {t: read(self.store / t / 'state.json') for t in real}
         self.check('C047 new records retain observed first settlement timestamps', all(
             self.wall_started - 1 <= datetime.fromisoformat(s['settled_at'].replace('Z', '+00:00')).timestamp() <= wall_end
-            for s in states.values()))
+            for s in states.values()) and all(
+                self.wall_started - 1 <= datetime.fromisoformat(s['first_done_at'].replace('Z', '+00:00')).timestamp() <= wall_end
+                for s in states.values() if s['state'] == 'done'))
         bounds = {}
         for task_id, record in real.items():
             if states[task_id]['state'] != 'done':
@@ -339,7 +345,7 @@ class Run:
         self.observations['stats_duration_bounds_minutes'] = bounds
         self.check('C048 stats durations fit independently observed filesystem bounds', all(
             obj['workers'][n]['duration_minutes']['sample_size'] == 1
-            and obj['workers'][n]['duration_minutes']['sources'] == {'settled_at': 1}
+            and obj['workers'][n]['duration_minutes']['sources'] == {'first_done_at': 1}
             and obj['workers'][n]['duration_minutes']['max'] <= (wall_end - self.wall_started + 1) / 60
             and all(bounds[n][0] <= obj['workers'][n]['duration_minutes'][key] <= bounds[n][1]
                     for key in ('median', 'p90', 'max')) for n in names for obj in (whole, scoped))
@@ -353,8 +359,8 @@ class Run:
         self.check('C050 stats workspace counts and reminder denominator match deliveries',
                    all(scoped['workers'][n]['workspaces'] == {
                        self.workspace['workspace_id']: 2 if n == names[0] else 1} for n in names)
-                   and whole['notify_after_minutes']['timed_task_count'] == len(names) + 1
-                   and scoped['notify_after_minutes']['timed_task_count'] == len(names))
+                   and whole['delivered_duration_estimate']['timed_task_count'] == len(names) + 1
+                   and scoped['delivered_duration_estimate']['timed_task_count'] == len(names))
         after = {str(p.relative_to(self.root)): sha(p) for p in self.root.rglob('*')
                  if p.is_file() and self.diagnostics not in p.parents}
         self.check('C051 stats leaves isolated config and task store unchanged', before == after)
@@ -375,12 +381,16 @@ class Run:
                    state['state'] == 'running' and not state['closed']
                    and not (directory / 'result.json').exists()
                    and self.records()[task_id]['pane_id'] in self.panes())
+        inflight = json.loads(self.cli('stats').stdout)['workers'][names[0]]
+        self.check('C062 running work is in flight, not a settled problem',
+                   inflight['unclosed_running'] == 1 and inflight['states']['running'] == 1
+                   and inflight['problem_count'] == 1 and inflight['problem_rate'] == 0.5)
         proc = self.cli('close', task_id)
         self.rows('cancel_close', proc)
         state = read(directory / 'state.json')
         self.check('C054 close cancels running probe without settling it',
                    proc.returncode == 0 and state['closed'] is True and state['state'] == 'running'
-                   and state.get('settled_at') is None
+                   and state.get('settled_at') is None and state.get('first_done_at') is None
                    and self.records()[task_id]['pane_id'] not in self.panes())
         for check_id, label, previous, argv in (
                 ('C055', 'stats_after_cancel', whole, ()),
@@ -389,7 +399,7 @@ class Run:
             current = json.loads(proc.stdout)
             self.observations[label] = current
             # Compare the entire output: only the cancellation count, task totals,
-            # workspace count, last-use and the all-task problem denominator change.
+            # workspace count and last-use change; settled problem rate is unchanged.
             expected = json.loads(json.dumps(previous))
             expected['task_count'] += 1
             row = expected['workers'][names[0]]
@@ -397,9 +407,69 @@ class Run:
             row['states']['closed_before_done'] = 1
             row['workspaces'][self.workspace['workspace_id']] += 1
             row['last_use'] = self.records()[task_id]['created_at']
-            row['problem_rate'] = row['problem_count'] / row['task_count']
             self.check(f'{check_id} {label} counts cancellation, not running or problems',
                        proc.returncode == 0 and current == expected)
+
+        self.check('C057 fixed thresholds use strict greater-than and nondefault current', all(
+            obj['delivered_duration_estimate'] == {
+                'timed_task_count': len(names) + extra,
+                'current': {'minutes': 20, 'count': extra, 'share': extra / (len(names) + extra)},
+                'thresholds': [{'minutes': t, 'count': extra if t < 45 else 0,
+                                'share': (extra if t < 45 else 0) / (len(names) + extra)}
+                               for t in (15, 30, 45, 60, 90)]}
+            for obj, extra in ((whole, 1), (scoped, 0))))
+        self.check('C058 worker facts and dangling roles match configuration', all(
+            whole['workers'][n][key] == self.workers[n].get(key)
+            for n in self.workers for key in ('harness', 'model', 'effort', 'provider'))
+            and whole['roles_with_unconfigured_workers'] == {'review': [unknown]})
+
+        # Extend the existing fixture worker with recovered and old deliveries.
+        # Fixed 10, 45, 85 minute samples distinguish median from mean, p90
+        # from median, first-done from first-problem, and days from whole-store.
+        extra_ids = [f't-{n:06x}' for n in range(1, len(self.records()) + 5)
+                     if f't-{n:06x}' not in self.records()][:2]
+        for task_id, minutes, age in zip(extra_ids, (10, 85), (7200, 3 * 86400)):
+            directory = self.store / task_id
+            directory.mkdir()
+            start = wall_end - age
+            stamp = lambda seconds: datetime.fromtimestamp(seconds, timezone.utc).isoformat()
+            task = dict(fixture, task_id=task_id, created_at=stamp(start),
+                        result_path=str(directory / 'result.json'))
+            (directory / 'task.json').write_text(json.dumps(task))
+            (directory / 'state.json').write_text(json.dumps({
+                'state': 'done', 'closed': True, 'settled_at': stamp(start + 60),
+                'first_done_at': stamp(start + minutes * 60)}))
+            (directory / 'result.json').write_text(json.dumps({
+                'task_id': task_id, 'nonce': 'stats-fixture', 'status': 'completed',
+                'summary': 'fixture', 'files': [], 'question': None}))
+        extended = json.loads(self.cli('stats').stdout)
+        recent = json.loads(self.cli('stats', '--days', '1').stdout)
+        self.observations['stats_extended'] = extended
+        self.observations['stats_recent'] = recent
+        self.check('C059 multi-sample median and nearest-rank p90 use first-done endpoints',
+                   extended['workers'][unknown]['duration_minutes'] == {
+                       'sample_size': 3, 'median': 45.0, 'p90': 85.0, 'max': 85.0,
+                       'sources': {'first_done_at': 2, 'result_mtime': 1}}
+                   and extended['workers'][unknown]['duration_samples'] == sorted([
+                       {'task_id': removed_id, 'minutes': 45.0, 'endpoint_source': 'result_mtime'},
+                       *[{'task_id': t, 'minutes': m, 'endpoint_source': 'first_done_at'}
+                         for t, m in zip(extra_ids, (10.0, 85.0))]], key=lambda s: s['task_id']))
+        self.check('C060 days scope excludes old delivery and recomputes percentiles',
+                   recent['task_count'] == extended['task_count'] - 1
+                   and recent['scope']['days'] == 1 and recent['scope']['created_since'] is not None
+                   and recent['workers'][unknown]['duration_minutes'] == {
+                       'sample_size': 2, 'median': 27.5, 'p90': 45.0, 'max': 45.0,
+                       'sources': {'first_done_at': 1, 'result_mtime': 1}})
+        # A current threshold equal to a standard bucket must appear exactly once.
+        self.config.write_text(self.config.read_text().replace('notify_after_minutes = 20',
+                                                             'notify_after_minutes = 45'))
+        dedup = json.loads(self.cli('stats').stdout)['delivered_duration_estimate']
+        self.check('C061 current threshold is not duplicated and shares use fixed samples',
+                   dedup['current'] == {'minutes': 45, 'count': 1, 'share': 1 / (len(names) + 3)}
+                   and dedup['thresholds'] == [
+                       {'minutes': t, 'count': 2 if t < 45 else (1 if t < 85 else 0),
+                        'share': (2 if t < 45 else (1 if t < 85 else 0)) / (len(names) + 3)}
+                       for t in (15, 30, 60, 90)])
 
     def cleanup(self):
         if self.process is not None:

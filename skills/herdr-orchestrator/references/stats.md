@@ -18,29 +18,37 @@ Concurrent controllers can change records during the scan; it is not a snapshot.
 
 - `scope` records filters and cutoff; `task_count` totals valid in-scope records.
 - `workers` is keyed by names seen in scope or currently configured.
-  `configured`, `harness`, `model`, `effort` describe current configuration,
+  `configured`, `harness`, `model`, `effort`, `provider` describe current configuration,
   not necessarily the model used for historical tasks; arguments are omitted.
 - `task_count`, `states`, `result_statuses`: stored task states and valid,
   nonce-bound result statuses, only delivered (`done`) results for the latter.
   Early, missing, and invalid results are not counted as delivered outcomes.
 - Closed tasks whose stored state is not settled count as `states.closed_before_done` (cancellations), not `running`; closed settled tasks keep their outcomes.
-- `problem_count` and `problem_rate` count states other than `done` and `closed_before_done`, including unclosed running tasks; the rate divides by all in-scope tasks, including cancellations, and is not a model failure probability.
+- `unclosed_running` counts in-flight work separately. `problem_count` counts only
+  settled problem states; `problem_rate` divides by done + problems, excluding
+  running and cancellations. No settled outcomes means null, not zero.
 - `last_use` is the latest created_at; `workspaces` counts recorded workspace IDs.
   Legacy records contribute to `unknown_workspace_count`, not workspace filters.
 - `duration_minutes`: sample_size, median, nearest-rank p90, max, and `sources`
   counts for done tasks with valid results (any result status). Prefer the first
-  observed `settled_at` in state.json; legacy records use result.json mtime.
+  observed `first_done_at` in state.json; legacy records use result.json mtime.
+  `duration_samples` identifies each task's minutes and `endpoint_source`.
   `duration_excluded_count` counts done records without usable results/timing.
   Negative/future endpoints and malformed timestamps are excluded.
 - `configured_unused_workers` lists configured names with zero tasks in scope;
   `roles_with_unconfigured_workers` maps roles to missing assigned names.
 - `invalid_task_ids` lists malformed task/state records excluded from numbers.
-  Invalid task.json IDs are listed even when their scope cannot be established;
-  invalid states are listed within known scope. Disappearing records are skipped.
-- `notify_after_minutes` gives timed_task_count and count/share strictly above
-  the current threshold and 15, 30, 45, 60, 90 minutes. The denominator is the
-  same completed duration sample, not active elapsed times. Empty rates and
-  percentiles are null; empty counts are zero.
+  Known raw workspace/date metadata narrows invalid-record scope; unknown scope
+  remains visible. Missing task/state files during publication/removal are skipped.
+- `reminder_fired` counts in-scope tasks with stored `long_notified: true`, per
+  worker and in total; unlike the delivered-duration estimate, this flag records
+  only reminders where a `wait` observed the task past the threshold configured
+  at that time.
+- `delivered_duration_estimate` gives timed_task_count and count/share strictly
+  above the configured reminder threshold (`current`) and 15/30/45/60/90 minutes
+  (`thresholds`, excluding current). This estimates delivered-duration tails,
+  not reminder firings or active elapsed times. Empty rates/percentiles are null;
+  empty counts are zero.
 
 ## Interpretation and configuration
 
@@ -48,7 +56,10 @@ Small samples can mislead; different task scopes are not controlled comparisons.
 A blocked result may be a real specification question. Provider faults behind
 result_missing are not evidence of poor model behavior. Durations include startup,
 notification/polling delays and any wait for observation; mtime fallback can shift
-if results are copied or rewritten. First settlement remains first after recheck.
+if results are copied or rewritten. `settled_at` retains first settlement even
+on problems; `first_done_at` independently retains first delivery after recovery.
+Observation and mtime samples are mixed: trends across this source switch are not
+strictly comparable.
 The store cannot show reviewer quality or cost.
 
 Knobs are `notify_after_minutes`, removing or redefining a worker, role assignments,

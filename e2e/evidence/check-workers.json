@@ -1,0 +1,224 @@
+{
+  "schema": "horch/check-workers-e2e/v1",
+  "verdict": "pass",
+  "scenario_complete": true,
+  "diagnostics": "<run>/diagnostics",
+  "source_hashes": {
+    "horch_sha256": "32fbad8e88dedf604d9e51407228ef11fa8c86cd7ba25cfe0754168f8f3d493f",
+    "driver_sha256": "bb314b167cf8198c8b6bca958709f826a4094194587e2b02ebe526268c49cc33"
+  },
+  "versions": {
+    "python": "3.14.7",
+    "herdr_cli": {
+      "exit_code": 0,
+      "version": "0.9.5"
+    },
+    "pi": {
+      "exit_code": 0,
+      "version": "1.2.0"
+    },
+    "herdr_server": {
+      "version": "0.9.5"
+    }
+  },
+  "workers": {
+    "glm-flash": {
+      "harness": "pi",
+      "model": "glm-5.3-flash",
+      "provider": "zai",
+      "effort": "max"
+    },
+    "gpt": {
+      "harness": "pi",
+      "model": "gpt-6.1-sol",
+      "provider": "openai",
+      "effort": "medium"
+    }
+  },
+  "batch_limit": 1,
+  "selections": [
+    "glm-flash",
+    "glm-flash",
+    "gpt"
+  ],
+  "rerun": [
+    "python3",
+    "e2e/check_workers.py",
+    "--worker",
+    "glm-flash",
+    "--worker",
+    "gpt",
+    "--cwd",
+    "<cwd>",
+    "--output",
+    "<output>",
+    "--max-seconds",
+    "300"
+  ],
+  "seconds": 55.811,
+  "observations": {
+    "batch": {
+      "exit_code": 0,
+      "rows": [
+        {
+          "worker": "glm-flash",
+          "task_id": "t-d228ff",
+          "state": "done",
+          "ok": true,
+          "pane_id": null,
+          "seconds": 30
+        },
+        {
+          "worker": "gpt",
+          "task_id": "t-77ed6d",
+          "state": "done",
+          "ok": true,
+          "pane_id": null,
+          "seconds": 20
+        }
+      ]
+    },
+    "batch_lifecycle": [
+      {
+        "task_id": "t-d228ff",
+        "published_ns": 1792059741192961268,
+        "closed_ns": 1792059770813505085
+      },
+      {
+        "task_id": "t-77ed6d",
+        "published_ns": 1792059770824698897,
+        "closed_ns": 1792059790439497398
+      }
+    ],
+    "zero_slots": {
+      "exit_code": 0,
+      "rows": [
+        {
+          "worker": "glm-flash",
+          "task_id": null,
+          "state": "not_checked",
+          "ok": false,
+          "pane_id": null,
+          "seconds": null
+        },
+        {
+          "worker": "gpt",
+          "task_id": null,
+          "state": "not_checked",
+          "ok": false,
+          "pane_id": null,
+          "seconds": null
+        }
+      ]
+    },
+    "injected_exit": {
+      "exit_code": 0,
+      "rows": [
+        {
+          "worker": "glm-flash",
+          "task_id": "t-368c76",
+          "state": "exited",
+          "ok": false,
+          "pane_id": "wD:p4",
+          "seconds": 6
+        }
+      ]
+    },
+    "exhausted_budget": {
+      "exit_code": 0,
+      "rows": [
+        {
+          "worker": "glm-flash",
+          "task_id": null,
+          "state": "not_checked",
+          "ok": false,
+          "pane_id": null,
+          "seconds": null
+        }
+      ]
+    }
+  },
+  "assertions": [
+    {
+      "name": "C001 check exits successfully",
+      "ok": true
+    },
+    {
+      "name": "C002 selected workers deduplicated in order",
+      "ok": true
+    },
+    {
+      "name": "C003 all workers deliver done and ok",
+      "ok": true
+    },
+    {
+      "name": "C004 exactly one real task per unique selection",
+      "ok": true
+    },
+    {
+      "name": "C005 every batch task closed and done",
+      "ok": true
+    },
+    {
+      "name": "C006 check leaves exactly baseline panes",
+      "ok": true
+    },
+    {
+      "name": "C007 matching completion identities",
+      "ok": true
+    },
+    {
+      "name": "C008 isolated tasks retain selected models and workspace",
+      "ok": true
+    },
+    {
+      "name": "C009 each reservation begins after previous slot release",
+      "ok": true
+    },
+    {
+      "name": "C010 zero slots report complete skip fields",
+      "ok": true
+    },
+    {
+      "name": "C011 zero slots allocate nothing",
+      "ok": true
+    },
+    {
+      "name": "C020 exit probe reaches acknowledged worker",
+      "ok": true
+    },
+    {
+      "name": "C021 worker exit has concrete diagnostic",
+      "ok": true
+    },
+    {
+      "name": "C022 exit probe creates exactly one task",
+      "ok": true
+    },
+    {
+      "name": "C030 exhausted budget skips with wait-limit reason",
+      "ok": true
+    },
+    {
+      "name": "C031 exhausted budget allocates nothing",
+      "ok": true
+    },
+    {
+      "name": "C100 all owned worker panes removed",
+      "ok": true
+    },
+    {
+      "name": "owned workspace cleanup confirmed",
+      "ok": true
+    },
+    {
+      "name": "real configuration unchanged",
+      "ok": true
+    },
+    {
+      "name": "verified sources unchanged",
+      "ok": true
+    }
+  ],
+  "problem_category": null
+}

@@ -22,6 +22,17 @@ Read the printed `evidence.json`: require a passing verdict, expected initial FA
 
 This makes real model calls and tests `horch` directly, not an AI controller or pstack rubric. A newly created worktree can need its own Pi trust decision; report a blocked startup without submitting input to the dialog. A historical passing receipt does not prove a new run passed.
 
+## Worker setup checks
+
+Select at least two distinct authenticated configured workers (mixed harnesses are optional). Use an already trusted checkout and the shared Doctor; verify the actual caller pane before running:
+
+```bash
+python3 e2e/check_workers.py --worker "$worker_a" --worker "$worker_b" \
+  --cwd "$repo" --output "$proof"
+```
+
+The driver creates a dedicated workspace and isolated state, repeats the first worker selection, and forces batching with one slot. Require all 20 behavioral receipt assertions (19 existing checks plus reservation ordering, excluding the former completion marker): deduplication bound to the sent selection, strictly ordered task-publication/previous-closure filesystem timestamps, valid nonce-bound results, no leaked panes before teardown, zero-slot skips, the deliberately injected acknowledged-worker exit, exhausted-budget skips, source/configuration integrity and owned cleanup. Inspect the printed sanitized `evidence.json`; preserve failures without retrying another model or clearing dialogs. No pane transcripts are captured. The verdict also requires full scenario completion. Herdr CLI and running-server versions are recorded separately. Known paths, including cwd/output and rerun arguments, are replaced; free-form message/error diagnostics are omitted. Retained config/task state and command/failure diagnostics outside the checkout are private, not publication artifacts; only their placeholder location is in the receipt. Coarse/equal lifecycle timestamps fail closed. This directly exercises `horch check`, not an AI controller.
+
 ## Workspace worker limits
 
 For quota changes, select one authenticated worker from the existing configuration and use a trusted checkout. The driver creates two temporary workspaces with their own caller panes, a shared isolated task store, and a two-slot limit in each workspace:

@@ -31,6 +31,7 @@ jobs:
           python scripts/check_upstream.py --help
           python e2e/review_loop.py --help
           python e2e/workspace_limits.py --help
+          python e2e/check_workers.py --help
           python e2e/pi_startup.py --help
           python e2e/pi_preflight.py --help
           python e2e/controller_loop.py --help

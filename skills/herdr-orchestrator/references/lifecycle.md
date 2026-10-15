@@ -52,7 +52,7 @@ If inspection shows a previously unacknowledged task started, or the user cleare
 
 When `done` has `closed: false`, read `message` and retry `horch close <task-id>`. The worker slot remains occupied until closure is confirmed. Closing an unfinished worker cancels it and cannot satisfy a completion or review gate.
 
-A pane-placement error can leave an empty pane when Herdr's response was lost. No worker has started at that point. Inspect Herdr before removing it; never close an unrelated pane. A `task_invalid` record requires inspection of its task directory before repair or removal. `list` reports corrupt records without hiding healthy history.
+A pane-placement error can leave an empty pane when Herdr's response was lost. No worker has started at that point. Inspect Herdr before removing it; never close an unrelated pane. `list` reports `task_invalid` records without hiding healthy history. Each unclosed invalid record reserves one slot in every caller workspace because its owner and pane are unknown; a full `run` returns `worker_limit`, naming the invalid IDs and `horch list`. `check` keeps polling its started tasks and starts pending workers as slots free; workers it cannot start are `not_checked`, with invalid IDs and `horch list` in their message when invalid records held capacity. No-ID `wait` skips them; targeted `wait` still returns `task_invalid`. `close` also returns `task_invalid`: check `herdr pane list` for a leftover `horch` pane, then remove the task directory by hand. Nothing is deleted automatically.
 
 ## Task store and concurrency
 
@@ -66,4 +66,4 @@ A Pi worker waiting for its session signal can use the full 90-second startup bu
 
 `horch close` resolves the recorded pane directly, even from another workspace. Only explicit pane/tab/workspace-not-found responses establish that it is already gone; other Herdr errors leave cleanup unresolved.
 
-`check` batches at its caller workspace's `max_active_workers` and deduplicates repeated worker names. Each row has `worker`, `task_id`, `state`, `ok`, `pane_id`, `seconds`, and `message`. Workers that cannot start before the wait cap or have no free slot are `not_checked`, with null task, pane, and duration. Unfinished/problem tasks retain their panes; inspect `message` before acting.
+`check` batches at its caller workspace's `max_active_workers` and deduplicates repeated worker names. Each row has `worker`, `task_id`, `state`, `ok`, `pane_id`, `seconds`, and `message`. Workers that cannot start before the wait cap or have no free slot are `not_checked`, with null task, pane, and duration. Invalid reservations do not abort a batch: started tasks are still polled and pending workers launch as slots free. If invalid records held capacity, never-started workers' messages name those IDs and recommend `horch list`. Unfinished/problem tasks retain their panes; inspect `message` before acting.

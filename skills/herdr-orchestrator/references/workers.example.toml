@@ -49,7 +49,7 @@ model = "haiku"
 effort = "max" # passed as claude --effort
 args = ["--permission-mode", "auto"]
 
-# Optional. Read only by the pstack-herdr skill; horch itself ignores it.
+# Optional. pstack-herdr uses roles for routing; horch stats reports missing workers.
 # A single role names one worker from [workers]; a panel role lists one
 # worker per review task. Repeated names start separate fresh processes.
 [roles]

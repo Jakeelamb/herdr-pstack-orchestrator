@@ -21,16 +21,12 @@ Run coding agents from one conversation and inspect their work in [Herdr](https:
   <img alt="Your controller briefs an implementation worker, verifies its diff, and dispatches independent reviewers. After all reviewers finish, the controller assesses findings. Accepted findings go to a fresh fix worker and a fresh review panel; no unresolved blockers leads to a verified result." src="assets/workflow-light.svg" width="100%">
 </picture>
 
-The diagram shows an implementation and review loop. The optional `pstack-herdr` adapter also routes original pstack workflows through configured Herdr workers.
-
-[Download the interactive diagram](https://github.com/conscientiousness/herdr-pstack-orchestrator/raw/refs/heads/main/assets/workflow.html) and open it in your browser · [Diagram source and reproduction](assets/workflow.md)
-
 Two Agent Skills connect your controller to Pi, Codex CLI, and Claude Code. Each task gets a fresh process, a complete brief, and a structured result. The `horch` CLI uses Python's standard library and your authenticated agent CLIs.
 
 - `herdr-orchestrator` sets up workers and delegates tasks through the `horch` CLI.
-- `pstack-herdr` maps the bundled original pstack skills, roles, and delegation to Herdr. The controller coordinates the workflow; workers receive bounded assignments.
+- `pstack-herdr` maps the bundled original pstack skills, roles, and delegation to Herdr.
 
-Workers open in separate tabs labeled `horch`, at most four panes per tab, without taking focus or using the controller's tab. The controller creates separate git worktrees for writers and submits tasks through Herdr's agent API. Every follow-up starts a fresh worker.
+Workers open in separate tabs labeled `horch`, at most four panes per tab, without taking focus or using the controller's tab.
 
 ## Requirements
 
@@ -48,7 +44,7 @@ Install pstack and both Herdr adapters together:
 npx skills@1.7.1 add https://github.com/conscientiousness/herdr-pstack-orchestrator/tree/main/skills --skill '*'
 ```
 
-Choose your harnesses and installation scope, review any existing skill-name conflicts, then open a new agent session inside Herdr. The command installs the bundled skills and resources from this repository; no upstream clone or preparation step is needed. It installs from `main`; v0.2.0 predates this bundled layout.
+Choose harnesses and installation scope, review skill-name conflicts, then open a new agent session inside Herdr. The command installs the whole bundle from this repository's `main`; no upstream clone is needed, and v0.2.0 predates this layout.
 
 For delegation without pstack, install only the core skill:
 
@@ -78,7 +74,9 @@ HORCH_SCRIPT="$PWD/skills/herdr-orchestrator/scripts/horch.py"
 horch() { python3 "$HORCH_SCRIPT" "$@"; }
 ```
 
-Commands are `run`, `wait`, `list`, `close`, `detect`, and `check`. `detect` reports installed harnesses and Pi integration status; `check` runs real tasks with configured workers. Operational output is JSON; errors use `{"error": ..., "message": ...}` and exit status 1. See the [command guide](skills/herdr-orchestrator/SKILL.md#run-horch).
+Commands are `run`, `wait`, `list`, `close`, `detect`, `check`, and `stats`. `detect` reports installed harnesses and Pi integration status; `check` runs real tasks with configured workers. Operational output is JSON; operational errors use `{"error": ..., "message": ...}` and exit status 1. CLI help and argument errors use argparse output. See the [command guide](skills/herdr-orchestrator/SKILL.md#run-horch).
+
+`horch stats` summarizes stored worker performance without Herdr calls or writes; see [worker statistics](skills/herdr-orchestrator/references/stats.md).
 
 ## Quickstart
 
@@ -108,37 +106,35 @@ cp -i skills/herdr-orchestrator/references/workers.example.toml \
    ~/.config/herdr-orchestrator/workers.toml
 ```
 
-The example defines one worker per harness:
+The copied example defines one worker per harness (`glm`, `gpt`, `haiku`). Names and models are examples; read each worker's configured harness, because a name such as `gpt` does not imply Codex. Pi lists available models with `pi --list-models`.
 
-| Worker | Harness | Model and effort |
-|---|---|---|
-| `glm` | Pi | provider `zai`, `glm-5.3-flash`, thinking `max` |
-| `gpt` | Codex | `gpt-6.1-sol`, reasoning `medium` |
-| `haiku` | Claude Code | `haiku`, effort `max` |
+The controller never answers worker dialogs, so the permission flags you choose are the worker's authorization; automatic approval can still deny an action, and denial handling is unverified. Verified flag choices and dialog handling are in [setup and dialog handling](skills/herdr-orchestrator/references/setup.md).
 
-Worker names and models are examples. Read each worker's configured harness; a name such as `gpt` does not imply Codex. Pi lists available models with `pi --list-models`.
+Other keys are documented in [configuration](skills/herdr-orchestrator/references/setup.md#configuration):
 
-The controller never answers worker dialogs. Choose permission flags during setup. These modes completed real tasks on 2026-10-09:
+- `max_active_workers` (default 4) caps unclosed tasks per workspace. Controllers in the same workspace share that cap when they share the task store.
+- `notify_after_minutes` (default 180) reports elapsed time, not useful progress.
+- An optional `[roles]` table selects workers for pstack.
+- A worker can carry an optional `description` of its intended tasks.
 
-| Harness | Arguments |
-|---|---|
-| Pi | no per-tool approval by default; project-trust dialogs still apply |
-| Codex | `-s workspace-write -a on-request -c 'approvals_reviewer="auto_review"'` |
-| Codex | `-s workspace-write -a never` (writes in its cwd and the task directory) |
-| Claude Code | `--permission-mode auto` |
-| Claude Code | `--permission-mode acceptEdits` (shell commands outside the project can still prompt) |
-
-Automatic approval can deny an action; denial handling is unverified. A new location can also trigger a trust dialog. See [setup and dialog handling](skills/herdr-orchestrator/references/setup.md).
-
-`max_active_workers` defaults to 4 per workspace: two workspaces can each run four workers. Controllers in the same workspace share its limit when they use the same task store. `notify_after_minutes` defaults to 180; the notification reports elapsed time, not whether the worker is making useful progress. The optional `[roles]` table selects workers for pstack. Each worker can also have an optional `description` explaining its intended tasks; existing configurations need no changes. See [configuration](skills/herdr-orchestrator/references/setup.md#configuration).
-
-Task directories live under `~/.local/state/herdr-orchestrator/tasks/`, or the corresponding `$XDG_STATE_HOME` path. Briefs and results remain until you delete them. Controllers sharing that task store share the worker limit; workers execute concurrently after startup.
+Task directories live under `~/.local/state/herdr-orchestrator/tasks/`, or the corresponding `$XDG_STATE_HOME` path, until you delete them.
 
 ## How delegation works
 
-The controller chooses a configured Pi, Codex CLI, or Claude Code worker, sends a complete brief with `horch run`, and waits for its structured result with `horch wait`. It verifies the outcome before reporting back.
+The controller sends a complete brief with `horch run`, waits for the structured result with `horch wait`, and verifies the outcome before reporting back. Commands, waiting rules, and recovery are in the [herdr-orchestrator skill](skills/herdr-orchestrator/SKILL.md).
 
-A manual example: first create a separate checkout and branch for the writer. A worktree separates edits; it is not a security sandbox.
+`horch wait` has no default time cap. Run it in a background command or a yielded shell session so the controller can post updates while waiting; with blocking-only tools, use `--max-seconds 300` and a longer tool timeout. The cap ends the wait call, not the worker. For parallel work, launch each task first, then wait on the returned IDs.
+
+After `done`, read the separate `status` inside `result.json`: verify a `completed` claim, inspect a `failed` report, and relay a `blocked` question to the user, then start a fresh task with their answer. A `blocked` status means the worker delivered a question and its turn ended. A `blocked` task state means the worker is stopped at a dialog, and the pane stays open for inspection.
+
+`horch wait` withholds summaries, files, and questions until the turn ends, so wait for `done` before consuming a result. A worker can write files while it runs, and closing a running worker cancels it. The full state and status tables and the recovery steps are in [task lifecycle and recovery](skills/herdr-orchestrator/references/lifecycle.md).
+
+The Quickstart delegates through the agent skill. To drive `horch` by hand instead, use the manual example below.
+
+<details>
+<summary>Manual delegation example, driving <code>horch</code> by hand</summary>
+
+First create a separate checkout and branch for the writer. A worktree separates edits; it is not a security sandbox.
 
 ```bash
 git -C ~/src/myapp worktree add ~/src/myapp-fix-login -b fix/login
@@ -170,36 +166,20 @@ horch run gpt --brief /tmp/fix-login.md --cwd ~/src/myapp-fix-login
 horch wait t-0a1b2c  # use the task_id returned by run
 ```
 
-`horch wait` has no default time cap. Use a background command or yielded shell session so the controller can post updates while waiting. For blocking-only tools, use `--max-seconds 300` with a longer tool timeout, or a shorter cap if the runtime requires it. The cap ends the wait call, not the worker.
-
-For parallel work, launch each task before waiting on all returned IDs. Handle each state change, then keep waiting for unfinished tasks. After `done`, read `result.json` and its listed files; file paths are relative to the result directory.
-
-## Task states and result status
-
-`horch wait` reports observed task states; `horch list` shows stored states without polling workers:
+`horch wait` reports task states:
 
 | State | Meaning |
 |---|---|
 | `running` | The worker is working. |
-| `long_running` | One-time `wait` notification after `notify_after_minutes`; the stored state remains `running`. |
-| `done` | Turn ended with a valid `result.json`; check `closed` and `message` for pane cleanup. |
+| `long_running` | A one-time notification after `notify_after_minutes`, not a state change. |
+| `done` | The turn ended with a valid `result.json`. |
 | `blocked`, `start_failed`, `not_started`, `exited`, `result_missing`, `result_invalid` | Problems; the pane stays open for inspection. |
 
-After `done`, read the separate `status` inside `result.json`:
-
-| Task state | Result status | Next action |
-|---|---|---|
-| `done` | `completed` | Verify the worker's claimed success and any review verdict. |
-| `done` | `failed` | Inspect and report the worker's failure. |
-| `done` | `blocked` | Relay the worker's question, then start a fresh task with the answer. |
-
-Read the diff, run the tests, or request an independent review before accepting the work. A delivered review can still find blocking defects.
-
-Wait for `state: "done"` before consuming a result. A worker can write files while its turn is still running, so `horch wait` withholds result summaries, files, and questions until completion. Closing a running worker cancels it; it does not complete the task or satisfy a review gate.
+</details>
 
 ## Optional: original pstack through Herdr
 
-The adapter tracks [original pstack](https://github.com/cursor/plugins/tree/e5136d82418d2db3165ea1050d17577cd618cc05/pstack) 0.15.25. The bundle contains 56 installable entries: 51 pstack skills, three team-kit dependencies, and two Herdr adapters. It preserves supporting files and licenses. The nineteen adapted workflow entries load the Herdr mapping; other upstream skills keep their complete original `SKILL.md`, including frontmatter.
+The adapter tracks [original pstack](https://github.com/cursor/plugins/tree/e5136d82418d2db3165ea1050d17577cd618cc05/pstack) 0.15.25 and bundles 56 installable entries: 51 pstack skills, three team-kit dependencies, and two Herdr adapters, with supporting files and licenses preserved. Nineteen adapted workflow entries load the Herdr mapping; the rest keep their complete original `SKILL.md`.
 
 After installation, start a fresh session and invoke a skill directly:
 
@@ -208,7 +188,7 @@ Use poteto-mode for this goal: ...
 Done means: ...
 ```
 
-You can also ask `Use interrogate to review this branch.` Independent skills such as `unslop` remain installed with upstream's explicit-only flag. Pi's `/skill:unslop` expansion was measured; explicit-only skills are in its command catalog and out of its model-visible list (measured). Codex 0.162.1 lists these skills as enabled with no errors (measured). Explicit `$name` invocation is documented, not measured. Codex's documented way to keep a skill out of automatic model context is `policy.allow_implicit_invocation: false` in `agents/openai.yaml` (default true). The bundle does not add that file, so whether Codex selects these skills implicitly is not measured; they may still be selected implicitly. [Claude Code's skills documentation](https://code.claude.com/docs/en/skills#control-who-invokes-a-skill) describes `disable-model-invocation: true` as keeping the description out of model context and preventing automatic invocation while allowing explicit `/name` invocation; this behavior is documented, not measured. Review conflicts with existing skill names when installing. It excludes Cursor-specific `make-bot-ui`, `poteto-help`, and `setup-pstack`; role setup uses `workers.toml`. See the [selection and compatibility notes](skills/pstack-herdr/references/compatibility.md).
+You can also ask `Use interrogate to review this branch.`
 
 All three controller harnesses read roles directly from `workers.toml`. Configure only the roles the chosen workflow needs. For the implementation/review loop:
 
@@ -218,52 +198,17 @@ All three controller harnesses read roles directly from `workers.toml`. Configur
 "interrogate reviewers" = ["glm", "haiku"]
 ```
 
-A single role names one worker; a panel lists one worker per task. Roles may share one worker/model, and repeated panel entries start separate processes. Disclose when a chosen upstream workflow's panel size or model-diversity requirement is unmet; same-model reviews are not cross-model validation. The controller selects one worker from `arena cross-judge pool`. Other workflows use their original role names, such as `how explorer` or `architect runners`. Assignments outside a named playbook also use applicable configured roles first, with optional worker descriptions guiding otherwise unmatched tasks.
+A single role names one worker; a panel lists one worker per task. Same-model reviews are separate processes, not cross-model validation, so disclose an unmet panel-size or model-diversity requirement. The [adapter instructions](skills/pstack-herdr/SKILL.md) define workflow coordination, role routing, and review. Read-only assignments rely on worker briefs and harness permissions; `horch` is not a sandbox.
 
-The [adapter instructions](skills/pstack-herdr/SKILL.md) define workflow coordination and review. Read-only assignments rely on worker briefs and harness permissions; `horch` does not enforce a separate sandbox.
-
-### Upstream sync and adaptations
-
-| Record | Contents |
-|---|---|
-| [Selection manifest](skills/pstack-herdr/references/upstream.json) | Pinned version and commit, skills requiring Herdr mapping, and exclusions with reasons. |
-| [Bundle inventory](skills/pstack-herdr/references/bundle.json) | Included upstream skills, source paths and hashes, and which entries load the Herdr mapping. |
-| [Compatibility notes](skills/pstack-herdr/references/compatibility.md) | Shared metadata changes, resource mapping, unsupported capabilities, and maintainer update steps. |
-| [Tool mapping](skills/pstack-herdr/references/herdr-tools.md) | Herdr equivalents for upstream tools, roles, and workflow actions. |
-
-The [upstream monitor](https://github.com/conscientiousness/herdr-pstack-orchestrator/actions/workflows/upstream.yml) checks `pstack/` and `cursor-team-kit/` daily at 02:23 UTC. Its summary and JSON artifact list changed files and distinguish changes needing review from a failed check. It does not decide how to adapt changes or upgrade installed skills automatically.
-
-For each upstream update, use the [upstream sync PR template](.github/PULL_REQUEST_TEMPLATE/upstream-sync.md) to record what was synced directly, adapted, or excluded, with reasons and verification evidence. The manifests remain the inventory; the PR records decisions for that update.
-
-Cursor modes, hooks, `/loop`, cloud execution, and unavailable MCP or app-driving tools are not supplied by this adapter. Workflows requiring a missing capability stop at that step. See the verification scope below.
+Cursor modes, hooks, `/loop`, cloud execution, and unavailable MCP or app-driving tools are not supplied; a workflow requiring one stops at that step. For the pinned source, adaptations, exclusions, discovery behavior, and the maintainer sync procedure, see the [selection and compatibility notes](skills/pstack-herdr/references/compatibility.md).
 
 ## Verification
 
-The current 0.15.25 bundle passed local installation and native discovery checks. Earlier results retain their original source attribution:
+Runtime checks run on Linux with real Pi workers. Real Codex and Claude Code controller runs are also recorded. The verified set covers worker setup, the implementation and review loop, a controller-level run, workspace limits, invalid record handling, and Pi preflight. The 0.15.25 bundle passed a local installation check and native discovery in the Pi and Codex catalogs. A receipt for each verified claim is linked in [evidence and source attribution](e2e/README.md#evidence-and-source-attribution).
 
-| Scope | Evidence |
-|---|---|
-| Workspace worker capacity | Two workspaces sharing one task store each held two workers. Legacy records, local `run`/`check` refusal, five delivered model results, released capacity, and cleanup passed 49 checks. See the [workspace quota receipt](e2e/evidence/workspace-limits.json). |
-| Local bundled installation (pstack 0.15.25) | A temporary local source-copy install preserved all 56 entries and 197 files for Codex, Pi, and Claude Code, with no file differences. The source was deleted before native catalog checks. |
-| Native discovery (pstack 0.15.25) | All 56 entries appeared in Pi and Codex catalogs. Claude Code installation was checked; native discovery was not measured. |
-| Local bundled installation (pstack 0.15.24) | A temporary local source-copy install preserved all 56 entries and 197 files for Codex, Pi, and Claude Code, with no file differences. The source was deleted before native catalog checks. |
-| Native discovery (pstack 0.15.24) | All 56 entries appeared in Pi and Codex catalogs. Claude Code installation was checked; native discovery was not measured. |
-| Local bundled installation (pstack 0.15.21) | A temporary local source-copy install preserved all 54 entries and 193 files for Codex, Pi, and Claude Code, with no file differences. The source was deleted before native catalog checks. |
-| Native discovery (pstack 0.15.21) | All 54 entries appeared in Pi and Codex catalogs. Claude Code installation was checked; native discovery was not measured. |
-| Local bundled installation (pstack 0.15.18) | A temporary local source-copy install preserved all 54 entries and 192 files for Codex, Pi, and Claude Code, with no file differences. The source was deleted before native catalog checks. |
-| Native discovery (pstack 0.15.18) | All 54 entries, including `ketchup`, appeared in Pi and Codex catalogs. Claude Code installation was checked; native discovery was not measured. |
-| Local bundled installation (pstack 0.15.17) | A temporary local source-copy install preserved all 54 entries and 192 files for Codex, Pi, and Claude Code, with no file differences. The source was deleted before native catalog checks. |
-| Native discovery (pstack 0.15.17) | All 54 entries, including `ketchup`, appeared in Pi and Codex catalogs. Claude Code installation was checked; native discovery was not measured. |
-| Bundled installation (pstack 0.15.15) | One GitHub URL installed all 53 entries and 190 files for Codex, Pi, and Claude Code. A separate local install remained usable after its temporary source was deleted. |
-| Native discovery (pstack 0.15.15) | All 53 entries appeared in Pi and Codex catalogs. Claude Code installation was checked; native discovery was not measured. |
-| Original pstack `how` (v0.2.0) | A Pi controller completed three explorer tasks and one explainer task through Herdr, with delivery and cleanup verified. |
-| Historical package CI | Python 3.11/3.14, installed file comparisons, and regeneration from the then-pinned upstream source. |
+Not verified: macOS, deliberate approval denial, task turns longer than 30 minutes, and Claude Code native discovery, which was not measured although installation was checked. Apart from one recorded `how` run, most pstack playbooks remain unverified at runtime: updated workflows, `ketchup`, other original skills, and `poteto-mode` playbooks. Discovery does not prove workflow execution.
 
-See the current [0.15.25 upstream-sync receipt](e2e/evidence/upstream-sync-0.15.25.json), historical [0.15.24 receipt](e2e/evidence/upstream-sync-0.15.24.json), [0.15.21 receipt](e2e/evidence/upstream-sync-0.15.21.json), [0.15.18 receipt](e2e/evidence/upstream-sync-0.15.18.json), [0.15.17 receipt](e2e/evidence/upstream-sync-0.15.17.json), [bundled-install receipt](e2e/evidence/bundled-install.json), and [discovery/routing receipt](e2e/evidence/skill-discovery.json). Updated workflows and scripts, `ketchup`, other original skills, and `poteto-mode` playbooks remain runtime unverified. Discovery does not prove workflow execution.
-
-Earlier core, review-loop, and controller tests retain their original source revisions in the [E2E guide](e2e/README.md#evidence-and-source-attribution). They are not new v0.2.0 workflow tests. Runtime checks used Linux; macOS, deliberate approval denial, and task completion beyond 30 minutes remain unverified.
-
-For commands, prerequisites, evidence locations, and cleanup, use [verify-herdr-orchestrator](.agents/skills/verify-herdr-orchestrator/SKILL.md).
+Historical receipts keep their original source attribution in [evidence and source attribution](e2e/README.md#evidence-and-source-attribution). To rerun the checks, use [verify-herdr-orchestrator](.agents/skills/verify-herdr-orchestrator/SKILL.md).
 
 ## Troubleshooting
 
@@ -271,11 +216,11 @@ Start with `horch detect`. For worker dialogs or failed tasks, inspect the recor
 
 ## Contributing
 
-Include reproduction steps, relevant versions, and sanitized evidence with a bug report or fix. Verify affected behavior using the [existing E2E drivers](e2e/README.md). Keep changes focused and write code, documentation, and commit messages in English. Never publish credentials, private paths, or full worker transcripts.
+Send reproduction steps, relevant versions, and sanitized evidence with a bug report or fix, and verify affected behavior with the [existing E2E drivers](e2e/README.md). Write code, documentation, and commit messages in English. Never publish credentials, private paths, or full worker transcripts.
 
 Controllers deliver changes on a feature branch and open or update a PR by default. Merging into `main` or enabling auto-merge requires an explicit user request, even when an upstream playbook calls for autonomous shipping.
 
-Release tags use `vYYYY.MM.DD.N`: the UTC release date and an index starting at `1` each day (for example, `v2026.10.10.1`, then `v2026.10.10.2`). Publish from verified `main` after an explicit release request. Existing tags stay unchanged; the upstream pstack version is tracked separately.
+Release tags use `vYYYY.MM.DD.N`, the UTC date plus a daily index from `1` (`v2026.10.10.1`, then `v2026.10.10.2`). Publish from verified `main` after an explicit release request. Existing tags stay unchanged, and the upstream pstack version is tracked separately.
 
 ## Credits
 

@@ -4,8 +4,8 @@
   "scenario_complete": true,
   "diagnostics": "<run>/diagnostics",
   "source_hashes": {
-    "horch_sha256": "32fbad8e88dedf604d9e51407228ef11fa8c86cd7ba25cfe0754168f8f3d493f",
-    "driver_sha256": "bb314b167cf8198c8b6bca958709f826a4094194587e2b02ebe526268c49cc33"
+    "horch_sha256": "6c590dd7e1a5ce92b9480990926235aee5764e618ce0e79167af06e208e0cd30",
+    "driver_sha256": "342672ecb1dfbe586fd4741d1aed1b19e2c8028ed429030f2af1bf5cc3118d9b"
   },
   "versions": {
     "python": "3.14.7",
@@ -22,32 +22,38 @@
     }
   },
   "workers": {
-    "glm-flash": {
-      "harness": "pi",
-      "model": "glm-5.3-flash",
-      "provider": "zai",
-      "effort": "max"
-    },
     "gpt": {
       "harness": "pi",
       "model": "gpt-6.1-sol",
       "provider": "openai",
       "effort": "medium"
+    },
+    "glm": {
+      "harness": "pi",
+      "model": "glm-5.3",
+      "provider": "zai",
+      "effort": "max"
+    },
+    "stats-unused0": {
+      "harness": "pi",
+      "model": "stats-model",
+      "provider": "stats-provider",
+      "effort": "high"
     }
   },
   "batch_limit": 1,
   "selections": [
-    "glm-flash",
-    "glm-flash",
-    "gpt"
+    "gpt",
+    "gpt",
+    "glm"
   ],
   "rerun": [
     "python3",
     "e2e/check_workers.py",
     "--worker",
-    "glm-flash",
-    "--worker",
     "gpt",
+    "--worker",
+    "glm",
     "--cwd",
     "<cwd>",
     "--output",
@@ -55,22 +61,22 @@
     "--max-seconds",
     "300"
   ],
-  "seconds": 55.811,
+  "seconds": 49.602,
   "observations": {
     "batch": {
       "exit_code": 0,
       "rows": [
         {
-          "worker": "glm-flash",
-          "task_id": "t-d228ff",
+          "worker": "gpt",
+          "task_id": "t-d804a8",
           "state": "done",
           "ok": true,
           "pane_id": null,
-          "seconds": 30
+          "seconds": 20
         },
         {
-          "worker": "gpt",
-          "task_id": "t-77ed6d",
+          "worker": "glm",
+          "task_id": "t-37167e",
           "state": "done",
           "ok": true,
           "pane_id": null,
@@ -80,21 +86,21 @@
     },
     "batch_lifecycle": [
       {
-        "task_id": "t-d228ff",
-        "published_ns": 1792059741192961268,
-        "closed_ns": 1792059770813505085
+        "task_id": "t-d804a8",
+        "published_ns": 1792075987888979927,
+        "closed_ns": 1792076007500542732
       },
       {
-        "task_id": "t-77ed6d",
-        "published_ns": 1792059770824698897,
-        "closed_ns": 1792059790439497398
+        "task_id": "t-37167e",
+        "published_ns": 1792076007511493808,
+        "closed_ns": 1792076027086558319
       }
     ],
     "zero_slots": {
       "exit_code": 0,
       "rows": [
         {
-          "worker": "glm-flash",
+          "worker": "gpt",
           "task_id": null,
           "state": "not_checked",
           "ok": false,
@@ -102,7 +108,7 @@
           "seconds": null
         },
         {
-          "worker": "gpt",
+          "worker": "glm",
           "task_id": null,
           "state": "not_checked",
           "ok": false,
@@ -115,11 +121,11 @@
       "exit_code": 0,
       "rows": [
         {
-          "worker": "glm-flash",
-          "task_id": "t-368c76",
+          "worker": "gpt",
+          "task_id": "t-a94182",
           "state": "exited",
           "ok": false,
-          "pane_id": "wD:p4",
+          "pane_id": "wE:p4",
           "seconds": 6
         }
       ]
@@ -128,7 +134,7 @@
       "exit_code": 0,
       "rows": [
         {
-          "worker": "glm-flash",
+          "worker": "gpt",
           "task_id": null,
           "state": "not_checked",
           "ok": false,
@@ -136,6 +142,1198 @@
           "seconds": null
         }
       ]
+    },
+    "stats": {
+      "scope": {
+        "workspace_id": null,
+        "days": null,
+        "created_since": null
+      },
+      "task_count": 4,
+      "reminder_fired": 1,
+      "workers": {
+        "glm": {
+          "configured": true,
+          "harness": "pi",
+          "model": "glm-5.3",
+          "effort": "max",
+          "provider": "zai",
+          "task_count": 1,
+          "reminder_fired": 0,
+          "states": {
+            "done": 1
+          },
+          "result_statuses": {
+            "completed": 1
+          },
+          "problem_count": 0,
+          "problem_rate": 0.0,
+          "unclosed_running": 0,
+          "last_use": "2026-10-15T14:53:27Z",
+          "workspaces": {
+            "wE": 1
+          },
+          "unknown_workspace_count": 0,
+          "duration_excluded_count": 0,
+          "duration_samples": [
+            {
+              "task_id": "t-37167e",
+              "minutes": 0.3333333333333333,
+              "endpoint_source": "first_done_at"
+            }
+          ],
+          "duration_minutes": {
+            "sample_size": 1,
+            "median": 0.3333333333333333,
+            "p90": 0.3333333333333333,
+            "max": 0.3333333333333333,
+            "sources": {
+              "first_done_at": 1
+            }
+          }
+        },
+        "gpt": {
+          "configured": true,
+          "harness": "pi",
+          "model": "gpt-6.1-sol",
+          "effort": "medium",
+          "provider": "openai",
+          "task_count": 2,
+          "reminder_fired": 0,
+          "states": {
+            "exited": 1,
+            "done": 1
+          },
+          "result_statuses": {
+            "completed": 1
+          },
+          "problem_count": 1,
+          "problem_rate": 0.5,
+          "unclosed_running": 0,
+          "last_use": "2026-10-15T14:53:47Z",
+          "workspaces": {
+            "wE": 2
+          },
+          "unknown_workspace_count": 0,
+          "duration_excluded_count": 0,
+          "duration_samples": [
+            {
+              "task_id": "t-d804a8",
+              "minutes": 0.3333333333333333,
+              "endpoint_source": "first_done_at"
+            }
+          ],
+          "duration_minutes": {
+            "sample_size": 1,
+            "median": 0.3333333333333333,
+            "p90": 0.3333333333333333,
+            "max": 0.3333333333333333,
+            "sources": {
+              "first_done_at": 1
+            }
+          }
+        },
+        "stats-removed0": {
+          "configured": false,
+          "harness": null,
+          "model": null,
+          "effort": null,
+          "provider": null,
+          "task_count": 1,
+          "reminder_fired": 1,
+          "states": {
+            "done": 1
+          },
+          "result_statuses": {
+            "blocked": 1
+          },
+          "problem_count": 0,
+          "problem_rate": 0.0,
+          "unclosed_running": 0,
+          "last_use": "2026-10-15T13:53:52.890127Z",
+          "workspaces": {
+            "stats-other-workspace": 1
+          },
+          "unknown_workspace_count": 0,
+          "duration_excluded_count": 0,
+          "duration_samples": [
+            {
+              "task_id": "t-000002",
+              "minutes": 45.0,
+              "endpoint_source": "result_mtime"
+            }
+          ],
+          "duration_minutes": {
+            "sample_size": 1,
+            "median": 45.0,
+            "p90": 45.0,
+            "max": 45.0,
+            "sources": {
+              "result_mtime": 1
+            }
+          }
+        },
+        "stats-unused0": {
+          "configured": true,
+          "harness": "pi",
+          "model": "stats-model",
+          "effort": "high",
+          "provider": "stats-provider",
+          "task_count": 0,
+          "reminder_fired": 0,
+          "states": {},
+          "result_statuses": {},
+          "problem_count": 0,
+          "problem_rate": null,
+          "unclosed_running": 0,
+          "last_use": null,
+          "workspaces": {},
+          "unknown_workspace_count": 0,
+          "duration_excluded_count": 0,
+          "duration_samples": [],
+          "duration_minutes": {
+            "sample_size": 0,
+            "median": null,
+            "p90": null,
+            "max": null,
+            "sources": {}
+          }
+        }
+      },
+      "configured_unused_workers": [
+        "stats-unused0"
+      ],
+      "roles_with_unconfigured_workers": {
+        "review": [
+          "stats-removed0"
+        ]
+      },
+      "invalid_task_ids": [
+        "t-000001"
+      ],
+      "delivered_duration_estimate": {
+        "timed_task_count": 3,
+        "current": {
+          "minutes": 20,
+          "count": 1,
+          "share": 0.3333333333333333
+        },
+        "thresholds": [
+          {
+            "minutes": 15,
+            "count": 1,
+            "share": 0.3333333333333333
+          },
+          {
+            "minutes": 30,
+            "count": 1,
+            "share": 0.3333333333333333
+          },
+          {
+            "minutes": 45,
+            "count": 0,
+            "share": 0.0
+          },
+          {
+            "minutes": 60,
+            "count": 0,
+            "share": 0.0
+          },
+          {
+            "minutes": 90,
+            "count": 0,
+            "share": 0.0
+          }
+        ]
+      }
+    },
+    "stats_workspace": {
+      "scope": {
+        "workspace_id": "wE",
+        "days": null,
+        "created_since": null
+      },
+      "task_count": 3,
+      "reminder_fired": 0,
+      "workers": {
+        "glm": {
+          "configured": true,
+          "harness": "pi",
+          "model": "glm-5.3",
+          "effort": "max",
+          "provider": "zai",
+          "task_count": 1,
+          "reminder_fired": 0,
+          "states": {
+            "done": 1
+          },
+          "result_statuses": {
+            "completed": 1
+          },
+          "problem_count": 0,
+          "problem_rate": 0.0,
+          "unclosed_running": 0,
+          "last_use": "2026-10-15T14:53:27Z",
+          "workspaces": {
+            "wE": 1
+          },
+          "unknown_workspace_count": 0,
+          "duration_excluded_count": 0,
+          "duration_samples": [
+            {
+              "task_id": "t-37167e",
+              "minutes": 0.3333333333333333,
+              "endpoint_source": "first_done_at"
+            }
+          ],
+          "duration_minutes": {
+            "sample_size": 1,
+            "median": 0.3333333333333333,
+            "p90": 0.3333333333333333,
+            "max": 0.3333333333333333,
+            "sources": {
+              "first_done_at": 1
+            }
+          }
+        },
+        "gpt": {
+          "configured": true,
+          "harness": "pi",
+          "model": "gpt-6.1-sol",
+          "effort": "medium",
+          "provider": "openai",
+          "task_count": 2,
+          "reminder_fired": 0,
+          "states": {
+            "exited": 1,
+            "done": 1
+          },
+          "result_statuses": {
+            "completed": 1
+          },
+          "problem_count": 1,
+          "problem_rate": 0.5,
+          "unclosed_running": 0,
+          "last_use": "2026-10-15T14:53:47Z",
+          "workspaces": {
+            "wE": 2
+          },
+          "unknown_workspace_count": 0,
+          "duration_excluded_count": 0,
+          "duration_samples": [
+            {
+              "task_id": "t-d804a8",
+              "minutes": 0.3333333333333333,
+              "endpoint_source": "first_done_at"
+            }
+          ],
+          "duration_minutes": {
+            "sample_size": 1,
+            "median": 0.3333333333333333,
+            "p90": 0.3333333333333333,
+            "max": 0.3333333333333333,
+            "sources": {
+              "first_done_at": 1
+            }
+          }
+        },
+        "stats-unused0": {
+          "configured": true,
+          "harness": "pi",
+          "model": "stats-model",
+          "effort": "high",
+          "provider": "stats-provider",
+          "task_count": 0,
+          "reminder_fired": 0,
+          "states": {},
+          "result_statuses": {},
+          "problem_count": 0,
+          "problem_rate": null,
+          "unclosed_running": 0,
+          "last_use": null,
+          "workspaces": {},
+          "unknown_workspace_count": 0,
+          "duration_excluded_count": 0,
+          "duration_samples": [],
+          "duration_minutes": {
+            "sample_size": 0,
+            "median": null,
+            "p90": null,
+            "max": null,
+            "sources": {}
+          }
+        }
+      },
+      "configured_unused_workers": [
+        "stats-unused0"
+      ],
+      "roles_with_unconfigured_workers": {
+        "review": [
+          "stats-removed0"
+        ]
+      },
+      "invalid_task_ids": [],
+      "delivered_duration_estimate": {
+        "timed_task_count": 2,
+        "current": {
+          "minutes": 20,
+          "count": 0,
+          "share": 0.0
+        },
+        "thresholds": [
+          {
+            "minutes": 15,
+            "count": 0,
+            "share": 0.0
+          },
+          {
+            "minutes": 30,
+            "count": 0,
+            "share": 0.0
+          },
+          {
+            "minutes": 45,
+            "count": 0,
+            "share": 0.0
+          },
+          {
+            "minutes": 60,
+            "count": 0,
+            "share": 0.0
+          },
+          {
+            "minutes": 90,
+            "count": 0,
+            "share": 0.0
+          }
+        ]
+      }
+    },
+    "stats_duration_bounds_minutes": {
+      "glm": [
+        0.2591026941935221,
+        0.35144263903299966
+      ],
+      "gpt": [
+        0.2645247538884481,
+        0.35834237734476726
+      ]
+    },
+    "cancel_run": {
+      "exit_code": 0,
+      "rows": [
+        {
+          "task_id": "t-991cd5",
+          "worker": "gpt",
+          "pane_id": "wE:p5",
+          "state": "running"
+        }
+      ]
+    },
+    "cancel_close": {
+      "exit_code": 0,
+      "rows": [
+        {
+          "task_id": "t-991cd5"
+        }
+      ]
+    },
+    "stats_after_cancel": {
+      "scope": {
+        "workspace_id": null,
+        "days": null,
+        "created_since": null
+      },
+      "task_count": 5,
+      "reminder_fired": 1,
+      "workers": {
+        "glm": {
+          "configured": true,
+          "harness": "pi",
+          "model": "glm-5.3",
+          "effort": "max",
+          "provider": "zai",
+          "task_count": 1,
+          "reminder_fired": 0,
+          "states": {
+            "done": 1
+          },
+          "result_statuses": {
+            "completed": 1
+          },
+          "problem_count": 0,
+          "problem_rate": 0.0,
+          "unclosed_running": 0,
+          "last_use": "2026-10-15T14:53:27Z",
+          "workspaces": {
+            "wE": 1
+          },
+          "unknown_workspace_count": 0,
+          "duration_excluded_count": 0,
+          "duration_samples": [
+            {
+              "task_id": "t-37167e",
+              "minutes": 0.3333333333333333,
+              "endpoint_source": "first_done_at"
+            }
+          ],
+          "duration_minutes": {
+            "sample_size": 1,
+            "median": 0.3333333333333333,
+            "p90": 0.3333333333333333,
+            "max": 0.3333333333333333,
+            "sources": {
+              "first_done_at": 1
+            }
+          }
+        },
+        "gpt": {
+          "configured": true,
+          "harness": "pi",
+          "model": "gpt-6.1-sol",
+          "effort": "medium",
+          "provider": "openai",
+          "task_count": 3,
+          "reminder_fired": 0,
+          "states": {
+            "closed_before_done": 1,
+            "exited": 1,
+            "done": 1
+          },
+          "result_statuses": {
+            "completed": 1
+          },
+          "problem_count": 1,
+          "problem_rate": 0.5,
+          "unclosed_running": 0,
+          "last_use": "2026-10-15T14:53:53Z",
+          "workspaces": {
+            "wE": 3
+          },
+          "unknown_workspace_count": 0,
+          "duration_excluded_count": 0,
+          "duration_samples": [
+            {
+              "task_id": "t-d804a8",
+              "minutes": 0.3333333333333333,
+              "endpoint_source": "first_done_at"
+            }
+          ],
+          "duration_minutes": {
+            "sample_size": 1,
+            "median": 0.3333333333333333,
+            "p90": 0.3333333333333333,
+            "max": 0.3333333333333333,
+            "sources": {
+              "first_done_at": 1
+            }
+          }
+        },
+        "stats-removed0": {
+          "configured": false,
+          "harness": null,
+          "model": null,
+          "effort": null,
+          "provider": null,
+          "task_count": 1,
+          "reminder_fired": 1,
+          "states": {
+            "done": 1
+          },
+          "result_statuses": {
+            "blocked": 1
+          },
+          "problem_count": 0,
+          "problem_rate": 0.0,
+          "unclosed_running": 0,
+          "last_use": "2026-10-15T13:53:52.890127Z",
+          "workspaces": {
+            "stats-other-workspace": 1
+          },
+          "unknown_workspace_count": 0,
+          "duration_excluded_count": 0,
+          "duration_samples": [
+            {
+              "task_id": "t-000002",
+              "minutes": 45.0,
+              "endpoint_source": "result_mtime"
+            }
+          ],
+          "duration_minutes": {
+            "sample_size": 1,
+            "median": 45.0,
+            "p90": 45.0,
+            "max": 45.0,
+            "sources": {
+              "result_mtime": 1
+            }
+          }
+        },
+        "stats-unused0": {
+          "configured": true,
+          "harness": "pi",
+          "model": "stats-model",
+          "effort": "high",
+          "provider": "stats-provider",
+          "task_count": 0,
+          "reminder_fired": 0,
+          "states": {},
+          "result_statuses": {},
+          "problem_count": 0,
+          "problem_rate": null,
+          "unclosed_running": 0,
+          "last_use": null,
+          "workspaces": {},
+          "unknown_workspace_count": 0,
+          "duration_excluded_count": 0,
+          "duration_samples": [],
+          "duration_minutes": {
+            "sample_size": 0,
+            "median": null,
+            "p90": null,
+            "max": null,
+            "sources": {}
+          }
+        }
+      },
+      "configured_unused_workers": [
+        "stats-unused0"
+      ],
+      "roles_with_unconfigured_workers": {
+        "review": [
+          "stats-removed0"
+        ]
+      },
+      "invalid_task_ids": [
+        "t-000001"
+      ],
+      "delivered_duration_estimate": {
+        "timed_task_count": 3,
+        "current": {
+          "minutes": 20,
+          "count": 1,
+          "share": 0.3333333333333333
+        },
+        "thresholds": [
+          {
+            "minutes": 15,
+            "count": 1,
+            "share": 0.3333333333333333
+          },
+          {
+            "minutes": 30,
+            "count": 1,
+            "share": 0.3333333333333333
+          },
+          {
+            "minutes": 45,
+            "count": 0,
+            "share": 0.0
+          },
+          {
+            "minutes": 60,
+            "count": 0,
+            "share": 0.0
+          },
+          {
+            "minutes": 90,
+            "count": 0,
+            "share": 0.0
+          }
+        ]
+      }
+    },
+    "stats_workspace_after_cancel": {
+      "scope": {
+        "workspace_id": "wE",
+        "days": null,
+        "created_since": null
+      },
+      "task_count": 4,
+      "reminder_fired": 0,
+      "workers": {
+        "glm": {
+          "configured": true,
+          "harness": "pi",
+          "model": "glm-5.3",
+          "effort": "max",
+          "provider": "zai",
+          "task_count": 1,
+          "reminder_fired": 0,
+          "states": {
+            "done": 1
+          },
+          "result_statuses": {
+            "completed": 1
+          },
+          "problem_count": 0,
+          "problem_rate": 0.0,
+          "unclosed_running": 0,
+          "last_use": "2026-10-15T14:53:27Z",
+          "workspaces": {
+            "wE": 1
+          },
+          "unknown_workspace_count": 0,
+          "duration_excluded_count": 0,
+          "duration_samples": [
+            {
+              "task_id": "t-37167e",
+              "minutes": 0.3333333333333333,
+              "endpoint_source": "first_done_at"
+            }
+          ],
+          "duration_minutes": {
+            "sample_size": 1,
+            "median": 0.3333333333333333,
+            "p90": 0.3333333333333333,
+            "max": 0.3333333333333333,
+            "sources": {
+              "first_done_at": 1
+            }
+          }
+        },
+        "gpt": {
+          "configured": true,
+          "harness": "pi",
+          "model": "gpt-6.1-sol",
+          "effort": "medium",
+          "provider": "openai",
+          "task_count": 3,
+          "reminder_fired": 0,
+          "states": {
+            "closed_before_done": 1,
+            "exited": 1,
+            "done": 1
+          },
+          "result_statuses": {
+            "completed": 1
+          },
+          "problem_count": 1,
+          "problem_rate": 0.5,
+          "unclosed_running": 0,
+          "last_use": "2026-10-15T14:53:53Z",
+          "workspaces": {
+            "wE": 3
+          },
+          "unknown_workspace_count": 0,
+          "duration_excluded_count": 0,
+          "duration_samples": [
+            {
+              "task_id": "t-d804a8",
+              "minutes": 0.3333333333333333,
+              "endpoint_source": "first_done_at"
+            }
+          ],
+          "duration_minutes": {
+            "sample_size": 1,
+            "median": 0.3333333333333333,
+            "p90": 0.3333333333333333,
+            "max": 0.3333333333333333,
+            "sources": {
+              "first_done_at": 1
+            }
+          }
+        },
+        "stats-unused0": {
+          "configured": true,
+          "harness": "pi",
+          "model": "stats-model",
+          "effort": "high",
+          "provider": "stats-provider",
+          "task_count": 0,
+          "reminder_fired": 0,
+          "states": {},
+          "result_statuses": {},
+          "problem_count": 0,
+          "problem_rate": null,
+          "unclosed_running": 0,
+          "last_use": null,
+          "workspaces": {},
+          "unknown_workspace_count": 0,
+          "duration_excluded_count": 0,
+          "duration_samples": [],
+          "duration_minutes": {
+            "sample_size": 0,
+            "median": null,
+            "p90": null,
+            "max": null,
+            "sources": {}
+          }
+        }
+      },
+      "configured_unused_workers": [
+        "stats-unused0"
+      ],
+      "roles_with_unconfigured_workers": {
+        "review": [
+          "stats-removed0"
+        ]
+      },
+      "invalid_task_ids": [],
+      "delivered_duration_estimate": {
+        "timed_task_count": 2,
+        "current": {
+          "minutes": 20,
+          "count": 0,
+          "share": 0.0
+        },
+        "thresholds": [
+          {
+            "minutes": 15,
+            "count": 0,
+            "share": 0.0
+          },
+          {
+            "minutes": 30,
+            "count": 0,
+            "share": 0.0
+          },
+          {
+            "minutes": 45,
+            "count": 0,
+            "share": 0.0
+          },
+          {
+            "minutes": 60,
+            "count": 0,
+            "share": 0.0
+          },
+          {
+            "minutes": 90,
+            "count": 0,
+            "share": 0.0
+          }
+        ]
+      }
+    },
+    "stats_extended": {
+      "scope": {
+        "workspace_id": null,
+        "days": null,
+        "created_since": null
+      },
+      "task_count": 7,
+      "reminder_fired": 1,
+      "workers": {
+        "glm": {
+          "configured": true,
+          "harness": "pi",
+          "model": "glm-5.3",
+          "effort": "max",
+          "provider": "zai",
+          "task_count": 1,
+          "reminder_fired": 0,
+          "states": {
+            "done": 1
+          },
+          "result_statuses": {
+            "completed": 1
+          },
+          "problem_count": 0,
+          "problem_rate": 0.0,
+          "unclosed_running": 0,
+          "last_use": "2026-10-15T14:53:27Z",
+          "workspaces": {
+            "wE": 1
+          },
+          "unknown_workspace_count": 0,
+          "duration_excluded_count": 0,
+          "duration_samples": [
+            {
+              "task_id": "t-37167e",
+              "minutes": 0.3333333333333333,
+              "endpoint_source": "first_done_at"
+            }
+          ],
+          "duration_minutes": {
+            "sample_size": 1,
+            "median": 0.3333333333333333,
+            "p90": 0.3333333333333333,
+            "max": 0.3333333333333333,
+            "sources": {
+              "first_done_at": 1
+            }
+          }
+        },
+        "gpt": {
+          "configured": true,
+          "harness": "pi",
+          "model": "gpt-6.1-sol",
+          "effort": "medium",
+          "provider": "openai",
+          "task_count": 3,
+          "reminder_fired": 0,
+          "states": {
+            "closed_before_done": 1,
+            "exited": 1,
+            "done": 1
+          },
+          "result_statuses": {
+            "completed": 1
+          },
+          "problem_count": 1,
+          "problem_rate": 0.5,
+          "unclosed_running": 0,
+          "last_use": "2026-10-15T14:53:53Z",
+          "workspaces": {
+            "wE": 3
+          },
+          "unknown_workspace_count": 0,
+          "duration_excluded_count": 0,
+          "duration_samples": [
+            {
+              "task_id": "t-d804a8",
+              "minutes": 0.3333333333333333,
+              "endpoint_source": "first_done_at"
+            }
+          ],
+          "duration_minutes": {
+            "sample_size": 1,
+            "median": 0.3333333333333333,
+            "p90": 0.3333333333333333,
+            "max": 0.3333333333333333,
+            "sources": {
+              "first_done_at": 1
+            }
+          }
+        },
+        "stats-removed0": {
+          "configured": false,
+          "harness": null,
+          "model": null,
+          "effort": null,
+          "provider": null,
+          "task_count": 3,
+          "reminder_fired": 1,
+          "states": {
+            "done": 3
+          },
+          "result_statuses": {
+            "blocked": 1,
+            "completed": 2
+          },
+          "problem_count": 0,
+          "problem_rate": 0.0,
+          "unclosed_running": 0,
+          "last_use": "2026-10-15T13:53:52.890127Z",
+          "workspaces": {
+            "stats-other-workspace": 3
+          },
+          "unknown_workspace_count": 0,
+          "duration_excluded_count": 0,
+          "duration_samples": [
+            {
+              "task_id": "t-000002",
+              "minutes": 45.0,
+              "endpoint_source": "result_mtime"
+            },
+            {
+              "task_id": "t-000003",
+              "minutes": 10.0,
+              "endpoint_source": "first_done_at"
+            },
+            {
+              "task_id": "t-000004",
+              "minutes": 85.0,
+              "endpoint_source": "first_done_at"
+            }
+          ],
+          "duration_minutes": {
+            "sample_size": 3,
+            "median": 45.0,
+            "p90": 85.0,
+            "max": 85.0,
+            "sources": {
+              "first_done_at": 2,
+              "result_mtime": 1
+            }
+          }
+        },
+        "stats-unused0": {
+          "configured": true,
+          "harness": "pi",
+          "model": "stats-model",
+          "effort": "high",
+          "provider": "stats-provider",
+          "task_count": 0,
+          "reminder_fired": 0,
+          "states": {},
+          "result_statuses": {},
+          "problem_count": 0,
+          "problem_rate": null,
+          "unclosed_running": 0,
+          "last_use": null,
+          "workspaces": {},
+          "unknown_workspace_count": 0,
+          "duration_excluded_count": 0,
+          "duration_samples": [],
+          "duration_minutes": {
+            "sample_size": 0,
+            "median": null,
+            "p90": null,
+            "max": null,
+            "sources": {}
+          }
+        }
+      },
+      "configured_unused_workers": [
+        "stats-unused0"
+      ],
+      "roles_with_unconfigured_workers": {
+        "review": [
+          "stats-removed0"
+        ]
+      },
+      "invalid_task_ids": [
+        "t-000001"
+      ],
+      "delivered_duration_estimate": {
+        "timed_task_count": 5,
+        "current": {
+          "minutes": 20,
+          "count": 2,
+          "share": 0.4
+        },
+        "thresholds": [
+          {
+            "minutes": 15,
+            "count": 2,
+            "share": 0.4
+          },
+          {
+            "minutes": 30,
+            "count": 2,
+            "share": 0.4
+          },
+          {
+            "minutes": 45,
+            "count": 1,
+            "share": 0.2
+          },
+          {
+            "minutes": 60,
+            "count": 1,
+            "share": 0.2
+          },
+          {
+            "minutes": 90,
+            "count": 0,
+            "share": 0.0
+          }
+        ]
+      }
+    },
+    "stats_recent": {
+      "scope": {
+        "workspace_id": null,
+        "days": 1,
+        "created_since": "2026-10-14T14:53:57.064236Z"
+      },
+      "task_count": 6,
+      "reminder_fired": 1,
+      "workers": {
+        "glm": {
+          "configured": true,
+          "harness": "pi",
+          "model": "glm-5.3",
+          "effort": "max",
+          "provider": "zai",
+          "task_count": 1,
+          "reminder_fired": 0,
+          "states": {
+            "done": 1
+          },
+          "result_statuses": {
+            "completed": 1
+          },
+          "problem_count": 0,
+          "problem_rate": 0.0,
+          "unclosed_running": 0,
+          "last_use": "2026-10-15T14:53:27Z",
+          "workspaces": {
+            "wE": 1
+          },
+          "unknown_workspace_count": 0,
+          "duration_excluded_count": 0,
+          "duration_samples": [
+            {
+              "task_id": "t-37167e",
+              "minutes": 0.3333333333333333,
+              "endpoint_source": "first_done_at"
+            }
+          ],
+          "duration_minutes": {
+            "sample_size": 1,
+            "median": 0.3333333333333333,
+            "p90": 0.3333333333333333,
+            "max": 0.3333333333333333,
+            "sources": {
+              "first_done_at": 1
+            }
+          }
+        },
+        "gpt": {
+          "configured": true,
+          "harness": "pi",
+          "model": "gpt-6.1-sol",
+          "effort": "medium",
+          "provider": "openai",
+          "task_count": 3,
+          "reminder_fired": 0,
+          "states": {
+            "closed_before_done": 1,
+            "exited": 1,
+            "done": 1
+          },
+          "result_statuses": {
+            "completed": 1
+          },
+          "problem_count": 1,
+          "problem_rate": 0.5,
+          "unclosed_running": 0,
+          "last_use": "2026-10-15T14:53:53Z",
+          "workspaces": {
+            "wE": 3
+          },
+          "unknown_workspace_count": 0,
+          "duration_excluded_count": 0,
+          "duration_samples": [
+            {
+              "task_id": "t-d804a8",
+              "minutes": 0.3333333333333333,
+              "endpoint_source": "first_done_at"
+            }
+          ],
+          "duration_minutes": {
+            "sample_size": 1,
+            "median": 0.3333333333333333,
+            "p90": 0.3333333333333333,
+            "max": 0.3333333333333333,
+            "sources": {
+              "first_done_at": 1
+            }
+          }
+        },
+        "stats-removed0": {
+          "configured": false,
+          "harness": null,
+          "model": null,
+          "effort": null,
+          "provider": null,
+          "task_count": 2,
+          "reminder_fired": 1,
+          "states": {
+            "done": 2
+          },
+          "result_statuses": {
+            "blocked": 1,
+            "completed": 1
+          },
+          "problem_count": 0,
+          "problem_rate": 0.0,
+          "unclosed_running": 0,
+          "last_use": "2026-10-15T13:53:52.890127Z",
+          "workspaces": {
+            "stats-other-workspace": 2
+          },
+          "unknown_workspace_count": 0,
+          "duration_excluded_count": 0,
+          "duration_samples": [
+            {
+              "task_id": "t-000002",
+              "minutes": 45.0,
+              "endpoint_source": "result_mtime"
+            },
+            {
+              "task_id": "t-000003",
+              "minutes": 10.0,
+              "endpoint_source": "first_done_at"
+            }
+          ],
+          "duration_minutes": {
+            "sample_size": 2,
+            "median": 27.5,
+            "p90": 45.0,
+            "max": 45.0,
+            "sources": {
+              "first_done_at": 1,
+              "result_mtime": 1
+            }
+          }
+        },
+        "stats-unused0": {
+          "configured": true,
+          "harness": "pi",
+          "model": "stats-model",
+          "effort": "high",
+          "provider": "stats-provider",
+          "task_count": 0,
+          "reminder_fired": 0,
+          "states": {},
+          "result_statuses": {},
+          "problem_count": 0,
+          "problem_rate": null,
+          "unclosed_running": 0,
+          "last_use": null,
+          "workspaces": {},
+          "unknown_workspace_count": 0,
+          "duration_excluded_count": 0,
+          "duration_samples": [],
+          "duration_minutes": {
+            "sample_size": 0,
+            "median": null,
+            "p90": null,
+            "max": null,
+            "sources": {}
+          }
+        }
+      },
+      "configured_unused_workers": [
+        "stats-unused0"
+      ],
+      "roles_with_unconfigured_workers": {
+        "review": [
+          "stats-removed0"
+        ]
+      },
+      "invalid_task_ids": [
+        "t-000001"
+      ],
+      "delivered_duration_estimate": {
+        "timed_task_count": 4,
+        "current": {
+          "minutes": 20,
+          "count": 1,
+          "share": 0.25
+        },
+        "thresholds": [
+          {
+            "minutes": 15,
+            "count": 1,
+            "share": 0.25
+          },
+          {
+            "minutes": 30,
+            "count": 1,
+            "share": 0.25
+          },
+          {
+            "minutes": 45,
+            "count": 0,
+            "share": 0.0
+          },
+          {
+            "minutes": 60,
+            "count": 0,
+            "share": 0.0
+          },
+          {
+            "minutes": 90,
+            "count": 0,
+            "share": 0.0
+          }
+        ]
+      }
     }
   },
   "assertions": [
@@ -201,6 +1399,102 @@
     },
     {
       "name": "C031 exhausted budget allocates nothing",
+      "ok": true
+    },
+    {
+      "name": "C040 stats commands return single JSON objects",
+      "ok": true
+    },
+    {
+      "name": "C041 stats task counts match real dispatches and fixture",
+      "ok": true
+    },
+    {
+      "name": "C042 stats states and problem rates match scenario",
+      "ok": true
+    },
+    {
+      "name": "C043 stats delivered result statuses exclude exited probe",
+      "ok": true
+    },
+    {
+      "name": "C044 stats invalid record listed globally and excluded from other workspace",
+      "ok": true
+    },
+    {
+      "name": "C045 stats removed worker is unconfigured and workspace filtered",
+      "ok": true
+    },
+    {
+      "name": "C046 stats configured unused worker retained in both scopes",
+      "ok": true
+    },
+    {
+      "name": "C047 new records retain observed first settlement timestamps",
+      "ok": true
+    },
+    {
+      "name": "C048 stats durations fit independently observed filesystem bounds",
+      "ok": true
+    },
+    {
+      "name": "C049 stats never exposes worker args",
+      "ok": true
+    },
+    {
+      "name": "C050 stats workspace counts and reminder denominator match deliveries",
+      "ok": true
+    },
+    {
+      "name": "C051 stats leaves isolated config and task store unchanged",
+      "ok": true
+    },
+    {
+      "name": "C052 cancellation probe starts one real running worker",
+      "ok": true
+    },
+    {
+      "name": "C053 cancellation probe is open and running before close",
+      "ok": true
+    },
+    {
+      "name": "C062 running work is in flight, not a settled problem",
+      "ok": true
+    },
+    {
+      "name": "C054 close cancels running probe without settling it",
+      "ok": true
+    },
+    {
+      "name": "C055 stats_after_cancel counts cancellation, not running or problems",
+      "ok": true
+    },
+    {
+      "name": "C056 stats_workspace_after_cancel counts cancellation, not running or problems",
+      "ok": true
+    },
+    {
+      "name": "C057 fixed thresholds use strict greater-than and nondefault current",
+      "ok": true
+    },
+    {
+      "name": "C058 worker facts and dangling roles match configuration",
+      "ok": true
+    },
+    {
+      "name": "C059 multi-sample median and nearest-rank p90 use first-done endpoints",
+      "ok": true
+    },
+    {
+      "name": "C060 days scope excludes old delivery and recomputes percentiles",
+      "ok": true
+    },
+    {
+      "name": "C063 stored reminder firings count flags per worker and in scope",
+      "ok": true
+    },
+    {
+      "name": "C061 current threshold is not duplicated and shares use fixed samples",
       "ok": true
     },
     {

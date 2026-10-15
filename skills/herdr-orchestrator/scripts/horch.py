@@ -291,11 +291,19 @@ class TaskInvalidError(Exception):
     pass
 
 
+class TaskMissingError(Exception):
+    pass
+
+
 def load_task(directory, task_id):
     path = directory / "task.json"
-    if not path.is_file():
-        fail("unknown_task", f"no such task: {task_id}")
-    task = read_json(path)
+    try:
+        text = path.read_text(encoding="utf-8")
+    except FileNotFoundError as exc:
+        raise TaskMissingError(f"no such task: {task_id}") from exc
+    except (OSError, UnicodeDecodeError):
+        text = ""
+    task = _read_json_text(text)
     required = ("nonce", "worker", "agent", "pane_id", "result_path", "created_at")
     if (not isinstance(task, dict) or task.get("task_id") != task_id
             or any(not isinstance(task.get(key), str) or not task[key] for key in required)
@@ -323,13 +331,26 @@ def all_task_ids():
 
 def active_task_count(workspace_id):
     """Unclosed reservations owned by one workspace, including live legacy panes."""
+    return task_capacity(workspace_id)[0]
+
+
+def task_capacity(workspace_id):
+    """Return the reservation count and invalid IDs from the same bulk scan."""
     active = 0
     legacy_panes = []
+    invalid = []
     for task_id in all_task_ids():
         directory = task_dir(task_id)
         if load_state(directory)["closed"]:
             continue
-        task = load_task(directory, task_id)
+        try:
+            task = load_task(directory, task_id)
+        except TaskMissingError:
+            continue  # manual recovery removed the record after enumeration
+        except TaskInvalidError:
+            active += 1  # unknown owner and pane; reserve a slot in every workspace
+            invalid.append(task_id)
+            continue
         if "workspace_id" not in task:
             legacy_panes.append(task["pane_id"])
         elif task["workspace_id"] == workspace_id:
@@ -337,7 +358,7 @@ def active_task_count(workspace_id):
     if legacy_panes:
         panes = {pane_id for pane_id, _ in workspace_panes(workspace_id)}
         active += sum(pane_id in panes for pane_id in legacy_panes)
-    return active
+    return active, invalid
 
 
 # ---------------------------------------------------------------------------
@@ -644,14 +665,16 @@ def _start_task_locked(config, worker_name, brief_text, cwd, skip_if_full):
         fail("unknown_worker", f"no worker named {worker_name!r} in {config_path()}")
 
     max_active = config["max_active_workers"]
-    active = active_task_count(caller["workspace_id"])
+    active, invalid = task_capacity(caller["workspace_id"])
     if active >= max_active:
         if skip_if_full:
             return None
+        guidance = (f"; invalid tasks: {', '.join(invalid)}; inspect them with horch list"
+                    if invalid else "")
         fail(
             "worker_limit",
             f"worker limit reached in workspace {caller['workspace_id']}: "
-            f"{active} active tasks, max_active_workers = {max_active}",
+            f"{active} active tasks, max_active_workers = {max_active}{guidance}",
         )
 
     root = tasks_root()
@@ -983,7 +1006,10 @@ def cmd_wait(args):
     else:
         infos = []
         for task_id in all_task_ids():
-            info = make_info(task_id)
+            try:
+                info = make_info(task_id)
+            except (TaskInvalidError, TaskMissingError):
+                continue
             if not info["state"]["closed"] and info["state"]["state"] not in SETTLED_STATES:
                 infos.append(info)
     if not infos:
@@ -1034,6 +1060,8 @@ def cmd_list(args):
     for task_id in all_task_ids():
         try:
             task = load_task(task_dir(task_id), task_id)
+        except TaskMissingError:
+            continue
         except TaskInvalidError as exc:
             rows.append(("", task_id, {"task_id": task_id, "state": "task_invalid",
                                       "error": "task_invalid", "message": str(exc)}))
@@ -1063,7 +1091,11 @@ def cmd_list(args):
 def cmd_close(args):
     require_herdr_env()
     directory = task_dir(args.task_id)
-    task = load_task(directory, args.task_id)
+    try:
+        task = load_task(directory, args.task_id)
+    except TaskInvalidError as exc:
+        fail("task_invalid", f"{exc}; pane is unknown. Check herdr pane list for a leftover "
+             f"horch pane, then remove task directory {directory} by hand")
     outcome = close_pane(task["pane_id"])
     with task_state_lock(directory):
         current = load_state(directory)
@@ -1146,11 +1178,24 @@ def require_pi_integration():
              "Pi requires the Herdr integration; install it with herdr integration install pi")
 
 
+def herdr_server_version():
+    """Read the running server version independently of the installed CLI."""
+    try:
+        proc = subprocess.run(["herdr", "status", "server", "--json"],
+                              capture_output=True, text=True, timeout=10)
+        status = _read_json_text(proc.stdout) if proc.returncode == 0 else None
+        version = status.get("version") if isinstance(status, dict) else None
+        return version if isinstance(version, str) else None
+    except (OSError, UnicodeError, subprocess.TimeoutExpired):
+        return None
+
+
 def cmd_detect(args):
     harnesses = {name: tool_version(name) for name in HARNESSES}
     emit({
         "herdr_env": os.environ.get("HERDR_ENV") == "1",
         "herdr": tool_version("herdr"),
+        "herdr_server_version": herdr_server_version(),
         "python": ".".join(str(part) for part in sys.version_info[:3]),
         "harnesses": harnesses,
         "pi_providers": pi_providers() if harnesses["pi"] else [],
@@ -1161,7 +1206,7 @@ def cmd_detect(args):
 
 def cmd_check(args):
     require_herdr_env()
-    require_caller_context()
+    caller = require_caller_context()
     config = load_config()
     names = list(dict.fromkeys(args.workers or list(config["workers"])))
     unknown = [name for name in names if name not in config["workers"]]
@@ -1174,6 +1219,7 @@ def cmd_check(args):
     pending = list(names)
     started = {}
     settled_at = {}
+    capacity_invalid = set()
     while pending or any(not info["state"]["closed"] and info["state"]["state"] not in SETTLED_STATES
                          for info, _ in started.values()):
         while pending and time.monotonic() < deadline:
@@ -1181,7 +1227,9 @@ def cmd_check(args):
             began = time.monotonic()
             run = start_task(config, name, CHECK_BRIEF, cwd, skip_if_full=True)
             if run is None:
-                break  # another run/check may have claimed the last slot
+                _, invalid = task_capacity(caller["workspace_id"])
+                capacity_invalid.update(invalid)
+                break  # poll our started tasks before retrying pending workers
             pending.pop(0)
             info = make_info(run["task_id"])
             started[name] = (info, began)
@@ -1199,6 +1247,9 @@ def cmd_check(args):
         if name not in started:
             message = ("check wait limit reached before this worker could start" if time.monotonic() >= deadline
                        else "no free worker slot; review max_active_workers or close problem panes with horch close")
+            if capacity_invalid:
+                message += (f"; invalid tasks held capacity: {', '.join(sorted(capacity_invalid))}; "
+                            "inspect them with horch list")
             emit({"worker": name, "task_id": None, "state": "not_checked", "ok": False,
                   "pane_id": None, "seconds": None, "message": message})
             continue
@@ -1276,6 +1327,8 @@ def main(argv=None):
         if hasattr(args, "task_id"):
             validate_task_id(args.task_id)
         args.func(args)
+    except TaskMissingError as exc:
+        fail("unknown_task", str(exc))
     except TaskInvalidError as exc:
         fail("task_invalid", str(exc))
     except HerdrError as exc:

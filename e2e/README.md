@@ -27,6 +27,8 @@ Choose at least two distinct authenticated workers from your existing configurat
 
 The printed `evidence.json` contains source hashes, separate Herdr CLI/server versions, selected harness/model metadata, bounded lifecycle observations and 20 behavioral assertions on a complete successful run (19 prior checks plus reservation ordering; the former completion marker is no longer counted). Scenario completion separately gates the verdict. It contains no pane transcripts, raw command streams or free-form message/error diagnostics; known cwd/output/config/home/repository/run paths are replaced in every field, including `rerun`. Keep the sibling isolated config, task state and `diagnostics/` private. Command stdout/stderr and failure details stay there outside the checkout; the receipt records only a placeholder diagnostic location. Missing or invalid worker configuration also produces a failed receipt. Model speed can prevent the exit probe from observing an acknowledged running worker: that is a failed probe, not a pass. CI runs only `--help`; the controller must run and inspect live evidence.
 
+The [setup-check receipt](evidence/check-workers.json) records a fresh 20/20 pass in 55.811 seconds with real `glm-flash` and `gpt` Pi workers, Herdr CLI 0.9.5 and server 0.9.5. Its source hashes match this driver and `horch.py` on `main` at `0e9382c`. The first run of the reviewed driver failed before any worker started: it read `herdr status server --json` through a `result` envelope that this command does not print.
+
 ## Workspace worker limits
 
 ```bash

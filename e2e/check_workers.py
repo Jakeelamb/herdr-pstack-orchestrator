@@ -148,18 +148,13 @@ class Run:
             proc = self.command([tool, '--version'])
             self.versions['herdr_cli' if tool == 'herdr' else tool] = {
                 'exit_code': proc.returncode, 'version': self.version(proc.stdout or proc.stderr)}
-        server = self.herdr('status', 'server', '--json')
-        def server_versions(value):
-            if not isinstance(value, dict):
-                return set()
-            versions = {self.version(v) for k, v in value.items()
-                        if k in ('version', 'server_version')}
-            for child in value.values():
-                versions.update(server_versions(child))
-            return versions - {None}
-        versions = server_versions(server)
-        self.versions['herdr_server'] = {
-            'version': next(iter(versions)) if len(versions) == 1 else None}
+        # `herdr status server --json` prints the status object itself, without a "result" envelope.
+        proc = self.command(['herdr', 'status', 'server', '--json'])
+        if proc.returncode:
+            raise RuntimeError('herdr_command_failed')
+        server = json.loads(proc.stdout)
+        version = self.version(server.get('version')) if isinstance(server, dict) else None
+        self.versions['herdr_server'] = {'version': version}
         if self.versions['herdr_server']['version'] is None:
             raise RuntimeError('herdr_server_version_unavailable')
         caller = self.herdr('pane', 'current', '--current')['pane']

@@ -4,8 +4,8 @@
   "scenario_complete": true,
   "diagnostics": "<run>/diagnostics",
   "source_hashes": {
-    "horch_sha256": "be60023b4b5234d7d138ca7baa7a2150cd3330d31dade3e047e81bf83b3d86d8",
-    "driver_sha256": "15e7d636515c322058844584bd3cef371f88c94225b203d704764877d6e5826f"
+    "horch_sha256": "6c590dd7e1a5ce92b9480990926235aee5764e618ce0e79167af06e208e0cd30",
+    "driver_sha256": "342672ecb1dfbe586fd4741d1aed1b19e2c8028ed429030f2af1bf5cc3118d9b"
   },
   "versions": {
     "python": "3.14.7",
@@ -61,39 +61,39 @@
     "--max-seconds",
     "300"
   ],
-  "seconds": 59.469,
+  "seconds": 49.602,
   "observations": {
     "batch": {
       "exit_code": 0,
       "rows": [
         {
           "worker": "gpt",
-          "task_id": "t-d6b773",
+          "task_id": "t-d804a8",
           "state": "done",
           "ok": true,
           "pane_id": null,
-          "seconds": 18
+          "seconds": 20
         },
         {
           "worker": "glm",
-          "task_id": "t-047ea9",
+          "task_id": "t-37167e",
           "state": "done",
           "ok": true,
           "pane_id": null,
-          "seconds": 32
+          "seconds": 20
         }
       ]
     },
     "batch_lifecycle": [
       {
-        "task_id": "t-d6b773",
-        "published_ns": 1792074838416917514,
-        "closed_ns": 1792074855986497728
+        "task_id": "t-d804a8",
+        "published_ns": 1792075987888979927,
+        "closed_ns": 1792076007500542732
       },
       {
-        "task_id": "t-047ea9",
-        "published_ns": 1792074855993664837,
-        "closed_ns": 1792074887582524796
+        "task_id": "t-37167e",
+        "published_ns": 1792076007511493808,
+        "closed_ns": 1792076027086558319
       }
     ],
     "zero_slots": {
@@ -122,10 +122,10 @@
       "rows": [
         {
           "worker": "gpt",
-          "task_id": "t-9be3f1",
+          "task_id": "t-a94182",
           "state": "exited",
           "ok": false,
-          "pane_id": "wD:p4",
+          "pane_id": "wE:p4",
           "seconds": 6
         }
       ]
@@ -150,6 +150,7 @@
         "created_since": null
       },
       "task_count": 4,
+      "reminder_fired": 1,
       "workers": {
         "glm": {
           "configured": true,
@@ -158,6 +159,7 @@
           "effort": "max",
           "provider": "zai",
           "task_count": 1,
+          "reminder_fired": 0,
           "states": {
             "done": 1
           },
@@ -167,24 +169,24 @@
           "problem_count": 0,
           "problem_rate": 0.0,
           "unclosed_running": 0,
-          "last_use": "2026-10-15T14:34:15Z",
+          "last_use": "2026-10-15T14:53:27Z",
           "workspaces": {
-            "wD": 1
+            "wE": 1
           },
           "unknown_workspace_count": 0,
           "duration_excluded_count": 0,
           "duration_samples": [
             {
-              "task_id": "t-047ea9",
-              "minutes": 0.5333333333333333,
+              "task_id": "t-37167e",
+              "minutes": 0.3333333333333333,
               "endpoint_source": "first_done_at"
             }
           ],
           "duration_minutes": {
             "sample_size": 1,
-            "median": 0.5333333333333333,
-            "p90": 0.5333333333333333,
-            "max": 0.5333333333333333,
+            "median": 0.3333333333333333,
+            "p90": 0.3333333333333333,
+            "max": 0.3333333333333333,
             "sources": {
               "first_done_at": 1
             }
@@ -197,6 +199,7 @@
           "effort": "medium",
           "provider": "openai",
           "task_count": 2,
+          "reminder_fired": 0,
           "states": {
             "exited": 1,
             "done": 1
@@ -207,24 +210,24 @@
           "problem_count": 1,
           "problem_rate": 0.5,
           "unclosed_running": 0,
-          "last_use": "2026-10-15T14:34:47Z",
+          "last_use": "2026-10-15T14:53:47Z",
           "workspaces": {
-            "wD": 2
+            "wE": 2
           },
           "unknown_workspace_count": 0,
           "duration_excluded_count": 0,
           "duration_samples": [
             {
-              "task_id": "t-d6b773",
-              "minutes": 0.2833333333333333,
+              "task_id": "t-d804a8",
+              "minutes": 0.3333333333333333,
               "endpoint_source": "first_done_at"
             }
           ],
           "duration_minutes": {
             "sample_size": 1,
-            "median": 0.2833333333333333,
-            "p90": 0.2833333333333333,
-            "max": 0.2833333333333333,
+            "median": 0.3333333333333333,
+            "p90": 0.3333333333333333,
+            "max": 0.3333333333333333,
             "sources": {
               "first_done_at": 1
             }
@@ -237,6 +240,7 @@
           "effort": null,
           "provider": null,
           "task_count": 1,
+          "reminder_fired": 1,
           "states": {
             "done": 1
           },
@@ -246,7 +250,7 @@
           "problem_count": 0,
           "problem_rate": 0.0,
           "unclosed_running": 0,
-          "last_use": "2026-10-15T13:34:53.374444Z",
+          "last_use": "2026-10-15T13:53:52.890127Z",
           "workspaces": {
             "stats-other-workspace": 1
           },
@@ -276,6 +280,7 @@
           "effort": "high",
           "provider": "stats-provider",
           "task_count": 0,
+          "reminder_fired": 0,
           "states": {},
           "result_statuses": {},
           "problem_count": 0,
@@ -344,11 +349,12 @@
     },
     "stats_workspace": {
       "scope": {
-        "workspace_id": "wD",
+        "workspace_id": "wE",
         "days": null,
         "created_since": null
       },
       "task_count": 3,
+      "reminder_fired": 0,
       "workers": {
         "glm": {
           "configured": true,
@@ -357,6 +363,7 @@
           "effort": "max",
           "provider": "zai",
           "task_count": 1,
+          "reminder_fired": 0,
           "states": {
             "done": 1
           },
@@ -366,24 +373,24 @@
           "problem_count": 0,
           "problem_rate": 0.0,
           "unclosed_running": 0,
-          "last_use": "2026-10-15T14:34:15Z",
+          "last_use": "2026-10-15T14:53:27Z",
           "workspaces": {
-            "wD": 1
+            "wE": 1
           },
           "unknown_workspace_count": 0,
           "duration_excluded_count": 0,
           "duration_samples": [
             {
-              "task_id": "t-047ea9",
-              "minutes": 0.5333333333333333,
+              "task_id": "t-37167e",
+              "minutes": 0.3333333333333333,
               "endpoint_source": "first_done_at"
             }
           ],
           "duration_minutes": {
             "sample_size": 1,
-            "median": 0.5333333333333333,
-            "p90": 0.5333333333333333,
-            "max": 0.5333333333333333,
+            "median": 0.3333333333333333,
+            "p90": 0.3333333333333333,
+            "max": 0.3333333333333333,
             "sources": {
               "first_done_at": 1
             }
@@ -396,6 +403,7 @@
           "effort": "medium",
           "provider": "openai",
           "task_count": 2,
+          "reminder_fired": 0,
           "states": {
             "exited": 1,
             "done": 1
@@ -406,24 +414,24 @@
           "problem_count": 1,
           "problem_rate": 0.5,
           "unclosed_running": 0,
-          "last_use": "2026-10-15T14:34:47Z",
+          "last_use": "2026-10-15T14:53:47Z",
           "workspaces": {
-            "wD": 2
+            "wE": 2
           },
           "unknown_workspace_count": 0,
           "duration_excluded_count": 0,
           "duration_samples": [
             {
-              "task_id": "t-d6b773",
-              "minutes": 0.2833333333333333,
+              "task_id": "t-d804a8",
+              "minutes": 0.3333333333333333,
               "endpoint_source": "first_done_at"
             }
           ],
           "duration_minutes": {
             "sample_size": 1,
-            "median": 0.2833333333333333,
-            "p90": 0.2833333333333333,
-            "max": 0.2833333333333333,
+            "median": 0.3333333333333333,
+            "p90": 0.3333333333333333,
+            "max": 0.3333333333333333,
             "sources": {
               "first_done_at": 1
             }
@@ -436,6 +444,7 @@
           "effort": "high",
           "provider": "stats-provider",
           "task_count": 0,
+          "reminder_fired": 0,
           "states": {},
           "result_statuses": {},
           "problem_count": 0,
@@ -502,21 +511,21 @@
     },
     "stats_duration_bounds_minutes": {
       "glm": [
-        0.288335649172465,
-        0.5597087462743123
+        0.2591026941935221,
+        0.35144263903299966
       ],
       "gpt": [
-        0.19920670986175537,
-        0.3164416273434957
+        0.2645247538884481,
+        0.35834237734476726
       ]
     },
     "cancel_run": {
       "exit_code": 0,
       "rows": [
         {
-          "task_id": "t-5c6607",
+          "task_id": "t-991cd5",
           "worker": "gpt",
-          "pane_id": "wD:p5",
+          "pane_id": "wE:p5",
           "state": "running"
         }
       ]
@@ -525,7 +534,7 @@
       "exit_code": 0,
       "rows": [
         {
-          "task_id": "t-5c6607"
+          "task_id": "t-991cd5"
         }
       ]
     },
@@ -536,6 +545,7 @@
         "created_since": null
       },
       "task_count": 5,
+      "reminder_fired": 1,
       "workers": {
         "glm": {
           "configured": true,
@@ -544,6 +554,7 @@
           "effort": "max",
           "provider": "zai",
           "task_count": 1,
+          "reminder_fired": 0,
           "states": {
             "done": 1
           },
@@ -553,24 +564,24 @@
           "problem_count": 0,
           "problem_rate": 0.0,
           "unclosed_running": 0,
-          "last_use": "2026-10-15T14:34:15Z",
+          "last_use": "2026-10-15T14:53:27Z",
           "workspaces": {
-            "wD": 1
+            "wE": 1
           },
           "unknown_workspace_count": 0,
           "duration_excluded_count": 0,
           "duration_samples": [
             {
-              "task_id": "t-047ea9",
-              "minutes": 0.5333333333333333,
+              "task_id": "t-37167e",
+              "minutes": 0.3333333333333333,
               "endpoint_source": "first_done_at"
             }
           ],
           "duration_minutes": {
             "sample_size": 1,
-            "median": 0.5333333333333333,
-            "p90": 0.5333333333333333,
-            "max": 0.5333333333333333,
+            "median": 0.3333333333333333,
+            "p90": 0.3333333333333333,
+            "max": 0.3333333333333333,
             "sources": {
               "first_done_at": 1
             }
@@ -583,6 +594,7 @@
           "effort": "medium",
           "provider": "openai",
           "task_count": 3,
+          "reminder_fired": 0,
           "states": {
             "closed_before_done": 1,
             "exited": 1,
@@ -594,24 +606,24 @@
           "problem_count": 1,
           "problem_rate": 0.5,
           "unclosed_running": 0,
-          "last_use": "2026-10-15T14:34:53Z",
+          "last_use": "2026-10-15T14:53:53Z",
           "workspaces": {
-            "wD": 3
+            "wE": 3
           },
           "unknown_workspace_count": 0,
           "duration_excluded_count": 0,
           "duration_samples": [
             {
-              "task_id": "t-d6b773",
-              "minutes": 0.2833333333333333,
+              "task_id": "t-d804a8",
+              "minutes": 0.3333333333333333,
               "endpoint_source": "first_done_at"
             }
           ],
           "duration_minutes": {
             "sample_size": 1,
-            "median": 0.2833333333333333,
-            "p90": 0.2833333333333333,
-            "max": 0.2833333333333333,
+            "median": 0.3333333333333333,
+            "p90": 0.3333333333333333,
+            "max": 0.3333333333333333,
             "sources": {
               "first_done_at": 1
             }
@@ -624,6 +636,7 @@
           "effort": null,
           "provider": null,
           "task_count": 1,
+          "reminder_fired": 1,
           "states": {
             "done": 1
           },
@@ -633,7 +646,7 @@
           "problem_count": 0,
           "problem_rate": 0.0,
           "unclosed_running": 0,
-          "last_use": "2026-10-15T13:34:53.374444Z",
+          "last_use": "2026-10-15T13:53:52.890127Z",
           "workspaces": {
             "stats-other-workspace": 1
           },
@@ -663,6 +676,7 @@
           "effort": "high",
           "provider": "stats-provider",
           "task_count": 0,
+          "reminder_fired": 0,
           "states": {},
           "result_statuses": {},
           "problem_count": 0,
@@ -731,11 +745,12 @@
     },
     "stats_workspace_after_cancel": {
       "scope": {
-        "workspace_id": "wD",
+        "workspace_id": "wE",
         "days": null,
         "created_since": null
       },
       "task_count": 4,
+      "reminder_fired": 0,
       "workers": {
         "glm": {
           "configured": true,
@@ -744,6 +759,7 @@
           "effort": "max",
           "provider": "zai",
           "task_count": 1,
+          "reminder_fired": 0,
           "states": {
             "done": 1
           },
@@ -753,24 +769,24 @@
           "problem_count": 0,
           "problem_rate": 0.0,
           "unclosed_running": 0,
-          "last_use": "2026-10-15T14:34:15Z",
+          "last_use": "2026-10-15T14:53:27Z",
           "workspaces": {
-            "wD": 1
+            "wE": 1
           },
           "unknown_workspace_count": 0,
           "duration_excluded_count": 0,
           "duration_samples": [
             {
-              "task_id": "t-047ea9",
-              "minutes": 0.5333333333333333,
+              "task_id": "t-37167e",
+              "minutes": 0.3333333333333333,
               "endpoint_source": "first_done_at"
             }
           ],
           "duration_minutes": {
             "sample_size": 1,
-            "median": 0.5333333333333333,
-            "p90": 0.5333333333333333,
-            "max": 0.5333333333333333,
+            "median": 0.3333333333333333,
+            "p90": 0.3333333333333333,
+            "max": 0.3333333333333333,
             "sources": {
               "first_done_at": 1
             }
@@ -783,6 +799,7 @@
           "effort": "medium",
           "provider": "openai",
           "task_count": 3,
+          "reminder_fired": 0,
           "states": {
             "closed_before_done": 1,
             "exited": 1,
@@ -794,24 +811,24 @@
           "problem_count": 1,
           "problem_rate": 0.5,
           "unclosed_running": 0,
-          "last_use": "2026-10-15T14:34:53Z",
+          "last_use": "2026-10-15T14:53:53Z",
           "workspaces": {
-            "wD": 3
+            "wE": 3
           },
           "unknown_workspace_count": 0,
           "duration_excluded_count": 0,
           "duration_samples": [
             {
-              "task_id": "t-d6b773",
-              "minutes": 0.2833333333333333,
+              "task_id": "t-d804a8",
+              "minutes": 0.3333333333333333,
               "endpoint_source": "first_done_at"
             }
           ],
           "duration_minutes": {
             "sample_size": 1,
-            "median": 0.2833333333333333,
-            "p90": 0.2833333333333333,
-            "max": 0.2833333333333333,
+            "median": 0.3333333333333333,
+            "p90": 0.3333333333333333,
+            "max": 0.3333333333333333,
             "sources": {
               "first_done_at": 1
             }
@@ -824,6 +841,7 @@
           "effort": "high",
           "provider": "stats-provider",
           "task_count": 0,
+          "reminder_fired": 0,
           "states": {},
           "result_statuses": {},
           "problem_count": 0,
@@ -895,6 +913,7 @@
         "created_since": null
       },
       "task_count": 7,
+      "reminder_fired": 1,
       "workers": {
         "glm": {
           "configured": true,
@@ -903,6 +922,7 @@
           "effort": "max",
           "provider": "zai",
           "task_count": 1,
+          "reminder_fired": 0,
           "states": {
             "done": 1
           },
@@ -912,24 +932,24 @@
           "problem_count": 0,
           "problem_rate": 0.0,
           "unclosed_running": 0,
-          "last_use": "2026-10-15T14:34:15Z",
+          "last_use": "2026-10-15T14:53:27Z",
           "workspaces": {
-            "wD": 1
+            "wE": 1
           },
           "unknown_workspace_count": 0,
           "duration_excluded_count": 0,
           "duration_samples": [
             {
-              "task_id": "t-047ea9",
-              "minutes": 0.5333333333333333,
+              "task_id": "t-37167e",
+              "minutes": 0.3333333333333333,
               "endpoint_source": "first_done_at"
             }
           ],
           "duration_minutes": {
             "sample_size": 1,
-            "median": 0.5333333333333333,
-            "p90": 0.5333333333333333,
-            "max": 0.5333333333333333,
+            "median": 0.3333333333333333,
+            "p90": 0.3333333333333333,
+            "max": 0.3333333333333333,
             "sources": {
               "first_done_at": 1
             }
@@ -942,6 +962,7 @@
           "effort": "medium",
           "provider": "openai",
           "task_count": 3,
+          "reminder_fired": 0,
           "states": {
             "closed_before_done": 1,
             "exited": 1,
@@ -953,24 +974,24 @@
           "problem_count": 1,
           "problem_rate": 0.5,
           "unclosed_running": 0,
-          "last_use": "2026-10-15T14:34:53Z",
+          "last_use": "2026-10-15T14:53:53Z",
           "workspaces": {
-            "wD": 3
+            "wE": 3
           },
           "unknown_workspace_count": 0,
           "duration_excluded_count": 0,
           "duration_samples": [
             {
-              "task_id": "t-d6b773",
-              "minutes": 0.2833333333333333,
+              "task_id": "t-d804a8",
+              "minutes": 0.3333333333333333,
               "endpoint_source": "first_done_at"
             }
           ],
           "duration_minutes": {
             "sample_size": 1,
-            "median": 0.2833333333333333,
-            "p90": 0.2833333333333333,
-            "max": 0.2833333333333333,
+            "median": 0.3333333333333333,
+            "p90": 0.3333333333333333,
+            "max": 0.3333333333333333,
             "sources": {
               "first_done_at": 1
             }
@@ -983,6 +1004,7 @@
           "effort": null,
           "provider": null,
           "task_count": 3,
+          "reminder_fired": 1,
           "states": {
             "done": 3
           },
@@ -993,7 +1015,7 @@
           "problem_count": 0,
           "problem_rate": 0.0,
           "unclosed_running": 0,
-          "last_use": "2026-10-15T13:34:53.374444Z",
+          "last_use": "2026-10-15T13:53:52.890127Z",
           "workspaces": {
             "stats-other-workspace": 3
           },
@@ -1034,6 +1056,7 @@
           "effort": "high",
           "provider": "stats-provider",
           "task_count": 0,
+          "reminder_fired": 0,
           "states": {},
           "result_statuses": {},
           "problem_count": 0,
@@ -1104,9 +1127,10 @@
       "scope": {
         "workspace_id": null,
         "days": 1,
-        "created_since": "2026-10-14T14:34:57.457918Z"
+        "created_since": "2026-10-14T14:53:57.064236Z"
       },
       "task_count": 6,
+      "reminder_fired": 1,
       "workers": {
         "glm": {
           "configured": true,
@@ -1115,6 +1139,7 @@
           "effort": "max",
           "provider": "zai",
           "task_count": 1,
+          "reminder_fired": 0,
           "states": {
             "done": 1
           },
@@ -1124,24 +1149,24 @@
           "problem_count": 0,
           "problem_rate": 0.0,
           "unclosed_running": 0,
-          "last_use": "2026-10-15T14:34:15Z",
+          "last_use": "2026-10-15T14:53:27Z",
           "workspaces": {
-            "wD": 1
+            "wE": 1
           },
           "unknown_workspace_count": 0,
           "duration_excluded_count": 0,
           "duration_samples": [
             {
-              "task_id": "t-047ea9",
-              "minutes": 0.5333333333333333,
+              "task_id": "t-37167e",
+              "minutes": 0.3333333333333333,
               "endpoint_source": "first_done_at"
             }
           ],
           "duration_minutes": {
             "sample_size": 1,
-            "median": 0.5333333333333333,
-            "p90": 0.5333333333333333,
-            "max": 0.5333333333333333,
+            "median": 0.3333333333333333,
+            "p90": 0.3333333333333333,
+            "max": 0.3333333333333333,
             "sources": {
               "first_done_at": 1
             }
@@ -1154,6 +1179,7 @@
           "effort": "medium",
           "provider": "openai",
           "task_count": 3,
+          "reminder_fired": 0,
           "states": {
             "closed_before_done": 1,
             "exited": 1,
@@ -1165,24 +1191,24 @@
           "problem_count": 1,
           "problem_rate": 0.5,
           "unclosed_running": 0,
-          "last_use": "2026-10-15T14:34:53Z",
+          "last_use": "2026-10-15T14:53:53Z",
           "workspaces": {
-            "wD": 3
+            "wE": 3
           },
           "unknown_workspace_count": 0,
           "duration_excluded_count": 0,
           "duration_samples": [
             {
-              "task_id": "t-d6b773",
-              "minutes": 0.2833333333333333,
+              "task_id": "t-d804a8",
+              "minutes": 0.3333333333333333,
               "endpoint_source": "first_done_at"
             }
           ],
           "duration_minutes": {
             "sample_size": 1,
-            "median": 0.2833333333333333,
-            "p90": 0.2833333333333333,
-            "max": 0.2833333333333333,
+            "median": 0.3333333333333333,
+            "p90": 0.3333333333333333,
+            "max": 0.3333333333333333,
             "sources": {
               "first_done_at": 1
             }
@@ -1195,6 +1221,7 @@
           "effort": null,
           "provider": null,
           "task_count": 2,
+          "reminder_fired": 1,
           "states": {
             "done": 2
           },
@@ -1205,7 +1232,7 @@
           "problem_count": 0,
           "problem_rate": 0.0,
           "unclosed_running": 0,
-          "last_use": "2026-10-15T13:34:53.374444Z",
+          "last_use": "2026-10-15T13:53:52.890127Z",
           "workspaces": {
             "stats-other-workspace": 2
           },
@@ -1241,6 +1268,7 @@
           "effort": "high",
           "provider": "stats-provider",
           "task_count": 0,
+          "reminder_fired": 0,
           "states": {},
           "result_statuses": {},
           "problem_count": 0,
@@ -1459,6 +1487,10 @@
     },
     {
       "name": "C060 days scope excludes old delivery and recomputes percentiles",
+      "ok": true
+    },
+    {
+      "name": "C063 stored reminder firings count flags per worker and in scope",
       "ok": true
     },
     {

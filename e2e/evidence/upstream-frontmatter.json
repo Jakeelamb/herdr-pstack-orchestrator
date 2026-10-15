@@ -183,7 +183,7 @@
   },
   "installed_files": 197,
   "file_differences": [],
-  "installed_tree_sha256": "aee50d227525e389a0efd832cf21db24dcccb1c3387ed469a66708bf34220e90",
+  "installed_tree_sha256": "5d9c6c755776e99c174abd262edb5dc83cf68e09a21b5c3a366a9ff630c3551f",
   "review_fix_verification": {
     "source_parent_revision": "e76103cb99ad008d1bb8191eb5e4a2b798584579",
     "changes": "All 19 adapted preambles now resolve named siblings via ../<name>/SKILL.md; original bodies are unchanged. Bundled compatibility documentation now distinguishes documented invocation and the non-dispatching fan-out boundary.",
@@ -220,5 +220,11 @@
     "Codex enabled catalog entries do not establish implicit-selection behavior or paths filtering.",
     "Installation used the worktree skills path, not a remote URL; the source remained present.",
     "Catalog checker remains strict: all 56 bundled entries must appear in both native catalogs."
-  ]
+  ],
+  "documentation_fix_verification": {
+    "source_parent_revision": "f17bee2",
+    "changes": "Codex automatic-context exclusion is attributed to policy.allow_implicit_invocation in agents/openai.yaml, not disable-model-invocation. The edit touched skills/pstack-herdr/references/compatibility.md, which changes the installed tree hash.",
+    "prior_installed_tree_sha256": "aee50d227525e389a0efd832cf21db24dcccb1c3387ed469a66708bf34220e90",
+    "checks": "Disposable installation with skills@1.7.1 and the full e2e/skill_catalogs.py run passed all six checks: 56 entries and 197 files, Pi and Codex catalogs complete, no Codex skill errors."
+  }
 }

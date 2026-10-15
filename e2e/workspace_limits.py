@@ -10,6 +10,7 @@ import argparse
 import hashlib
 import json
 import os
+import shutil
 from pathlib import Path
 import subprocess
 import sys
@@ -38,6 +39,7 @@ class Run:
         self.store = self.root / 'state/herdr-orchestrator/tasks'
         self.workspaces = {}
         self.tasks = []
+        self.planted = None
         self.assertions = []
         self.observations = {}
         self.input_hash = None
@@ -78,7 +80,8 @@ class Run:
         return proc, rows
 
     def records(self):
-        return [read(p) for p in sorted(self.store.glob('t-*/task.json'))]
+        return [read(p) for p in sorted(self.store.glob('t-*/task.json'))
+                if p.parent != self.planted]
 
     def snapshot(self, task, label):
         state = read(Path(task['task_dir']) / 'state.json')
@@ -88,7 +91,7 @@ class Run:
                 'problem_present': bool(state.get('problem'))}
 
     def allocation(self):
-        return {'tasks': sorted(t['task_id'] for t in self.records()),
+        return {'tasks': sorted(p.name for p in self.store.glob('t-*') if p.is_dir()),
                 'panes': {name: sorted(p['pane_id'] for p in self.herdr(
                     'allocation-' + name, 'pane', 'list', '--workspace', item['workspace'])['panes'])
                           for name, item in self.workspaces.items()}}
@@ -196,9 +199,87 @@ Use at most three shell calls, finish promptly, and write result.json last.
                               '--max-seconds', str(self.args.max_seconds), timeout=self.args.max_seconds + 90)
         self.check('released A check delivers and closes', proc.returncode == 0 and len(rows) == 1 and rows[0].get('ok') is True)
         self.check('released check allocates exactly one task', len(self.records()) == before + 1)
+        self.invalid_record_phase()
+
+    def invalid_record_phase(self):
+        baseline = self.allocation()['tasks']
+        self.check('original reservations are closed', all(
+            read(Path(t['task_dir']) / 'state.json')['closed'] for t in self.records()))
+        # mkdir must fail on collision; never adopt or remove an existing task.
+        planted = self.store / 't-000001'
+        planted.mkdir()
+        self.planted = planted
+        (planted / 'task.json').write_text('{"task_id":')
+        (planted / 'state.json').write_text('{"state": "running", "closed": false}\n')
+        original = {p.name: p.read_bytes() for p in planted.iterdir()}
+        proc, rows = self.cli('invalid-list', 'A', 'list')
+        self.check('planted record is listed as invalid', proc.returncode == 0 and sum(
+            r.get('task_id') == planted.name and r.get('state') == 'task_invalid' for r in rows) == 1)
+        task = self.start('A', 3)
+        self.check('one real worker admitted beside corruption', self.allocation()['tasks']
+                   == sorted([*baseline, planted.name, task['task_id']]))
+        for command in ('run', 'check'):
+            before = self.allocation()
+            argv = (['run', self.args.worker, '--brief', self.root / 'brief-A-3.md']
+                    if command == 'run' else ['check', self.args.worker, '--max-seconds', '10'])
+            proc, rows = self.cli('invalid-' + command, 'A', *argv,
+                                  '--cwd', self.args.cwd, timeout=30)
+            row = rows[0] if len(rows) == 1 else {}
+            self.check('invalid ' + command + ' reports worker_limit',
+                       proc.returncode != 0 and row.get('error') == 'worker_limit'
+                       and planted.name in row.get('message', '') and 'horch list' in row.get('message', ''))
+            self.check('invalid ' + command + ' allocates nothing', before == self.allocation())
+        before = self.allocation()
+        proc, rows = self.cli('invalid-close', 'A', 'close', planted.name, timeout=30)
+        row = rows[0] if len(rows) == 1 else {}
+        self.check('invalid close gives manual recovery guidance', proc.returncode != 0
+                   and row.get('error') == 'task_invalid'
+                   and all(s in row.get('message', '') for s in (
+                       'pane is unknown', 'herdr pane list', 'horch pane', str(planted), 'by hand')))
+        self.check('invalid close leaves all allocations intact', before == self.allocation())
+        self.check('planted record stays unchanged and unclosed', original == {
+            p.name: p.read_bytes() for p in planted.iterdir()} and not read(planted / 'state.json')['closed'])
+        proc, rows = self.cli('invalid-targeted-wait', 'A', 'wait', planted.name, '--max-seconds', '1', timeout=30)
+        self.check('targeted invalid wait still fails', proc.returncode != 0 and len(rows) == 1
+                   and rows[0].get('error') == 'task_invalid')
+        self.deliver_phase_task(task)
+        before = self.allocation()['tasks']
+        self.check('only owned planted files remain', original == {
+            p.name: p.read_bytes() for p in planted.iterdir()})
+        shutil.rmtree(planted)
+        self.planted = None
+        self.check('manual removal removes only planted directory', self.allocation()['tasks']
+                   == [t for t in before if t != planted.name])
+        fresh = self.start('A', 4)
+        self.check('fresh task has a new identity', fresh['task_id'] not in before)
+        self.deliver_phase_task(fresh)
+        proc, rows = self.cli('empty-wait', 'A', 'wait', '--max-seconds', '1', timeout=30)
+        self.check('no unsettled tasks leaves wait empty', proc.returncode == 0 and not rows)
+
+    def deliver_phase_task(self, task):
+        deadline = time.monotonic() + self.args.max_seconds
+        delivered = False
+        while not delivered and time.monotonic() < deadline:
+            proc, rows = self.cli('invalid-phase-wait', 'A', 'wait', '--max-seconds', '30', timeout=60)
+            self.check('no-ID wait reports only the real worker', proc.returncode == 0 and len(rows) == 1
+                       and rows[0].get('task_id') == task['task_id']
+                       and rows[0].get('state') in ('running', 'long_running', 'done'))
+            delivered = rows[0].get('state') == 'done' and rows[0].get('closed') is True
+        self.check('no-ID wait delivers and closes within cap', delivered)
+        directory = Path(task['task_dir'])
+        record, result = read(directory / 'task.json'), read(directory / 'result.json')
+        self.check('phase result identity and arithmetic', result.get('task_id') == record['task_id']
+                   and result.get('nonce') == record['nonce'] and result.get('status') == 'completed'
+                   and (directory / 'answer.txt').read_text().strip() == '2891')
 
     def cleanup(self, failed):
         ok = True
+        if self.planted is not None:
+            try:
+                shutil.rmtree(self.planted)
+                self.planted = None
+            except OSError:
+                ok = False
         for task in self.records():
             try:
                 self.observations.setdefault('before_cleanup', []).append({

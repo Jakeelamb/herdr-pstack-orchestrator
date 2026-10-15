@@ -325,11 +325,17 @@ def active_task_count(workspace_id):
     """Unclosed reservations owned by one workspace, including live legacy panes."""
     active = 0
     legacy_panes = []
+    invalid = []
     for task_id in all_task_ids():
         directory = task_dir(task_id)
         if load_state(directory)["closed"]:
             continue
-        task = load_task(directory, task_id)
+        try:
+            task = load_task(directory, task_id)
+        except TaskInvalidError:
+            active += 1  # unknown owner and pane; reserve a slot in every workspace
+            invalid.append(task_id)
+            continue
         if "workspace_id" not in task:
             legacy_panes.append(task["pane_id"])
         elif task["workspace_id"] == workspace_id:
@@ -337,7 +343,7 @@ def active_task_count(workspace_id):
     if legacy_panes:
         panes = {pane_id for pane_id, _ in workspace_panes(workspace_id)}
         active += sum(pane_id in panes for pane_id in legacy_panes)
-    return active
+    return active, invalid
 
 
 # ---------------------------------------------------------------------------
@@ -644,14 +650,16 @@ def _start_task_locked(config, worker_name, brief_text, cwd, skip_if_full):
         fail("unknown_worker", f"no worker named {worker_name!r} in {config_path()}")
 
     max_active = config["max_active_workers"]
-    active = active_task_count(caller["workspace_id"])
+    active, invalid = active_task_count(caller["workspace_id"])
     if active >= max_active:
-        if skip_if_full:
+        if skip_if_full and not invalid:
             return None
+        guidance = (f"; invalid tasks: {', '.join(invalid)}; inspect them with horch list"
+                    if invalid else "")
         fail(
             "worker_limit",
             f"worker limit reached in workspace {caller['workspace_id']}: "
-            f"{active} active tasks, max_active_workers = {max_active}",
+            f"{active} active tasks, max_active_workers = {max_active}{guidance}",
         )
 
     root = tasks_root()
@@ -983,7 +991,10 @@ def cmd_wait(args):
     else:
         infos = []
         for task_id in all_task_ids():
-            info = make_info(task_id)
+            try:
+                info = make_info(task_id)
+            except TaskInvalidError:
+                continue
             if not info["state"]["closed"] and info["state"]["state"] not in SETTLED_STATES:
                 infos.append(info)
     if not infos:
@@ -1063,7 +1074,11 @@ def cmd_list(args):
 def cmd_close(args):
     require_herdr_env()
     directory = task_dir(args.task_id)
-    task = load_task(directory, args.task_id)
+    try:
+        task = load_task(directory, args.task_id)
+    except TaskInvalidError as exc:
+        fail("task_invalid", f"{exc}; pane is unknown. Check herdr pane list for a leftover "
+             f"horch pane, then remove task directory {directory} by hand")
     outcome = close_pane(task["pane_id"])
     with task_state_lock(directory):
         current = load_state(directory)

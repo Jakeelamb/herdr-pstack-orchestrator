@@ -52,7 +52,7 @@ If inspection shows a previously unacknowledged task started, or the user cleare
 
 When `done` has `closed: false`, read `message` and retry `horch close <task-id>`. The worker slot remains occupied until closure is confirmed. Closing an unfinished worker cancels it and cannot satisfy a completion or review gate.
 
-A pane-placement error can leave an empty pane when Herdr's response was lost. No worker has started at that point. Inspect Herdr before removing it; never close an unrelated pane. A `task_invalid` record requires inspection of its task directory before repair or removal. `list` reports corrupt records without hiding healthy history.
+A pane-placement error can leave an empty pane when Herdr's response was lost. No worker has started at that point. Inspect Herdr before removing it; never close an unrelated pane. `list` reports `task_invalid` records without hiding healthy history. Each unclosed invalid record reserves one slot in every caller workspace because its owner and pane are unknown; full `run` and `check` calls return `worker_limit`, naming the invalid IDs and `horch list`. No-ID `wait` skips them; targeted `wait` still returns `task_invalid`. `close` also returns `task_invalid`: check `herdr pane list` for a leftover `horch` pane, then remove the task directory by hand. Nothing is deleted automatically.
 
 ## Task store and concurrency
 

@@ -122,6 +122,14 @@ sole rejection is a lowercase-only cloud word check against an ordinary
 sentence beginning with Cloud. The reviewed repair casefolds only prose gap
 terms; exact protocol/source/authority checks remain intact. New live
 validation is still required.
+The [fourth Check receipt](evidence/playbook-babysit-overlap.json) stops earlier,
+on an ambiguous visible babysitter observation. Its
+[independent audit](evidence/playbook-babysit-overlap-audit.json) verifies a
+correct conservative stop: the observed caller pane shows matching source and
+fixture, without enough identity evidence to bind the displayed launch to this
+run or establish a distinct dispatcher. No watcher or PR snapshot ran. This
+requires a run-specific supervisor witness, not a caller-wide exemption or a
+format relaxation. The FAIL remains unchanged.
 Feature/Refactoring now has a private same-file wait/audit gate for every
 worker. Its reviewed contract requires a captured working session to pass
 tool, path, input, result and original CommentSicko native checks before the

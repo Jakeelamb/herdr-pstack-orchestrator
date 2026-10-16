@@ -180,3 +180,12 @@ The third Check retains FAIL on lowercase-only cloud gap matching, despite
 correct exact footer lines and an independently verified real status flow.
 The reviewed repair casefolds ordinary-language gap terms only; protocol and
 source identity checks remain exact. New live Check evidence is required.
+The fourth Check correctly stops in preparation on an ambiguous visible launch.
+Same caller pane, source and fixture do not independently bind it to the current
+driver or establish another dispatcher. Preserve FAIL/blocked and the separate
+audit; no watcher or forge snapshots ran. Do not blindly retry or exempt the
+caller. A run-specific supervisor witness must resolve that actual fixture gap
+while distinct or ambiguous actors remain blocked.
+Current metadata has no established displayed-job-to-PID/run mapping. Merely
+recording this driver's nonce/PID cannot identify a truncated visible command;
+leave this branch blocked until a positive machine-derived link exists.

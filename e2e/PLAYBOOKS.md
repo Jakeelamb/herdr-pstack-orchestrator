@@ -448,6 +448,24 @@ explicitly names the Cloud limitation. The reviewed forward repair casefolds
 only ordinary-language gap terms; exact status/source/authority bindings stay
 unchanged. This is not a new automated PASS or complete Babysit evidence.
 
+The [fourth Check receipt](evidence/playbook-babysit-overlap.json) retains
+FAIL/blocked in preparation. Its
+[independent audit](evidence/playbook-babysit-overlap-audit.json) verifies all
+ownership fields except the required empty visible-conflict list. The actual
+brief requires a stop on visible same-repository babysitting, and the controller
+correctly stopped on that ambiguity. The observed target is the unique caller
+pane, and the displayed source/fixture match; no proof path, nonce, PID or
+ancestry binds it to this invocation. Neither self-supervision nor a distinct
+dispatcher is established. All 30 attempted tools, 15 full guide reads, five
+note writes and source/config/fixture/cleanup observations are valid. No ready
+barrier, watcher, forge snapshots or final report occurred. A run-specific
+supervisor witness is required before another attempt; do not exempt the caller
+or turn this supported blocked outcome into a PASS.
+The available Herdr metadata does not link a truncated displayed background job
+to a driver PID/start-time or run nonce. A standalone PID witness cannot fill
+that link, and one caller may launch multiple jobs. This identity capability
+remains unavailable under the current constraints.
+
 The [second Babysit Check receipt](evidence/playbook-babysit-triage.json) retains
 FAIL after 79 of 80 checks. Its
 [independent retained-data audit](evidence/playbook-babysit-triage-audit.json)
@@ -565,6 +583,7 @@ This verifies worker definition replacement, not automatic role or skill reload.
 | [Feature worker scope](evidence/playbook-feature-scope.json) | Unsupported explorer tools and task-store traversal; lead consumed reports before manual halt, so no automatic quarantine claim |
 | [Hillclimb shell grammar](evidence/playbook-hillclimb-shell.json) | Manual stop on explicitly excluded local How shell listings; no delivered report, measured attempt or PR |
 | [Refactoring quarantine](evidence/playbook-refactor-quarantine.json) | Automatic gate stopped explicitly excluded How shell forms before lead consumption; complete workflow unresolved |
+| [Babysit visible overlap](evidence/playbook-babysit-overlap.json) | Conservative preparation stop on an ambiguously identified visible launch; no watcher or forge snapshots |
 
 Each attempt retained its failure verdict and confirmed owned cleanup. The first
 prototype run did not execute a model task. The contract run produced real
@@ -591,7 +610,7 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 | Eval | Scoped Pi transcripts are accessible in principle; current global skill catalog violates strict blinding under unchanged settings |
 | Multi-phase plan | Validator exists; executable cloud lanes and configured swarm role are unavailable |
 | Opening a PR | [Earlier eligibility withdrawn](evidence/playbook-opening-pr-correction.json): ready PR facts verified, mandatory Comment Sicko review omitted |
-| Babysit | [Third FAIL with retained-data audit](evidence/playbook-babysit-case-audit.json): real status flow and exact footer verified; prose case mismatch repaired, fresh Check required; durable wake unavailable |
+| Babysit | [Fourth FAIL/blocked](evidence/playbook-babysit-overlap-audit.json): ambiguous visible launch needs a supervisor witness; earlier status-flow evidence remains partial; durable wake unavailable |
 | Shipping | Cloud verifier unavailable; no authorization to merge test PRs |
 | Autonomous run | Required wake mechanism unavailable |
 | Orchestrate | Cloud execution and durable wake mechanism unavailable |

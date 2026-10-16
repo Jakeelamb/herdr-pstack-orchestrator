@@ -385,7 +385,7 @@ class Run(core.Run):
 Use ONLY direct native read, bash, write, edit, grep, find, ls. No codemode, tool wrappers, inline scripts, arbitrary eval, shell redirection, pipelines, compound commands, or delegation. This captured artifact is bounded: reduce it using the maintained immutable helper and keep its small reduced finding locally; if it actually requires a subagent, stop and report the unsupported stage. Never invent delegation evidence.
 Bash accepts only the exact fixed probe commands below, bare uptime, nproc or pwd, and cat or sha256sum with exactly one assigned absolute file path. Use the native read/grep/find/ls tools for other inspection; do not add bash arguments, commands or wrappers outside that literal grammar.
 Every required source document must have a separate full read with no offset/limit, or literal cat of that one file, whose complete contents appear in the result. Read all: {json.dumps([str(skills / name) for name in READS])}.
-Before target inspection or any forensic work, use exactly one native write to {notes / 'checklist.md'} containing the full original FIVE numbered Runtime forensics instructions (including continuation text). Preserve that complete original-instruction prefix unchanged. After capture, record completion in a separate section in checklist.md only through native edit calls, using nonempty, uniquely matching oldText and nonempty newText; an initial separate pending section may be replaced. Do not rewrite checklist.md with a later native write. Read {self.probe} fully; this maintained control-cli harness accepts fixed operations and instruments only a selected existing source function. All notes may be written ONLY to checklist.md, decision.json, diagnosis.json, reply.md under {notes}; source, probe, descriptor, captures and evaluator are immutable. Failed write attempts are audited too.
+Before target inspection or any forensic work, use exactly one native write to {notes / 'checklist.md'} containing the full original FIVE numbered Runtime forensics instructions (including continuation text). Preserve that complete original-instruction prefix unchanged. Keep planning and completion in a separate section after that prefix. Earlier native edits to that separate tail may record planning notes, including before capture. Only use native edit calls with nonempty, uniquely matching oldText and nonempty newText; an initial separate pending section may be replaced. The final checklist edit must record completion after all five actual operations and the required full runtime-source.json and target.mjs reads. Do not rewrite checklist.md with a later native write. Read {self.probe} fully; this maintained control-cli harness accepts fixed operations and instruments only a selected existing source function. All notes may be written ONLY to checklist.md, decision.json, diagnosis.json, reply.md under {notes}; source, probe, descriptor, captures and evaluator are immutable. Failed write attempts are audited too.
 1. Capture the real live CPU signal via control-cli using this exact literal command:
 {command('capture')}
 Read {self.directory / 'capture.json'} fully. There are zero HTTP requests; the existing target remains alive.
@@ -510,7 +510,8 @@ Keep this directory private; do not commit native sessions or raw captures.
                             and (self.worktree / e['args']['path']).resolve() == checklist_path]
         updated, previous = checklist, checklist_events[0]['result_row']
         for event in completion_edits:
-            self.check('checklist_completion_edit_order', max(previous, cap['result_row']) < event['call_row'])
+            self.check('checklist_edit_order', previous < event['call_row'])
+            before_final_edit = updated
             edits = event['args'].get('edits', [event['args']])
             self.check('checklist_completion_edits_supported', isinstance(edits, list) and bool(edits))
             for edit in edits:
@@ -524,7 +525,7 @@ Keep this directory private; do not commit native sessions or raw captures.
         self.check('native_final_checklist_completion_bound', bool(completion_edits)
                    and updated == checklist_path.read_text()
                    and bool(updated[len(preserved):].strip())
-                   and updated[len(preserved):] != checklist[len(preserved):])
+                   and updated[len(preserved):] != before_final_edit[len(preserved):])
         early = self.full_read(events, self.probe, after=checklist_events[0]['result_row'], before=cap['call_row'])
         for name in READS:
             self.full_read(events, self.bundle / 'skills' / name, before=cap['call_row'])
@@ -566,8 +567,12 @@ Keep this directory private; do not commit native sessions or raw captures.
                    and 'Timeout.' in after['stack'] and str(self.worktree / 'target.mjs') in after['stack']
                    and all(value[side]['requests'] == 0 for value in self.operations.values() for side in ('before', 'after')))
         runtime_source = core.read_json(self.directory / 'runtime-source.json')
-        self.full_read(events, self.directory / 'runtime-source.json', after=source['result_row'])
+        live_source_reads = self.full_read(events, self.directory / 'runtime-source.json', after=source['result_row'])
         source_reads = self.full_read(events, self.worktree / 'target.mjs', after=source['result_row'])
+        self.check('checklist_final_completion_after_observations', completion_edits[-1]['call_row'] > max(
+            event['result_row'] for event in (cap, red, ins, obs, source))
+            and all(any(read['result_row'] < completion_edits[-1]['call_row'] for read in reads)
+                    for reads in (live_source_reads, source_reads)))
         self.check('exact_live_script_source', runtime_source['scriptSource'] == TARGET
                    and mapping['detail']['sourceSha256'] == self.immutable[self.worktree / 'target.mjs']
                    and runtime_source['script']['url'] == uri

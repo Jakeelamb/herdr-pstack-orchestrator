@@ -57,8 +57,9 @@ the sanitized receipt is a candidate for publication.
 
 - `behavior_verdict` covers independent fixture checks.
 - `stage_coverage` covers declared stages and their native evidence.
-- `workflow_verdict` additionally requires full workflow eligibility. Initial
-  scenarios remain ineligible pending an independent complete-stage audit.
+- `workflow_verdict` additionally requires full workflow eligibility and ordered
+  native evidence. Only the fixed-direction Prototype scenario is currently
+  eligible; Investigation and Trace forensics still need complete-stage audits.
 - `inventory` accounts for every playbook. `not_run` is not a pass.
 - `full_inventory_verdict` cannot pass from one scenario.
 
@@ -72,13 +73,22 @@ hashes identify the tested code; keep historical attribution intact.
 
 ### Measured results
 
-The [fresh Prototype stage receipt](evidence/playbook-prototype-stages.json)
-passes its native-stage and independent artifact checks with a real Pi
-controller and one delivered implementation task. Independent replay returns
-102 versus 101 cents for the separating invoice, 933 cents for the ordinary
-case, and zero for zero-cost and empty invoices. Both standalone variants and
-the shared labeled runner produce the expected results. Its complete workflow
-gate remains unresolved pending integration of the independent workflow audit.
+The [complete Prototype receipt](evidence/playbook-prototype.json) passes the
+fixed-direction core workflow with a real Pi controller and one delivered
+implementation task. Its six-stage native record proves the original checklist
+preceded delegation, all three scripts were inspected, both labeled alternatives
+were observed on the same discriminating input, and the decision and final
+handoff followed the observations. Reference gathering was explicitly skipped
+because the supplied contract fixed the direction, as the playbook permits.
+The decision records concrete tradeoffs, throwaway scope and a Feature handoff.
+
+Independent replay returns 102 versus 101 cents for the separating invoice,
+933 cents for the ordinary case, and zero for zero-cost and empty invoices.
+Both standalone variants and the shared runner produce these results even when
+the decision file is temporarily unavailable. This covers the behavioral fork
+with a fixed direction; it does not cover an open visual design search or a
+production Feature build. The [earlier stage receipt](evidence/playbook-prototype-stages.json)
+retains its original unresolved workflow verdict.
 
 The [fresh live-replacement receipt](evidence/hot-swap.json) verifies two real
 Pi tasks using distinct configured models. Both were held working while the
@@ -104,7 +114,8 @@ observations; those do not replace a passing independent replay.
 
 ## Complete inventory
 
-This initial inventory claims no complete-playbook pass.
+One fixed-direction Prototype scenario has complete core-workflow evidence.
+The remaining 22 playbooks are unresolved, as are other Prototype branches.
 
 | Playbook | Scenario or remaining requirement |
 |---|---|
@@ -112,7 +123,7 @@ This initial inventory claims no complete-playbook pass.
 | Bug fix | Failing input, runtime cause, delegated fix, real PR |
 | Feature | Design exploration, delegated implementation, behavior gate, real PR |
 | Refactoring | Frozen baseline, equivalent final artifact, real PR |
-| Prototype | Live scenario implemented; complete stage audit pending |
+| Prototype | [PASS: fixed-direction behavioral core workflow](evidence/playbook-prototype.json); open visual design search unverified |
 | Perf issue | Frozen workload, paired repeat measurements, correctness, real PR |
 | Hillclimb | Sensitive harness, metric and stop predicate, kept/reverted attempts |
 | Runtime forensics | Live signal, instrumentation, source-attributed mechanism |

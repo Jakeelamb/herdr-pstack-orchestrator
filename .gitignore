@@ -54,3 +54,4 @@ e2e/evidence/*
 !e2e/evidence/hot-swap-audit.json
 !e2e/evidence/playbook-prototype-stages.json
 !e2e/evidence/hot-swap.json
+!e2e/evidence/playbook-prototype.json

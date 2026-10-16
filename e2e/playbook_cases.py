@@ -29,8 +29,9 @@ CASES = {
     },
     "prototype": {
         "playbook": "prototype",
-        "workflow_complete": False,
-        "claims": ["observable alternative behavior", "isolated throwaway decision"],
+        "workflow_complete": True,
+        "claims": ["fixed-direction Prototype core workflow", "observable alternative behavior",
+                   "isolated throwaway decision"],
         "required_stages": ["source and supplied captures unchanged",
                             "per-line variant observed through shared CLI",
                             "invoice variant observed through shared CLI",
@@ -39,7 +40,16 @@ CASES = {
                             "workload separates the alternatives",
                             "recommendation follows observed contract behavior",
                             "alternatives have a shared labeled runner",
-                            "prototype handoff identifies tradeoffs and throwaway scope"],
+                            "prototype handoff identifies tradeoffs and throwaway scope",
+                            "prototype checklist copies all six steps",
+                            "prototype reference skip follows supplied direction",
+                            "prototype outputs are independent of the decision",
+                            "prototype decision carries concrete tradeoff facts",
+                            "prototype checklist precedes delegation",
+                            "prototype scripts inspected before observations",
+                            "variant observations share a discriminating input",
+                            "prototype decision and reply follow observations",
+                            "prototype bounded implementation routing"],
     },
     "trace-forensics": {
         "playbook": "trace-forensics",
@@ -198,6 +208,7 @@ def prepare(name, worktree, artifacts, bundle):
     commands = []
     invocations = []
     order = []
+    workflow = {}
     if name == "investigation":
         for filename, content in LEDGER_FILES.items():
             (fixture / filename).write_text(content)
@@ -216,7 +227,7 @@ machine-readable summary (discover the values from the source):
 {{"duplicate_scope": {{"persisted": true or false, "within_batch": true or false,
                       "across_files": true or false}},
  "commit_operation": {{"module": "...", "function": "...", "calls_per_success": integer}},
- "rounding_scope": {{"scope": "line" or "invoice", "mode": "..."}},
+ "rounding_scope": {{"scope": "line" or "invoice", "mode": "half_up" or "half_even" or "floor"}},
  "failure_effect": {{"store_unchanged": true or false, "pending_file_created": true or false}},
  "export_order": {{"key": "...", "direction": "ascending" or "descending"}}, "evidence": [
    {{"file": "<fixture-relative file>", "line": 1, "symbol": "<symbol>"}}]}}
@@ -225,6 +236,17 @@ citation for each of cli.py, storage.py and money.py. Do not change source or
 open a PR for this read-only task.'''
     elif name == "prototype":
         required += ["skills/principle-exhaust-the-design-space/SKILL.md"]
+        roles = ["feature, refactoring"]
+        steps = re.findall(r"^\d+\. (.+)$", (bundle / "skills/poteto-mode/playbooks/prototype.md").read_text(), re.M)
+        if len(steps) != 6:
+            raise ValueError("prototype_stage_inventory_changed")
+        context["prototype_steps"] = steps
+        context["reference_direction_fixed"] = True
+        workflow = {"type": "prototype", "checklist": str(artifacts / "checklist.md"),
+                    "decision": str(artifacts / "decision.json"), "reply": str(artifacts / "reply.md"),
+                    "steps": steps, "reference_direction_fixed": True,
+                    "required_artifact_reads": [str(artifacts / "variants" / filename)
+                                                for filename in ("per_line.py", "per_invoice.py", "compare.py")]}
         (fixture / "contract.md").write_text('''# Discount rounding decision
 
 An invoice is a list of lines with nonnegative integer quantity and price in
@@ -254,13 +276,22 @@ with the exact command form python3 <absolute compare.py> --variant <choice>
 followed by a quoted JSON heredoc as stdin. Use at least one multi-line invoice
 with fractional-cent discounts. Do not use a wrapper or pipeline for these two
 observations; they must show the runner's labeled JSON output directly.
+Keep the original playbook checklist at {artifacts / 'checklist.md'}, before
+any implementation assignment. State the reason for any permitted reference skip.
 Write {artifacts / 'decision.json'} with {{"recommendation": "per_line" or
-"per_invoice", "reason": "..."}}. Keep the recommendation separate from the
-independent implementations. No PR is appropriate for a throwaway prototype.'''
+"per_invoice", "reason": "...", "artifact_scope": "throwaway",
+"handoff": "Feature", "tradeoffs": {{
+"per_line": {{"matches_contract": true or false, "reconciles_line_items": true or false,
+             "rounding_adjustments_can_accumulate": true or false}},
+"per_invoice": {{"rounds_once": true or false, "matches_contract": true or false}}}}}}.
+Discover the facts from the contract and observations. Keep the recommendation
+separate from the independent implementations, and explain those tradeoffs and
+the Feature handoff in your final answer. No PR is appropriate for a throwaway prototype.'''
         invocations = [{"name": label, "script": str(artifacts / "variants/compare.py"),
                         "arguments": ["--variant", variant], "oracle": "rounding", "variant": variant}
                        for variant, label in (("per_line", "per-line variant observed through shared CLI"),
                                               ("per_invoice", "invoice variant observed through shared CLI"))]
+        workflow["observations"] = [item["name"] for item in invocations]
     elif name == "trace-forensics":
         source = fixture / "reconcile.py"
         source.write_text(PROFILE_SOURCE)
@@ -277,7 +308,6 @@ independent implementations. No PR is appropriate for a throwaway prototype.'''
             totals[label] = profiler.runcall(function, references, payments)
             profiler.dump_stats(str(fixture / f"{label}.prof"))
         context["capture_totals"] = totals
-        roles = ["why investigators"]
         counts = {label: len(pstats.Stats(str(fixture / f"{label}.prof")).stats)
                   for label in ("before", "after")}
         invocations = [
@@ -318,7 +348,7 @@ cited explanation and artifact paths. This task is diagnosis only, no fix or PR.
     context["source_hashes"] = hashes(fixture)
     return {"prompt": prompt, "required_reads": required, "expected_roles": roles,
             "required_commands": commands, "required_invocations": invocations,
-            "required_order": order, "context": context, "read_only": True,
+            "required_order": order, "workflow": workflow, "context": context, "read_only": True,
             "claims": CASES[name]["claims"]}
 
 
@@ -421,7 +451,40 @@ def verify(name, worktree, artifacts, context):
         checks.append(check("prototype handoff identifies tradeoffs and throwaway scope",
                             bool(re.search(r"(?:trade.?off|alternative)", report, re.I))
                             and bool(re.search(r"(?:throwaway|disposable)", report, re.I))
+                            and bool(re.search(r"\bFeature\b", report))
                             and str(artifacts / "variants") in report))
+        checklist = (artifacts / "checklist.md").read_text()
+        checks.append(check("prototype checklist copies all six steps",
+                            all(step in checklist for step in context["prototype_steps"])))
+        checks.append(check("prototype reference skip follows supplied direction",
+                            context["reference_direction_fixed"] is True
+                            and bool(re.search(r"(?is)2\..*?skip:.*?(?:direction|contract|alternatives).*?3\.", checklist))))
+        expected_facts = {"per_line": {"matches_contract": True, "reconciles_line_items": True,
+                                       "rounding_adjustments_can_accumulate": True},
+                          "per_invoice": {"rounds_once": True, "matches_contract": False}}
+        checks.append(check("prototype decision carries concrete tradeoff facts",
+                            decision.get("tradeoffs") == expected_facts
+                            and decision.get("artifact_scope") == "throwaway"
+                            and decision.get("handoff") == "Feature"
+                            and all(type(v) is bool for row in decision.get("tradeoffs", {}).values()
+                                    if isinstance(row, dict) for v in row.values())))
+        decision_path = artifacts / "decision.json"
+        backup = artifacts / "decision.json.e2e-saved"
+        if backup.exists():
+            raise ValueError("decision_backup_already_exists")
+        decision_path.rename(backup)
+        try:
+            independent = all(run_json(artifacts / "variants" / f"{variant}.py", vectors[0]) == outputs[variant][0]
+                              for variant in outputs)
+            for variant in outputs:
+                process = subprocess.run([sys.executable, "-B", str(artifacts / "variants/compare.py"),
+                                          "--variant", variant], input=json.dumps(vectors[0]),
+                                         text=True, capture_output=True, timeout=20)
+                independent = independent and process.returncode == 0 and json.loads(process.stdout) == {
+                    "variant": variant, "total_cents": outputs[variant][0]}
+        finally:
+            backup.rename(decision_path)
+        checks.append(check("prototype outputs are independent of the decision", independent))
         observations = {"inputs": vectors, "observed_totals": outputs, "runner_outputs": runner_outputs}
     elif name == "trace-forensics":
         expected = {}

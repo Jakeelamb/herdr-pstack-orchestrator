@@ -11,7 +11,10 @@
 [![Pstack source: 0.15.25](https://img.shields.io/badge/pstack_source-0.15.25-blue)](https://github.com/cursor/plugins/tree/e5136d82418d2db3165ea1050d17577cd618cc05/pstack)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Run coding agents from one conversation and inspect their work in [Herdr](https://herdr.dev). The controller assigns tasks, waits for results, and verifies the work.
+Add agent orchestration to your existing workflow without changing application
+code. Run coding agents from one conversation and inspect their work in
+[Herdr](https://herdr.dev). The controller assigns tasks, waits for results,
+and verifies the work.
 
 [Latest release](https://github.com/conscientiousness/herdr-pstack-orchestrator/releases/latest).
 
@@ -221,7 +224,9 @@ Cursor modes, hooks, `/loop`, cloud execution, and unavailable MCP or app-drivin
 
 Runtime checks run on Linux with real Pi workers. Real Codex and Claude Code controller runs are also recorded. The verified set covers worker setup, the implementation and review loop, a controller-level run, workspace limits, invalid record handling, and Pi preflight. The 0.15.25 bundle passed a local installation check and native discovery in the Pi and Codex catalogs. A receipt for each verified claim is linked in [evidence and source attribution](e2e/README.md#evidence-and-source-attribution).
 
-Not verified: macOS, deliberate approval denial, task turns longer than 30 minutes, and Claude Code native discovery, which was not measured although installation was checked. Apart from one recorded `how` run, most pstack playbooks remain unverified at runtime: updated workflows, `ketchup`, other original skills, and `poteto-mode` playbooks. Discovery does not prove workflow execution.
+The original Prototype playbook has an [ordered six-stage core workflow receipt](e2e/evidence/playbook-prototype.json) for a fixed-direction behavioral fork. Both independent alternatives and their labeled runner were replayed; the production build remains a separate Feature task. Live worker replacement also has [independent evidence](e2e/evidence/hot-swap.json).
+
+Not verified: macOS, deliberate approval denial, task turns longer than 30 minutes, and Claude Code native discovery, which was not measured although installation was checked. Most original pstack skills and 22 other playbooks remain unverified at runtime; see the [complete inventory](e2e/PLAYBOOKS.md). Discovery does not prove workflow execution.
 
 Historical receipts keep their original source attribution in [evidence and source attribution](e2e/README.md#evidence-and-source-attribution). To rerun the checks, use [verify-herdr-orchestrator](.agents/skills/verify-herdr-orchestrator/SKILL.md).
 

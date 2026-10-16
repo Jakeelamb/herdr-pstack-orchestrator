@@ -152,8 +152,189 @@ def invocation_result(command, output, cwd, requirement):
     return False
 
 
+
+def literal_horch_command(name, args, cwd, bundle):
+    if name != 'bash':
+        return None
+    command = args.get('command', '')
+    if not isinstance(command, str) or any(t in command for t in ('\n', ';', '|', '&', '>', '<', '`', '$', '\\')):
+        return None
+    try:
+        words = shlex.split(command)
+    except ValueError:
+        return None
+    if (len(words) >= 3 and Path(words[0]).name in {'python', 'python3'}
+            and (cwd / words[1]).resolve() == (bundle / 'skills/herdr-orchestrator/scripts/horch.py').resolve()):
+        return words[2:]
+    return None
+
+def rounding_observation(event, cwd, requirement):
+    """Decode only the same direct CLI/quoted-heredoc grammar as its oracle."""
+    if event['name'] != 'bash' or not invocation_result(
+            event['args'].get('command', ''), event['output'], cwd, requirement):
+        return None
+    lines = event['args']['command'].strip().splitlines()
+    if len(lines) < 3:
+        return None
+    try:
+        data = json.loads('\n'.join(lines[1:-1]))
+        rows = data['lines']
+        if not isinstance(rows, list) or not rows:
+            return None
+        for row in rows:
+            if any(type(row[key]) is not int or row[key] < 0
+                   for key in ('quantity', 'unit_price_cents', 'discount_bp')) or row['discount_bp'] > 10000:
+                return None
+        numerators = [row['quantity'] * row['unit_price_cents'] * (10000 - row['discount_bp']) for row in rows]
+        totals = {'per_line': sum((value + 5000) // 10000 for value in numerators),
+                  'per_invoice': (sum(numerators) + 5000) // 10000}
+        return {'input': data, 'totals': totals, 'event': event}
+    except (ValueError, TypeError, KeyError):
+        return None
+
+
+def audit_prototype(events, calls, cwd, tasks, bundle, requirements, workflow, implementation_workers):
+    """Witness this Prototype sequence using native successful result/call rows."""
+    names = ('prototype checklist precedes delegation',
+             'prototype scripts inspected before observations',
+             'variant observations share a discriminating input',
+             'prototype decision and reply follow observations',
+             'prototype bounded implementation routing')
+    checks = {name: False for name in names}
+    metadata_ok = (workflow.get('type') == 'prototype' and len(workflow.get('steps', [])) == 6
+                   and len(workflow.get('observations', [])) == 2
+                   and len(workflow.get('required_artifact_reads', [])) == 3)
+    proof = {'type': 'prototype', 'stages': [], 'sequence_verified': False}
+    if not metadata_ok:
+        return [{'name': name, 'ok': False} for name in names], proof
+    steps = workflow['steps']
+    source_steps = re.findall(r'^\d+\. (.+)$',
+                             (bundle / 'skills/poteto-mode/playbooks/prototype.md').read_text(), re.M)
+    if [re.sub(r'^\d+\.\s*', '', step) for step in steps] != source_steps:
+        return [{'name': name, 'ok': False} for name in names], proof
+    checklist = Path(workflow['checklist']).resolve()
+    scripts = [Path(path).resolve() for path in workflow['required_artifact_reads']]
+    writes = [event for event in events if event['name'] == 'write'
+              and isinstance(event['args'].get('path'), str)
+              and isinstance(event['args'].get('content'), str)]
+    runs = [(call, literal_horch_command(call['name'], call['args'], cwd, bundle)) for call in calls]
+    runs = [(call, argv) for call, argv in runs if argv and argv[0] == 'run']
+    first_run = min((call['call_row'] for call, _ in runs), default=-1)
+    checklist_event, skip_reason = None, None
+    for event in writes:
+        content = event['args']['content']
+        if ((cwd / event['args']['path']).resolve() != checklist or event['result_row'] >= first_run
+                or not all(step in content for step in source_steps)):
+            continue
+        start, stop = content.find(source_steps[1]), content.find(source_steps[2])
+        match = re.search(r'(?im)\bskip:\s*([^\n]+)', content[start:stop]) if stop > start else None
+        if (workflow.get('reference_direction_fixed') is True and match
+                and re.search(r'\b(?:set|fixed|supplied|contract|specified)\b', match[1], re.I)):
+            checklist_event, skip_reason = event, match[1].strip()
+            break
+    checks[names[0]] = checklist_event is not None
+    inspected = {}
+    for event in events:
+        target = read_target(event['name'], event['args'], cwd)
+        if target in scripts and target.is_file():
+            content = target.read_text().strip()
+            if content and content in event['output']:
+                inspected.setdefault(target, event['result_row'])
+    required = {item['name']: item for item in requirements}
+    matched_requirements = [required.get(name, {}) for name in workflow['observations']]
+    shared_cli = (all(item.get('script') for item in matched_requirements)
+                  and len({str(Path(item['script']).resolve()) for item in matched_requirements}) == 1
+                  and {item.get('variant') for item in matched_requirements} == {'per_line', 'per_invoice'}
+                  and Path(matched_requirements[0]['script']).resolve() in scripts)
+    candidates = []
+    for name in workflow['observations']:
+        requirement = required.get(name, {})
+        if requirement.get('oracle') != 'rounding' or requirement.get('variant') not in {'per_line', 'per_invoice'}:
+            candidates.append([])
+            continue
+        candidates.append([observation for event in events
+                           if (observation := rounding_observation(event, cwd, requirement)) is not None])
+    pairs = [(left, right) for left in candidates[0] for right in candidates[1]
+             if left['input'] == right['input']
+             and left['totals']['per_line'] != left['totals']['per_invoice']]
+    # Prefer a pair that also has all script inspections complete before either
+    # call. Do not replace call ordering with successful-result list positions.
+    def inspections_before(pair):
+        return len(inspected) == len(scripts) and all(
+            inspected[path] < min(item['event']['call_row'] for item in pair) for path in scripts)
+    pair = next((item for item in pairs if inspections_before(item)), pairs[0] if pairs else None)
+    checks[names[2]] = pair is not None and shared_cli
+    checks[names[1]] = pair is not None and inspections_before(pair)
+    completion = {}
+    if pair:
+        after = max(item['event']['result_row'] for item in pair)
+        for label in ('decision', 'reply'):
+            path = Path(workflow[label]).resolve()
+            completion[label] = next((event for event in writes
+                                      if (cwd / event['args']['path']).resolve() == path
+                                      and event['call_row'] > after and bool(event['args']['content'].strip())
+                                      and path.is_file() and event['args']['content'] == path.read_text()), None)
+        checks[names[3]] = all(completion.values())
+    agent_path = str((bundle / 'skills/pstack-herdr/references/agents/poteto-agent.md').resolve())
+    mode_path = str((bundle / 'skills/poteto-mode/SKILL.md').resolve())
+    routing = bool(tasks) and bool(implementation_workers)
+    for task in tasks:
+        brief = Path(task['brief_path']).read_text()
+        # Check the controller's assignment, before horch appends generic worker
+        # instructions; the bounded playbook assignment must forbid delegation.
+        assignment = brief.split('## Worker rules', 1)[0]
+        routing &= (task['worker'] in implementation_workers and 'feature, refactoring' in assignment
+                    and task['worker'] in assignment and bool(re.search(r'\b(?:reason|because)\b', assignment, re.I))
+                    and agent_path in assignment and mode_path in assignment
+                    and bool(re.search(r'\b(?:do not|must not|never)\s+(?:delegate|spawn\s+(?:sub)?agents?|use\s+(?:native\s+)?subagents?)\b|\bno\s+(?:delegation|subagents)\b', assignment, re.I))
+                    and bool(re.search(r'\b(?:bounded|scoped|only implementing|whole playbook)\b', assignment, re.I)))
+    launched = []
+    known_tasks = {task['task_id']: task for task in tasks}
+    for event in events:
+        argv = literal_horch_command(event['name'], event['args'], cwd, bundle)
+        if not argv or len(argv) < 2 or argv[0] != 'run':
+            continue
+        try:
+            result = json.loads(event['output'].strip())
+        except ValueError:
+            continue
+        if not isinstance(result, dict):
+            continue
+        task = known_tasks.get(result.get('task_id'))
+        if task and argv[1] == task['worker'] and result.get('worker') == task['worker']:
+            launched.append((event, task['task_id']))
+    launch_ids = {task_id for _, task_id in launched}
+    checks[names[4]] = bool(routing) and launch_ids == set(known_tasks)
+    first_launch = min((event for event, _ in launched), key=lambda event: event['call_row'], default=None)
+    # Keep six records even on a failed sequence, so absent evidence is visible.
+    proof['stages'] = [
+        {'step': 1, 'instruction': steps[0],
+         'checklist_result_row': checklist_event['result_row'] if checklist_event else None},
+        {'step': 2, 'instruction': steps[1], 'status': 'skip' if skip_reason else 'unverified',
+         'reason': 'The supplied scenario fixes the behavioral design direction.' if skip_reason else None,
+         'reason_sha256': hashlib.sha256(skip_reason.encode()).hexdigest() if skip_reason else None,
+         'checklist_result_row': checklist_event['result_row'] if checklist_event else None},
+        {'step': 3, 'instruction': steps[2], 'launch_call_row': first_launch['call_row'] if first_launch else None,
+         'launch_result_row': first_launch['result_row'] if first_launch else None},
+        {'step': 4, 'instruction': steps[3], 'script_read_result_rows': sorted(inspected.values())},
+        {'step': 5, 'instruction': steps[4],
+         'observations': [{'name': name, 'call_row': item['event']['call_row'],
+                           'result_row': item['event']['result_row']}
+                          for name, item in zip(workflow['observations'], pair)] if pair else [],
+         'input_sha256': hashlib.sha256(json.dumps(pair[0]['input'], sort_keys=True).encode()).hexdigest() if pair else None,
+         'oracle_totals': pair[0]['totals'] if pair else None},
+        {'step': 6, 'instruction': steps[5],
+         'decision_call_row': completion['decision']['call_row'] if completion.get('decision') else None,
+         'decision_result_row': completion['decision']['result_row'] if completion.get('decision') else None,
+         'reply_call_row': completion['reply']['call_row'] if completion.get('reply') else None,
+         'reply_result_row': completion['reply']['result_row'] if completion.get('reply') else None},
+    ]
+    proof['sequence_verified'] = all(checks.values())
+    return [{'name': name, 'ok': ok} for name, ok in checks.items()], proof
+
+
 def audit_pi(path, session, cwd, started, spec, required_reads, required_commands, tasks, bundle,
-             required_invocations=(), required_order=()):
+             required_invocations=(), required_order=(), workflow=None, implementation_workers=()):
     """Trust native successful calls/results, never a controller's self-report."""
     rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
     if not rows or rows[0].get('type') != 'session' or rows[0].get('version') != 3:
@@ -171,6 +352,7 @@ def audit_pi(path, session, cwd, started, spec, required_reads, required_command
     elif value != header['id']:
         raise Failure('native_session_identity_mismatch')
     pending, successful, read_paths = {}, [], set()
+    calls, events = [], []
     delivered, artifact_reads = set(), set()
     known_tasks = {task['task_id']: task for task in tasks}
     horch_script = (bundle / 'skills/herdr-orchestrator/scripts/horch.py').resolve()
@@ -178,7 +360,7 @@ def audit_pi(path, session, cwd, started, spec, required_reads, required_command
     ids = set()
     models = set()
     thinking = set()
-    for row in rows[1:]:
+    for row_index, row in enumerate(rows[1:], 1):
         identity = row.get('id')
         if identity in ids or not identity or row.get('parentId') != last:
             raise Failure('native_transcript_branch_or_identity_ambiguous')
@@ -204,16 +386,19 @@ def audit_pi(path, session, cwd, started, spec, required_reads, required_command
                 command = args.get('command', '')
                 if name == 'bash' and re.search(r'(?:^|[;&|\n]\s*)(?:codex|claude|pi)\b|\bherdr\s+agent\s+start\b', command):
                     raise Failure('native_delegation_forbidden')
-                pending[block['id']] = (name, args)
+                pending[block['id']] = (name, args, row_index)
+                calls.append({'name': name, 'args': args, 'call_row': row_index})
         elif message.get('role') == 'toolResult':
             pair = pending.pop(message.get('toolCallId'), None)
             if pair is None or message.get('toolName') != pair[0]:
                 raise Failure('native_tool_result_unbound')
             if message.get('isError') is not False:
                 continue
-            name, args = pair
+            name, args, call_row = pair
             output = text_content(message)
             successful.append((name, args, output))
+            events.append({'name': name, 'args': args, 'output': output,
+                           'call_row': call_row, 'result_row': row_index})
             target = read_target(name, args, cwd)
             # Other literal artifact-access forms must not disappear from an
             # ordering audit merely because their shell grammar is unsupported.
@@ -304,7 +489,15 @@ def audit_pi(path, session, cwd, started, spec, required_reads, required_command
         checks.append({'name': 'native required invocation order', 'ok': all(
             left in positions and right in positions and positions[left] < positions[right]
             for left, right in zip(required_order, required_order[1:]))})
+    ordered_workflow = None
+    if workflow:
+        if workflow.get('type') != 'prototype':
+            raise Failure('native_workflow_unsupported')
+        workflow_checks, ordered_workflow = audit_prototype(
+            events, calls, cwd, tasks, bundle, required_invocations, workflow, implementation_workers)
+        checks.extend(workflow_checks)
     return {'checks': checks, 'tool_calls': len(successful),
+            **({'ordered_workflow': ordered_workflow} if ordered_workflow is not None else {}),
             'session_id_sha256': hashlib.sha256(header['id'].encode()).hexdigest(),
             'sha256': sha(path), 'format': 'pi-session-v3',
             'harness': 'pi', 'model': spec['model'], 'effort': spec.get('effort')}
@@ -442,6 +635,11 @@ absolute horch.py path, wait, and task IDs. Read each delivered task's report or
 result with a separate native read call, after wait has reported state done.
 Write your final answer to {self.artifacts / 'reply.md'}.
 Put all checklists and control notes under {self.artifacts}; the worktree is read-only.
+Use separate native write calls for the stage checklist, decision.json and
+reply.md. Include any valid fixed-direction reference skip in the initial
+checklist before delegation. Inspect every delegated script with a separate
+full-file native read before the comparison observations. The decision and
+final report must follow those observations.
 Do not create or edit evidence.json or an evaluator/checker. No external forge
 writes, merges, configuration edits, trust changes, or model substitutions are
 authorized. Report any blocked required stage explicitly.
@@ -558,7 +756,11 @@ authorized. Report any blocked required stage explicitly.
                                self.spec, required, self.prepared.get('required_commands', []),
                                [task for task, _ in rows], self.bundle,
                                self.prepared.get('required_invocations', []),
-                               self.prepared.get('required_order', [])))
+                               self.prepared.get('required_order', []),
+                               self.prepared.get('workflow'),
+                               [self.config.get('roles', {}).get('feature, refactoring')]
+                               if isinstance(self.config.get('roles', {}).get('feature, refactoring'), str)
+                               else self.config.get('roles', {}).get('feature, refactoring', [])))
         self.stage_checks = self.native['checks']
         self.behavior = cases.verify(self.args.scenario, self.worktree, self.artifacts,
                                      self.prepared.get('context', {}))

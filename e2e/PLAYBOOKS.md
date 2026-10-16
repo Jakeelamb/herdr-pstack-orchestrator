@@ -436,6 +436,21 @@ final review/commit. Perf also audits every worker tool attempt and records
 before/after reader-tree evidence. These repairs have independent code review;
 a fresh complete live pass is still required.
 
+The [second Babysit Check receipt](evidence/playbook-babysit-triage.json) retains
+FAIL after 79 of 80 checks. Its
+[independent retained-data audit](evidence/playbook-babysit-triage-audit.json)
+verifies one original watcher invocation over an exact two-PR branch/commit
+chain, with two passing checks per PR, zero threads and unchanged before/after
+forge state. Original query responses reproduce both STATUS rows; the correct
+interpretation is WAITING/merge-queue with owner authority pending. All 43 native
+attempts, eleven exact writes, source/config/fixture integrity and cleanup agree.
+The first failure is overly strict whole-object triage equality: the actual
+empty findings include a truthful reason. A later unreached reply check also
+demands undeclared exact strings. The reviewed forward contract permits only
+the optional typed reason and declares exact private citation/authority footer
+lines. The raw FAIL remains unchanged, and no fresh Check or full Babysit pass
+is inferred from this analysis.
+
 The [first Hillclimb receipt](evidence/playbook-hillclimb-shell.json) remains an
 operator-stopped FAIL, with 28 passing setup/cleanup checks and no measured
 attempt. The [metadata-only audit](evidence/playbook-hillclimb-shell-audit.json)
@@ -532,7 +547,7 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 | Eval | Scoped Pi transcripts are accessible in principle; current global skill catalog violates strict blinding under unchanged settings |
 | Multi-phase plan | Validator exists; executable cloud lanes and configured swarm role are unavailable |
 | Opening a PR | [Earlier eligibility withdrawn](evidence/playbook-opening-pr-correction.json): ready PR facts verified, mandatory Comment Sicko review omitted |
-| Babysit | [First preparation FAIL](evidence/playbook-babysit-grammar-audit.json): bounded Herdr inspection grammar repaired; new live Check required; drive/background wake unavailable |
+| Babysit | [Second FAIL with retained-data audit](evidence/playbook-babysit-triage-audit.json): one actual watcher/real two-PR chain verified; triage/reply contract repaired, fresh Check required; durable wake unavailable |
 | Shipping | Cloud verifier unavailable; no authorization to merge test PRs |
 | Autonomous run | Required wake mechanism unavailable |
 | Orchestrate | Cloud execution and durable wake mechanism unavailable |

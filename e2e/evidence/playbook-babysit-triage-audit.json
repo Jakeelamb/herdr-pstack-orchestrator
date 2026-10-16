@@ -1,0 +1,109 @@
+{
+  "schema": "horch/babysit-check-independent-audit/v1",
+  "kind": "independent retained native/forge/source review",
+  "original_receipt": "playbook-babysit-triage.json",
+  "original_receipt_sha256": "462552db271517a62bc5cb0fc547be0868fc076eb1992ca487e61c6978488d44",
+  "original_receipt_unchanged": true,
+  "source_revision": "c6c04a02c5bae5b3f6d8cc4425e63c83d751e026",
+  "original_verdict": "fail",
+  "original_workflow_verdict": "fail",
+  "seconds": 369.855,
+  "recorded_checks": {
+    "passed": 79,
+    "total": 80,
+    "first_failed": "no_synthesized_review_findings"
+  },
+  "contract_mismatches": [
+    {
+      "check": "no_synthesized_review_findings",
+      "frozen_checker": "babysit_loop.py:567",
+      "actual": "The object has status=not_applicable, entries=[] and a truthful nonempty reason. Both actual watcher rows have zero review threads.",
+      "diagnosis": "Whole-object equality rejects extra explanatory metadata despite the brief requiring only status and entries; no synthesized finding is established."
+    },
+    {
+      "check": "final_cited_scoped_no_merge_report",
+      "frozen_checker": "babysit_loop.py:626-628",
+      "reached_in_original_audit": false,
+      "actual": "The reply paraphrases owner authority and cites the watcher filename and its artifact directory separately. The report contains the exact required typed authority.",
+      "diagnosis": "The brief requests the substance and source citation, not the exact owner-authority sentence and concatenated absolute filename demanded by the checker."
+    }
+  ],
+  "native": {
+    "sha256": "e3ce7a6def91151ba2ffe49ff1f1c17fd7cf48b8176a456ce05a527c2a09ad8a",
+    "single_bound_pi_session": true,
+    "configured_model_effort_preserved": true,
+    "complete_chain_valid": true,
+    "tool_attempts": 43,
+    "successful_tool_calls": 41,
+    "expected_help_discovery_errors": 2,
+    "all_attempts_declared_and_scoped": true,
+    "native_writes_match_retained_bytes": 11
+  },
+  "observed_workflow": {
+    "complete_original_nine_stage_checklist_before_poll": true,
+    "actor_snapshot_native_list_equal": true,
+    "visible_actor_reads": 1,
+    "unique_prior_listed_caller_workspace_target": true,
+    "actor_read_after_frozen_snapshot": true,
+    "original_watcher_invocations": 1,
+    "watcher_call_row_zero_based": 75,
+    "watcher_result_row_zero_based": 76,
+    "watcher_kind": "STATUS",
+    "watcher_sequence": 1,
+    "watcher_terminal": true,
+    "watcher_reason": "status-only",
+    "watcher_capture_equals_native_output": true,
+    "real_pr_count": 2,
+    "branch_and_commit_base_chain_exact": true,
+    "passing_checks_per_pr": [
+      2,
+      2
+    ],
+    "raw_and_unresolved_thread_counts": [
+      0,
+      0
+    ],
+    "auto_merge_present": false,
+    "frontier_status": "WAITING",
+    "frontier_reason": "merge-queue",
+    "owner_authority_pending": true,
+    "ci_work_performed": false,
+    "source_or_forge_mutation_observed": false
+  },
+  "independent_observations": {
+    "original_query_responses_replay_watcher_rows_exactly": true,
+    "typed_report_exact_required_facts": true,
+    "evidence_report_reply_order_valid": true,
+    "full_unslop_reread_after_report_before_reply": true,
+    "actual_owning_pr_link_present": true,
+    "no_merge_and_capability_limits_stated": true,
+    "native_write_count": 11
+  },
+  "before_after_sha256": "5723eeff1074a62cdb85fc4d2667521121a111bf2925e400215817f10529ad45",
+  "watcher_response_sha256": "7f4cf48eadd908838056c67d6d8e3967bdd91be442a923f3b5912ef5846c670d",
+  "triage_sha256": "147f7bffde94de88daedca986402747062aefa83ef4a4fc0bf622dd6e84f2eb1",
+  "integrity": {
+    "source_hashes": 202,
+    "frozen_source_rehashed": true,
+    "source_before_after_equal": true,
+    "bundle_and_config_intact": true,
+    "fixture_and_refs_unchanged": true,
+    "owned_panes_absent": true,
+    "lease_released": true
+  },
+  "forward_repair": {
+    "reviewed_driver_sha256": "48999861357a4881cbe65ef4a40e88338ab9a8e5922f920e65f13da1a998a118",
+    "changes": [
+      "Allow only empty-triage status/entries and an optional nonempty string reason; reject other keys.",
+      "Explicitly require exact private Owner authority and Source artifact footer lines, with matching whole-line checks.",
+      "Preserve structured report, actual watcher/forge and no-merge gates."
+    ],
+    "validation": "Compilation, CLI help and independent review only; a fresh Check run is required."
+  },
+  "limitations": [
+    "The original FAIL remains unchanged. Separate retained-data analysis is not a fresh automated PASS or full Babysit/inventory coverage.",
+    "Only one read-only Check flow was executed; drive/background, CI fix/retry, reply, cloud, wake and merge paths remain unrun.",
+    "Scoped ownership and visible actors do not establish global babysitter exclusivity.",
+    "The audit made no watcher reruns or external calls."
+  ]
+}

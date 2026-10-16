@@ -107,6 +107,14 @@ undeclared checker restriction on required environment/help and brief-directed
 actor inspection. The new contract admits only those bounded forms and
 previously listed caller-workspace actors. Code review is complete; a fresh
 Check run is still required, and would not complete the whole Babysit playbook.
+The [second Check receipt](evidence/playbook-babysit-triage.json) executed the
+original watcher once over two real stacked PRs. Its
+[independent audit](evidence/playbook-babysit-triage-audit.json) replays both
+STATUS rows against unchanged forge snapshots and confirms WAITING/merge-queue.
+The workflow still retains FAIL: whole-object triage equality rejected a truthful
+reason, and a later reply check required undeclared exact strings. The reviewed
+contract accepts only the known optional reason and declares exact private
+evidence footer lines. This repair still needs a fresh Check receipt.
 Named-agent briefs now require tool-only loading of the original agent and
 required skill before any assistant text. The original instructions and exact
 output rules remain unchanged; this forward repair needs fresh live evidence.

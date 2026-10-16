@@ -147,7 +147,12 @@ help, plus brief-directed visible actor inspection. Preserve its FAIL. The
 reviewed grammar repair permits only the exact guard/help forms and unique
 prior-listed caller-workspace actors after the frozen native snapshot. A new
 live Check is required. Hillclimb's first run was manually stopped on explicitly excluded How shell
-listings; preserve that FAIL and its metadata-only audit. Check
+listings; preserve that FAIL and its metadata-only audit. A second Check ran
+the real watcher and correctly interpreted the actual chain, but whole-object
+triage equality rejected its truthful reason. An unreached reply check also
+demanded undeclared exact strings. Preserve that FAIL and independent audit.
+The new contract permits only the optional typed reason and requires explicit
+private evidence footer lines; it still needs a fresh live Check. Check
 does not establish drive/background or a complete Babysit workflow.
 
 Inspect retained worktrees under `handoff/<run>/worktree`, then remove only the

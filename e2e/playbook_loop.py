@@ -864,6 +864,19 @@ class Run:
                 ('MISE_CONFIG_DIR', 'XDG_CONFIG_HOME', Path.home() / '.config'),
                 ('MISE_STATE_DIR', 'XDG_STATE_HOME', Path.home() / '.local/state')):
             self.env.setdefault(variable, str(Path(os.environ.get(xdg, default)) / 'mise'))
+        # Keep Git's original global config order despite the isolated XDG root.
+        # Includes retain relative paths and conditional includes in those files.
+        if 'GIT_CONFIG_GLOBAL' not in self.env:
+            git_global = self.directory / 'git-global.config'
+            originals = (Path(os.environ.get('XDG_CONFIG_HOME') or Path.home() / '.config') / 'git/config',
+                         Path.home() / '.gitconfig')
+            includes = []
+            for original in originals:
+                if original.is_file():
+                    quoted = str(original.absolute()).replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n')
+                    includes.append('[include]\n\tpath = "' + quoted + '"\n')
+            git_global.write_text(''.join(includes))
+            self.env['GIT_CONFIG_GLOBAL'] = str(git_global)
         self.task_root = self.directory / 'state/herdr-orchestrator/tasks'
         self.worktree = args.repo / 'handoff' / self.directory.name / 'worktree'
         self.bundle = self.directory / 'bundle'
@@ -965,7 +978,8 @@ class Run:
                          '--env', 'XDG_CONFIG_HOME=' + self.env['XDG_CONFIG_HOME'],
                          '--env', 'XDG_STATE_HOME=' + self.env['XDG_STATE_HOME'],
                          '--env', 'MISE_CONFIG_DIR=' + self.env['MISE_CONFIG_DIR'],
-                         '--env', 'MISE_STATE_DIR=' + self.env['MISE_STATE_DIR'])
+                         '--env', 'MISE_STATE_DIR=' + self.env['MISE_STATE_DIR'],
+                         '--env', 'GIT_CONFIG_GLOBAL=' + self.env['GIT_CONFIG_GLOBAL'])
         self.pane = tab['root_pane']['pane_id']
         workflow_type = self.prepared.get('workflow', {}).get('type')
         workflow_instructions = {
@@ -979,6 +993,11 @@ findings.json and reply.md. Write the checklist and fully read the how skill
 before delegation. Launch both scoped explorers before the first wait. Read
 their complete delivered Markdown reports before launching the explainer;
 include the actual full report bodies and both angle keys in its brief.
+Write EVERY complete worker brief with the native write tool. Do not read,
+copy, concatenate or write task artifacts using bash, inline Python or another
+script, even after delivery. This auditor cannot bind those program semantics.
+Ask explorers to keep their scoped reports concise, preferably under 8 KB,
+while retaining all six original explorer sections and their concrete evidence.
 Require each explorer and explainer to write its complete report as report.md
 in its task directory and list that report in result.json files, then read it.
 After reading the delivered explainer report, write findings.json, fully read

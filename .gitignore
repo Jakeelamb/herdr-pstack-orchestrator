@@ -59,3 +59,15 @@ e2e/evidence/*
 !e2e/evidence/playbook-investigation-reanalysis.json
 !e2e/evidence/playbook-trace-path.json
 !e2e/evidence/playbook-trace.json
+!e2e/pause_pickup.py
+!e2e/forge_loop.py
+!e2e/design_loop.py
+!e2e/perf_loop.py
+!e2e/authoring_loop.py
+!e2e/runtime_loop.py
+!e2e/evidence/playbook-pause-git.json
+!e2e/evidence/playbook-pause-audit.json
+!e2e/evidence/playbook-pause-empty-output.json
+!e2e/evidence/playbook-continuity-route.json
+!e2e/evidence/playbook-investigation-concat.json
+!e2e/evidence/playbook-investigation-concat-reanalysis.json

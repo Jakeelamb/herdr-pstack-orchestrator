@@ -25,6 +25,34 @@ canonical full reports and an unchanged delivered explanation plus one
 throughput line; this is a narrower witness than How's light-edit allowance.
 Check actual source citations, including valid enclosing-function locations.
 Review prose preservation independently before publishing any full-workflow claim.
+The later Investigation run correctly withheld an erroneous synthesis; that
+unresolved result remains failed. Shell/Python task-artifact composition is
+outside this grammar. Every full brief must use native `write`.
+
+For the maintained two-session driver:
+
+```bash
+python3 e2e/pause_pickup.py --controller <configured-pi-worker> \
+  --repo "$repo" --caller-pane <verified-pane> \
+  --output "$proof" --max-seconds 2400
+```
+
+It retains a WIP checkpoint, original note/trail, distinct session identities,
+real persisted CLI observations and replay instructions. Read each phase's
+inventory verdict: the published attempt passes Pause but fails Pickup's
+ambiguous fixture contract. A refined originating-workstream contract awaits
+a fresh run. Existing Git identity, hooks and signing stay in force through
+the isolated environment's original-global-config includes.
+
+See the inventory's [writable workflow procedures](../../../../e2e/PLAYBOOKS.md#continuity-and-writable-workflows)
+for `forge_loop.py`, `design_loop.py`, `perf_loop.py` and `authoring_loop.py`.
+Prepare and verify the portable fixture locally before creating your own private
+baseline repository/ready PR. Supply exact clone/base/parent identities, leave
+PRs unmerged, and stop other isolated dispatchers. Those live model workflows
+are not yet measured. Authoring additionally needs existing creator guidance
+and its validator dependencies; Runtime uses `runtime_loop.py` with Node
+Inspector and built-in WebSocket support. Preserve failed receipts and disclose
+unsupported native capture or forge paths.
 
 Inspect retained worktrees under `handoff/<run>/worktree`, then remove only the
 exact owned worktree with Git. Preserve the external receipt and diagnostics.

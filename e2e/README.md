@@ -13,9 +13,18 @@ skills; its initial scenarios are Investigation, Prototype and Trace forensics.
 Partial stage evidence must not be described as a completed playbook.
 The [fixed-direction Prototype receipt](evidence/playbook-prototype.json) and
 [paired-capture Trace receipt](evidence/playbook-trace.json) record ordered
-six-stage core workflow passes. The other 21 playbooks remain unresolved. The
-Investigation failure includes an actual explanation-preservation violation;
-its separately passing artifact checks do not promote the workflow.
+six-stage core workflow passes. The [continuity receipt](evidence/playbook-continuity-route.json)
+separately records a completed four-stage Pause safely phase; its Pickup phase
+failed because the fixture imposed an unstated Feature route. The other 20
+playbooks remain unresolved. Investigation preserves both an earlier explanation
+rewrite and a later erroneous synthesis that the controller correctly withheld.
+Separate artifact checks do not promote either failed workflow.
+
+The inventory also documents the reviewed continuity, private-PR, design,
+performance, skill-authoring and live-runtime drivers. Portable invoice and
+reconciliation baselines passed their real CLI oracles. The new writable and
+runtime model workflows still require live receipts; implementation and syntax
+checks do not establish those passes.
 
 For live replacement and removal of worker definitions, use the existing
 `check_workers.py --hot-swap-only` mode. It keeps two real reconciliation tasks

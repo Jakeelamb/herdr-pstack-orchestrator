@@ -859,6 +859,9 @@ class Run:
         self.directory.mkdir(parents=True, mode=0o700)
         self.env = dict(os.environ, XDG_CONFIG_HOME=str(self.directory / 'config'),
                         XDG_STATE_HOME=str(self.directory / 'state'))
+        # Isolate horch state without hiding the user's existing forge login.
+        self.env['GH_CONFIG_DIR'] = os.environ.get('GH_CONFIG_DIR') or str(
+            Path(os.environ.get('XDG_CONFIG_HOME') or Path.home() / '.config') / 'gh')
         # Isolate horch without changing the shell's existing Mise trust roots.
         for variable, xdg, default in (
                 ('MISE_CONFIG_DIR', 'XDG_CONFIG_HOME', Path.home() / '.config'),

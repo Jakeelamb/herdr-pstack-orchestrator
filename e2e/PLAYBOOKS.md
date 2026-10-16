@@ -31,6 +31,10 @@ flags, and does not answer trust dialogs. It preserves the shell's original
 Mise config and state roots when isolating horch's XDG directories. Git retains
 its original global configuration files and precedence through a private include
 wrapper, including relative include origins; user Git settings stay unchanged.
+Forge drivers and their controller tabs also retain the original GitHub CLI
+configuration location through `GH_CONFIG_DIR`, including an existing explicit
+override. They do not copy login credentials or require a separate test login.
+This does not establish environment forwarding into Herdr-created worker panes.
 
 Native sessions must match the fresh controller's cwd, time, session identity,
 model and effort. Required documents must appear in successful native tool
@@ -259,6 +263,7 @@ This verifies worker definition replacement, not automatic role or skill reload.
 | [Continuity empty output](evidence/playbook-pause-empty-output.json) | Pi rendered clean Git stdout as `(no output)`, which the checker rejected |
 | [Continuity routing](evidence/playbook-continuity-route.json) | Pause passed; Pickup selected a defensible Investigation route that the fixture had not allowed |
 | [Investigation composition](evidence/playbook-investigation-concat.json) | Unsupported inline file composition; separately, an erroneous synthesis correctly remained unresolved |
+| [Forge authentication visibility](evidence/playbook-forge-auth.json) | Isolated XDG hid existing GitHub CLI configuration; preflight stopped before any model or remote mutation |
 
 Each attempt retained its failure verdict and confirmed owned cleanup. The first
 prototype run did not execute a model task. The contract run produced real

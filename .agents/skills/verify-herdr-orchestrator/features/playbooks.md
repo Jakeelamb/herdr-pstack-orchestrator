@@ -43,6 +43,9 @@ inventory verdict: the fresh attempt passes both bounded phases, including six
 actual CLI cases and independent replay; earlier ambiguous fixtures remain
 failed. Existing Git identity, hooks and signing stay in force through
 the isolated environment's original-global-config includes.
+Private forge drivers and their controller tabs preserve the original
+`GH_CONFIG_DIR` or default GitHub CLI configuration location; no credential copy
+or new login is needed. Worker-pane environment forwarding is not established.
 
 See the inventory's [writable workflow procedures](../../../../e2e/PLAYBOOKS.md#continuity-and-writable-workflows)
 for `forge_loop.py`, `design_loop.py`, `perf_loop.py` and `authoring_loop.py`.

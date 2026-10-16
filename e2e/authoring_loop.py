@@ -220,7 +220,7 @@ class Run(core.Run):
             self.prepare_case(label)
         tab = self.herdr('tab', 'create', '--workspace', self.caller['workspace_id'], '--cwd', self.worktree,
                          '--label', 'authoring-e2e', '--no-focus', *sum((['--env', key + '=' + self.env[key]] for key in
-                         ('XDG_CONFIG_HOME', 'XDG_STATE_HOME', 'MISE_CONFIG_DIR', 'MISE_STATE_DIR', 'GIT_CONFIG_GLOBAL')), []))
+                         ('XDG_CONFIG_HOME', 'XDG_STATE_HOME', 'MISE_CONFIG_DIR', 'MISE_STATE_DIR', 'GIT_CONFIG_GLOBAL', 'GH_CONFIG_DIR')), []))
         self.pane = tab['root_pane']['pane_id']
         brief = self.directory / 'controller-brief.md'
         brief.write_text(self.prompt())

@@ -528,7 +528,8 @@ class Run(core.Run):
                          '--env', 'XDG_STATE_HOME=' + self.env['XDG_STATE_HOME'],
                          '--env', 'MISE_CONFIG_DIR=' + self.env['MISE_CONFIG_DIR'],
                          '--env', 'MISE_STATE_DIR=' + self.env['MISE_STATE_DIR'],
-                         '--env', 'GIT_CONFIG_GLOBAL=' + self.env['GIT_CONFIG_GLOBAL'])
+                         '--env', 'GIT_CONFIG_GLOBAL=' + self.env['GIT_CONFIG_GLOBAL'],
+                         '--env', 'GH_CONFIG_DIR=' + self.env['GH_CONFIG_DIR'])
         self.pane = tab['root_pane']['pane_id']
         brief = self.directory / 'controller-brief.md'
         brief.write_text(self.prompt())

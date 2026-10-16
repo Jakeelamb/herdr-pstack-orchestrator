@@ -422,7 +422,7 @@ class Run(core.Run):
         self.git('worktree', 'add', '-b', self.branch, self.worktree, self.base, repo=self.args.fixture_repo)
         self.reader = self.worktree.parent / 'how-reader'
         self.git('worktree', 'add', '--detach', self.reader, self.base, repo=self.args.fixture_repo)
-        env = [item for key in ('XDG_CONFIG_HOME', 'XDG_STATE_HOME', 'MISE_CONFIG_DIR', 'MISE_STATE_DIR', 'GIT_CONFIG_GLOBAL')
+        env = [item for key in ('XDG_CONFIG_HOME', 'XDG_STATE_HOME', 'MISE_CONFIG_DIR', 'MISE_STATE_DIR', 'GIT_CONFIG_GLOBAL', 'GH_CONFIG_DIR')
                for item in ('--env', key + '=' + self.env[key])]
         tab = self.herdr('tab', 'create', '--workspace', self.caller['workspace_id'], '--cwd', self.worktree,
                          '--label', 'hillclimb-e2e', '--no-focus', *env)

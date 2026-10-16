@@ -194,7 +194,7 @@ class Run(core.Run):
                         ignore=shutil.ignore_patterns('__pycache__', '*.pyc', 'node_modules'))
         self.env['BUN_INSTALL_CACHE_DIR'] = str(self.directory / 'bun-cache')
         env = [item for key in ('XDG_CONFIG_HOME', 'XDG_STATE_HOME', 'MISE_CONFIG_DIR', 'MISE_STATE_DIR',
-                               'GIT_CONFIG_GLOBAL', 'BUN_INSTALL_CACHE_DIR') for item in ('--env', key + '=' + self.env[key])]
+                               'GIT_CONFIG_GLOBAL', 'GH_CONFIG_DIR', 'BUN_INSTALL_CACHE_DIR') for item in ('--env', key + '=' + self.env[key])]
         tab = self.herdr('tab', 'create', '--workspace', self.caller['workspace_id'], '--cwd', self.worktree,
                          '--label', 'babysit-check-e2e', '--no-focus', *env)
         self.pane = tab['root_pane']['pane_id']

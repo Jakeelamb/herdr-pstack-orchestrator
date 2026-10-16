@@ -436,6 +436,17 @@ final review/commit. Perf also audits every worker tool attempt and records
 before/after reader-tree evidence. These repairs have independent code review;
 a fresh complete live pass is still required.
 
+The [third Babysit Check receipt](evidence/playbook-babysit-case.json) retains
+FAIL after 87 of 88 checks. Its
+[independent audit](evidence/playbook-babysit-case-audit.json) verifies all 43
+scoped attempts, eleven exact artifacts, the original watcher and both real
+PR rows, correct WAITING/merge-queue interpretation, exact declared footer
+lines, full unslop reread and intact source/config/fixture/cleanup. The sole
+rejected predicate is a lowercase-only cloud word match, although the reply
+explicitly names the Cloud limitation. The reviewed forward repair casefolds
+only ordinary-language gap terms; exact status/source/authority bindings stay
+unchanged. This is not a new automated PASS or complete Babysit evidence.
+
 The [second Babysit Check receipt](evidence/playbook-babysit-triage.json) retains
 FAIL after 79 of 80 checks. Its
 [independent retained-data audit](evidence/playbook-babysit-triage-audit.json)
@@ -560,7 +571,7 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 | Eval | Scoped Pi transcripts are accessible in principle; current global skill catalog violates strict blinding under unchanged settings |
 | Multi-phase plan | Validator exists; executable cloud lanes and configured swarm role are unavailable |
 | Opening a PR | [Earlier eligibility withdrawn](evidence/playbook-opening-pr-correction.json): ready PR facts verified, mandatory Comment Sicko review omitted |
-| Babysit | [Second FAIL with retained-data audit](evidence/playbook-babysit-triage-audit.json): one actual watcher/real two-PR chain verified; triage/reply contract repaired, fresh Check required; durable wake unavailable |
+| Babysit | [Third FAIL with retained-data audit](evidence/playbook-babysit-case-audit.json): real status flow and exact footer verified; prose case mismatch repaired, fresh Check required; durable wake unavailable |
 | Shipping | Cloud verifier unavailable; no authorization to merge test PRs |
 | Autonomous run | Required wake mechanism unavailable |
 | Orchestrate | Cloud execution and durable wake mechanism unavailable |

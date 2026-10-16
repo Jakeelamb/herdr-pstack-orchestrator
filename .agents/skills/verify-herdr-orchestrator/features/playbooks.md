@@ -165,3 +165,8 @@ after a PASS bound to done/closed state and a captured working native session.
 Every worker is audited before forwarding, with independent final lead
 consumption and dependency checks. This reviewed protocol still requires fresh
 live Feature/Refactoring evidence; it is not a security sandbox.
+
+The third Check retains FAIL on lowercase-only cloud gap matching, despite
+correct exact footer lines and an independently verified real status flow.
+The reviewed repair casefolds ordinary-language gap terms only; protocol and
+source identity checks remain exact. New live Check evidence is required.

@@ -115,6 +115,13 @@ The workflow still retains FAIL: whole-object triage equality rejected a truthfu
 reason, and a later reply check required undeclared exact strings. The reviewed
 contract accepts only the known optional reason and declares exact private
 evidence footer lines. This repair still needs a fresh Check receipt.
+The [third Check receipt](evidence/playbook-babysit-case.json) retains FAIL after
+87 of 88 checks. Its [separate audit](evidence/playbook-babysit-case-audit.json)
+confirms both exact footer lines and the same real read-only status flow. The
+sole rejection is a lowercase-only cloud word check against an ordinary
+sentence beginning with Cloud. The reviewed repair casefolds only prose gap
+terms; exact protocol/source/authority checks remain intact. New live
+validation is still required.
 Feature/Refactoring now has a private same-file wait/audit gate for every
 worker. Its reviewed contract requires a captured working session to pass
 tool, path, input, result and original CommentSicko native checks before the

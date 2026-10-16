@@ -1,0 +1,140 @@
+{
+  "schema": "horch/babysit-check-independent-audit/v1",
+  "kind": "independent retained native/forge/source review",
+  "original_receipt": "playbook-babysit-case.json",
+  "original_receipt_sha256": "54effdd9119b05f6652f27e9b4d85d73eef310f8ba8d7c614fb0a1263ed5e815",
+  "original_receipt_unchanged": true,
+  "source_revision": "d2a53869fe4140b85cb94ac97e17aff2be61743d",
+  "original_verdict": "fail",
+  "original_workflow_verdict": "fail",
+  "seconds": 379.566,
+  "recorded_checks": {
+    "passed": 87,
+    "total": 88,
+    "first_failed": "final_cited_scoped_no_merge_report"
+  },
+  "diagnosis": {
+    "sole_rejected_subpredicate": "case-sensitive 'cloud' in reply",
+    "actual_gap_sentence": "Cloud execution and wake/sleep scheduling remain gaps.",
+    "declared_literal_owner_footer_matches": true,
+    "declared_literal_source_footer_matches": true,
+    "other_exact_status_reason_STATUS_link_no_merge_terms_match": true,
+    "meaning": "The prompt requires the cloud limitation, without prescribing lowercase spelling. This is an evaluator case-sensitivity mismatch, not an ignored footer or semantic claim of cloud execution."
+  },
+  "native": {
+    "sha256": "c7947689f90b4cfcf83320407c778c368357174c5f8bbd7ffafc0b85db0d0415",
+    "provider": "openai",
+    "model": "gpt-6.1-sol",
+    "effort": "medium",
+    "working_session_observation_sha256": "fb6019fad5d20439ccd9264947a0a87fade65c87253d2a9c32700fc88a8bb78b",
+    "native_lines": 94,
+    "tool_attempts": 43,
+    "tool_counts": {
+      "read": 22,
+      "bash": 10,
+      "write": 11
+    },
+    "successful_tool_calls": 41,
+    "expected_help_discovery_errors": 2,
+    "pending_calls": 0,
+    "all_attempts_declared_and_scoped": true,
+    "required_complete_bundle_reads": 15,
+    "native_writes_match_retained_bytes": 11
+  },
+  "observed_workflow": {
+    "complete_original_nine_stage_checklist": true,
+    "actor_snapshot_equal_native_list": true,
+    "visible_actor_target_unique_prior_listed_caller_workspace": true,
+    "actor_snapshot_write_rows": [
+      55,
+      56
+    ],
+    "visible_actor_read_rows": [
+      57,
+      58
+    ],
+    "global_exclusivity_established": false,
+    "native_topology_read_rows": [
+      [
+        71,
+        72
+      ],
+      [
+        73,
+        74
+      ]
+    ],
+    "original_watcher_invocations": 1,
+    "watcher_call_row_zero_based": 75,
+    "watcher_result_row_zero_based": 76,
+    "watcher_kind": "STATUS",
+    "captured_read_and_hashed_json_exact": true,
+    "real_pr_count": 2,
+    "branch_and_commit_base_chain_exact": true,
+    "passing_checks_per_pr": [
+      2,
+      2
+    ],
+    "raw_and_unresolved_thread_counts": [
+      0,
+      0
+    ],
+    "mergeable_states": [
+      "MERGEABLE",
+      "MERGEABLE"
+    ],
+    "merge_state_statuses": [
+      "CLEAN",
+      "CLEAN"
+    ],
+    "auto_merge_present": false,
+    "readonly_graphql_query_records": 8,
+    "actual_queries_replay_both_complete_watcher_rows": true,
+    "frontier_status": "WAITING",
+    "frontier_reason": "merge-queue",
+    "owner_authority_pending": true,
+    "conditional_ci_and_review_work": "not applicable on actual clean rows",
+    "report_rows": [
+      87,
+      88
+    ],
+    "full_unslop_reread_rows": [
+      89,
+      90
+    ],
+    "reply_rows": [
+      91,
+      92
+    ],
+    "private_bootstrap_package_and_lock_marker_match": true,
+    "private_commander_version": "14.0.0",
+    "source_forge_mutations_retries_replies_merges_or_delegation_observed": false
+  },
+  "before_after_sha256": "5723eeff1074a62cdb85fc4d2667521121a111bf2925e400215817f10529ad45",
+  "watcher_response_sha256": "b3ae8d5f828b8a78020c807d7e6348e124825c44c8178f9e69ead4b0d0e92eb2",
+  "triage_sha256": "35aa2a0eed50271e766c0113d1a0fef23c379842940609107722dad5bc760530",
+  "report_sha256": "8b06ef15eca9caad28aefaa6610b8604bdfd4fb8edf89ff6042eb119cd9a76db",
+  "reply_sha256": "a8e12ecf6566f3c9c86e741b00e09b5389ec8e7f1021eb29c5be40d1adca2c6c",
+  "continuation_brief_sha256": "5bd375d317c9da3cb4344d32933f898d9718d19990f15983e749e30225270098",
+  "integrity": {
+    "frozen_source_identities": 202,
+    "bundled_resources": 198,
+    "source_config_bundle_and_binaries_intact": true,
+    "fixture_head_status_refs_and_tracked_file_readbacks_equal": true,
+    "owned_pane_close_succeeded": true,
+    "owned_panes_absent": true,
+    "lease_released_with_matching_nonce": true
+  },
+  "forward_repair": {
+    "reviewed_driver_sha256": "89aec6b4937d20fe9649aa55cd686e2c5f4672d01514caeb80779101a0b30890",
+    "change": "Casefold only ordinary-language cloud/wake/drive/background gap matching.",
+    "exact_protocol_footer_source_identity_checks_preserved": true,
+    "validation": "Compilation and independent code review only; no new live pass established."
+  },
+  "limitations": [
+    "The original FAIL remains unchanged. The separate retained-data audit establishes neither a fresh automated PASS nor full Babysit/inventory coverage.",
+    "Only one read-only Check flow was executed; drive/background, CI fix/retry, reply, cloud, wake and merge paths remain unrun.",
+    "A local scoped lease and visible actors cannot establish global babysitter exclusivity.",
+    "No watcher replay or external call was made by the independent reviewer."
+  ]
+}

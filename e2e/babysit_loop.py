@@ -633,7 +633,8 @@ Read unslop fully again before final reply. Never claim full Babysit or inventor
                    and bool(report.get('untested_cases')))
         reply, reply_events = self.artifact(events, 'reply.md', after=report_events[0]['result_row'])
         self.check('final_cited_scoped_no_merge_report', all(text in reply for text in (
-            status, reason, 'STATUS', 'cloud', 'wake', 'drive', 'background'))
+            status, reason, 'STATUS'))
+            and all(gap in reply.casefold() for gap in ('cloud', 'wake', 'drive', 'background'))
             and all(line in reply.splitlines() for line in (
                 'Owner authority: ' + self.args.owner_authority,
                 'Source artifact: ' + str(self.artifacts / 'watcher.json')))

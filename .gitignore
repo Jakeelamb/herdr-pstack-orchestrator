@@ -97,3 +97,6 @@ e2e/evidence/*
 !e2e/evidence/playbook-authoring-literal-reanalysis.json
 !e2e/evidence/playbook-investigation-concat.json
 !e2e/evidence/playbook-investigation-concat-reanalysis.json
+
+!e2e/evidence/playbook-feature-scope.json
+!e2e/evidence/playbook-feature-scope-audit.json

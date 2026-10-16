@@ -87,6 +87,13 @@ compared to a nonexistent later commit. That checker defect and an impossible
 report-hash command do not erase the actual Comment shell violation or its
 unadjudicated deeper-work requests. Both usage cases and retained independent
 replays remain correct; the complete workflow remains unresolved.
+The [first Feature receipt](evidence/playbook-feature-scope.json) remains failed
+after a manual stop on explorer tool and directory-scope violations. The
+[separate metadata audit](evidence/playbook-feature-scope-audit.json) records the
+missing working-state binding and incomplete early task accounting. Its lead
+had already consumed both reports and launched synthesis. There was no source
+change, commit or PR; this was not automatic quarantine. Existing recorded
+checks cover setup and cleanup only, without a completed worker or workflow audit.
 Named-agent briefs now require tool-only loading of the original agent and
 required skill before any assistant text. The original instructions and exact
 output rules remain unchanged; this forward repair needs fresh live evidence.

@@ -129,7 +129,9 @@ dependency; it never installs that dependency. Explicit forward use does not
 prove automatic discovery. Runtime forensics needs Node with Inspector and
 built-in WebSocket support. A fresh live run passes all five stages after four
 retained checker-contract failures; the independent audits below distinguish them.
-Feature and Refactoring model workflows remain unrun. The first Authoring run
+The first Feature attempt was manually stopped after explorer tool and
+directory-scope violations; its lead had already consumed the reports and
+launched synthesis. Refactoring remains unrun. The first Authoring run
 failed its controller command check and omitted a mandatory delegated review,
 as detailed below. The first Perf
 attempt retains a failed native-audit receipt. A second machine pass is rejected
@@ -432,6 +434,16 @@ final review/commit. Perf also audits every worker tool attempt and records
 before/after reader-tree evidence. These repairs have independent code review;
 a fresh complete live pass is still required.
 
+The [first Feature receipt](evidence/playbook-feature-scope.json) remains an
+operator-stopped FAIL. Its [metadata-only audit](evidence/playbook-feature-scope-audit.json)
+records unsupported explorer FFF tools and shell commands, including task-store
+parent and sibling-directory listing. The lead had read both deliveries and
+launched the explainer before the halt. There was no automatic quarantine,
+source change, commit or PR. Explorer UUIDs match fresh native headers, but
+the retained live observations were idle; a working-state binding is missing.
+All 31 setup/cleanup checks passed, without a completed workflow audit.
+Report bodies remain unread in this review. These facts do not complete Feature.
+
 The [fresh live-replacement receipt](evidence/hot-swap.json) verifies two real
 Pi tasks using distinct configured models. Both were held working while the
 private alias was changed and removed. A dispatch after removal failed without
@@ -466,6 +478,7 @@ This verifies worker definition replacement, not automatic role or skill reload.
 | [Runtime counter format](evidence/playbook-runtime-number.json) | Checker rejected a correct counter written with ordinary thousands separators |
 | [Snapshot shell grammar](evidence/playbook-forge-shell.json) | Composed shell and Bash ls calls triggered automatic quarantine; no worker payload reached the lead |
 | [Authoring command grammar](evidence/playbook-authoring-literal.json) | Undeclared controller restrictions and diff-prefix mismatch; mandatory Comment Sicko task also omitted |
+| [Feature worker scope](evidence/playbook-feature-scope.json) | Unsupported explorer tools and task-store traversal; lead consumed reports before manual halt, so no automatic quarantine claim |
 
 Each attempt retained its failure verdict and confirmed owned cleanup. The first
 prototype run did not execute a model task. The contract run produced real
@@ -480,7 +493,7 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 |---|---|
 | Investigation | [FAIL](evidence/playbook-investigation-concat.json): native grammar gap and unresolved synthesis; correct stop does not satisfy successful presentation |
 | Bug fix | Original live-query [scope failure](evidence/playbook-forge-scope-audit.json) and later [snapshot quarantine](evidence/playbook-forge-quarantine-audit.json); full workflow unresolved |
-| Feature | Reviewed `design_loop.py`, including mandatory Comment Sicko delivery; live Arena, behavior gate and real PR still unrun |
+| Feature | [First FAIL](evidence/playbook-feature-scope.json): explorer protocol and directory-scope violations; manual stop after lead consumption, before Arena, implementation or PR |
 | Refactoring | Reviewed `design_loop.py`, including mandatory Comment Sicko delivery; live frozen baseline, equivalence and real PR still unrun |
 | Prototype | [PASS: fixed-direction behavioral core workflow](evidence/playbook-prototype.json); open visual design search unverified |
 | Perf issue | [Fourth FAIL with independent behavior audit](evidence/playbook-perf-comment-audit.json): 70.2% native / 70.0% replay reduction; original output rule and review unresolved |

@@ -1,0 +1,181 @@
+{
+  "schema": "horch/playbook-interruption-audit/v1",
+  "kind": "independent post-run metadata-only review",
+  "scenario": "first Feature attempt",
+  "original_receipt": "playbook-feature-scope.json",
+  "original_receipt_unchanged": true,
+  "original_receipt_sha256": "2208d6ca0a828cee2d9d4c4afe8be7f53e49ec40889a205ed28010b5f75c5fd9",
+  "source_revision": "4aceb8fc93a4007fd1961d3114fe80979e9d9854",
+  "original_workflow_verdict": "fail",
+  "stop": "Operator interrupted the exact owned driver after explorer native calls violated their declared tool grammar and task-directory scope. This was not automatic quarantine.",
+  "recorded_checks": {
+    "passed": 31,
+    "total": 31,
+    "meaning": "Setup and final integrity/cleanup only; no completed worker or workflow audit."
+  },
+  "declared_protocol": {
+    "native_tools": [
+      "read",
+      "bash",
+      "write",
+      "edit",
+      "grep",
+      "find",
+      "ls"
+    ],
+    "worker_bash": "Literal cat of one file or standalone read-only Git only; no other shell commands.",
+    "actual_briefs_explicit": true
+  },
+  "explorers": [
+    {
+      "slot": "how-a",
+      "provider": "commandcode",
+      "model": "deepseek/deepseek-v4.1-flash",
+      "effort": "max",
+      "state": "done",
+      "closed": true,
+      "task_sha256": "0a4921eee55303f0b1dec7bcbc1b8aaeef3b3e4558864a7b4d97235946bbb7c5",
+      "brief_sha256": "888dd56f13bc65507a037fd98fec4e90b3977c064802f88117bbc4dbef6bd591",
+      "native_sha256": "bc1af5deed56edcbef2b0359d0066020f2399c9951a8c52974f9ff710600dfd5",
+      "native_rows": 88,
+      "tool_calls": 54,
+      "tool_counts": {
+        "read": 33,
+        "bash": 17,
+        "ffgrep": 2,
+        "write": 2
+      },
+      "tool_errors": 0,
+      "pending_calls": 0,
+      "violations": {
+        "ffgrep_call_rows_zero_based": [
+          65,
+          69
+        ],
+        "bash_ls_occurrences": 9,
+        "bash_ls_call_rows_zero_based": [
+          11,
+          32,
+          32,
+          32,
+          36,
+          60,
+          60,
+          63,
+          81
+        ],
+        "bash_find_call_rows_zero_based": [
+          21
+        ],
+        "task_parent_listing_first_row_zero_based": 32,
+        "sibling_task_directory_listing_row_zero_based": 36
+      },
+      "directory_scope": "Task-store parents and a sibling task directory were listed. No sibling report read was observed."
+    },
+    {
+      "slot": "how-b",
+      "provider": "commandcode",
+      "model": "deepseek/deepseek-v4.1-flash",
+      "effort": "max",
+      "state": "done",
+      "closed": true,
+      "task_sha256": "7d75157467fc9d19d59134197125e5e5cab1b95770679304169d3541ced227a0",
+      "brief_sha256": "bd0f2d310113c9a390c95d59b16e744f66d8dd2a7fa424b6c668a0079b9c9188",
+      "native_sha256": "f66603a591c0f76502532f0f7c0b92cd5679d4f56b378c0c870eb67eaf3383d7",
+      "native_rows": 64,
+      "tool_calls": 39,
+      "tool_counts": {
+        "read": 13,
+        "bash": 21,
+        "fffind": 2,
+        "ffgrep": 1,
+        "write": 2
+      },
+      "tool_errors": 1,
+      "pending_calls": 0,
+      "violations": {
+        "fffind_call_rows_zero_based": [
+          11,
+          17
+        ],
+        "ffgrep_call_rows_zero_based": [
+          60
+        ]
+      }
+    }
+  ],
+  "identity_binding": {
+    "fresh_header_cwd_model_effort_uuid_match": true,
+    "explorer_live_observation_state": "idle",
+    "explorer_working_capture_retained": false,
+    "dependent_explainer_working_capture_retained": true,
+    "limitation": "The explorer identities were retained from idle observations, not independently captured working sessions."
+  },
+  "lead": {
+    "native_sha256": "11152cf763f676df9d6ac9463db2ef96e0eddbb6a1c15595c31c145ca060982b",
+    "native_rows": 104,
+    "tool_calls": 50,
+    "tool_counts": {
+      "read": 37,
+      "write": 5,
+      "bash": 7,
+      "edit": 1
+    },
+    "resolved_successful_calls": 49,
+    "pending_wait_calls": 1,
+    "artifact_read_order_zero_based": [
+      {
+        "slot": "how-b",
+        "done_wait_result_row": 86,
+        "result_read_call_row": 87,
+        "result_read_result_row": 88,
+        "report_read_call_row": 89,
+        "report_read_result_row": 90
+      },
+      {
+        "slot": "how-a",
+        "done_wait_result_row": 92,
+        "result_read_call_row": 93,
+        "result_read_result_row": 94,
+        "report_read_call_row": 95,
+        "report_read_result_row": 96
+      }
+    ],
+    "dependent_explainer_launch_call_row": 101,
+    "dependent_explainer_launch_result_row": 102,
+    "source_writes_observed": 0,
+    "commit_commands_observed": 0,
+    "push_commands_observed": 0,
+    "forge_pr_commands_observed": 0,
+    "interpretation": "The lead consumed both violating deliveries and launched dependent synthesis before the operator halt; delivery-before-read alone did not enforce worker scope."
+  },
+  "dependent_explainer": {
+    "provider": "zai",
+    "model": "glm-5.3",
+    "effort": "max",
+    "state_after_cleanup": "running",
+    "closed": true,
+    "report_or_result_file_present": false,
+    "native_sha256": "421e35c8c2af48f296f6cf81b10a3fb43535dc2126e4bb02333da469e620ce3b"
+  },
+  "actual_launch_count": 3,
+  "receipt_task_facts_count": 0,
+  "receipt_task_facts_limit": "Task facts are populated during final verification; the interrupted receipt omits actual early launches. The separate metadata audit accounts for them without rewriting the receipt.",
+  "direct_network_forge_or_source_write_calls_observed": false,
+  "integrity": {
+    "source_hashes": 217,
+    "bundled_resources": 198,
+    "source_maps_equal": true,
+    "copied_config_matches": true,
+    "original_fixture_unchanged": true,
+    "owned_panes_absent": true
+  },
+  "operator_stop_record_sha256": "a7bc6feeebdd4cdea2ac81d8378ec97e2c282ae34d9e2994e0567b128edeadcf",
+  "review_scope": "Task/brief bindings, fixed receipt metadata, native call arguments and row identities, lifecycle, error flags and hashes only. Worker report/result bodies and native tool-output/write/edit payload bodies were not consumed.",
+  "limitations": [
+    "The original FAIL remains unchanged; no Feature, Opening a PR or full-inventory pass is established.",
+    "No semantic assessment, complete report-read-content assessment or result-nonce validation was performed.",
+    "No automatic gate withheld these reports. A repaired delivery contract needs new live evidence.",
+    "Post-execution evidence checking does not establish a sandbox or credential containment."
+  ]
+}

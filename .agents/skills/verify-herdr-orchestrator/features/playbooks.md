@@ -51,8 +51,11 @@ See the inventory's [writable workflow procedures](../../../../e2e/PLAYBOOKS.md#
 for `forge_loop.py`, `design_loop.py`, `perf_loop.py` and `authoring_loop.py`.
 Prepare and verify the portable fixture locally before creating your own private
 baseline repository/ready PR. Supply exact clone/base/parent identities, leave
-PRs unmerged, and stop other isolated dispatchers. Those live model workflows
-are not yet measured. Authoring additionally needs existing creator guidance
+PRs unmerged, and stop other isolated dispatchers. The first Perf attempt has
+actual measurements and a ready private child PR, but its native audit failed
+on a report-copy grammar gap. Preserve that failed receipt and review the
+separate observations; the other writable workflows still need live evidence.
+Authoring additionally needs existing creator guidance
 and its validator dependencies; Runtime uses `runtime_loop.py` with Node
 Inspector and built-in WebSocket support. Preserve failed receipts and disclose
 unsupported native capture or forge paths.

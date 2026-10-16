@@ -124,7 +124,8 @@ dependency; it never installs that dependency. Explicit forward use does not
 prove automatic discovery. Runtime forensics needs Node with Inspector and
 built-in WebSocket support. Three live receipts failed on checker contracts;
 the separate manual audits below support the actual runtime observations.
-Feature, Refactoring, Perf issue and Authoring model workflows remain unrun.
+Feature, Refactoring and Authoring model workflows remain unrun. The first Perf
+attempt retains a failed native-audit receipt, described below.
 The first live Bug fix investigation was stopped for an actual
 repository-scope violation, described below; it produced no fix or PR.
 
@@ -299,6 +300,13 @@ source identity and cleanup. Chronological edit replay now permits earlier
 planning while requiring final completion after all operations and source reads.
 The original receipt remains failed; a fresh automated pass is still required.
 
+The [first Perf receipt](evidence/playbook-perf-copy.json) remains failed after
+the native auditor rejected a literal copy of an already delivered and read How
+report. The attempt produced new profiles, alternating CLI timings, unchanged
+outputs and a ready private child PR. A separate independent review is checking
+these actual observations and the remaining verifier contracts; none promotes
+the original failed workflow verdict.
+
 The [fresh live-replacement receipt](evidence/hot-swap.json) verifies two real
 Pi tasks using distinct configured models. Both were held working while the
 private alias was changed and removed. A dispatch after removal failed without
@@ -328,6 +336,7 @@ This verifies worker definition replacement, not automatic role or skill reload.
 | [Runtime observation grammar](evidence/playbook-runtime-env.json) | Checker rejected required environment observations; separate review found checklist and citation format mismatches |
 | [Runtime citation contract](evidence/playbook-runtime-citations.json) | Checker required undeclared direct raw-file links despite valid citations to independently bound operation records |
 | [Runtime planning order](evidence/playbook-runtime-planning.json) | Checker treated an explicitly tentative planning edit as premature completion |
+| [Perf report copy](evidence/playbook-perf-copy.json) | Native auditor rejected a legitimate verbatim copy of a delivered and fully read report |
 
 Each attempt retained its failure verdict and confirmed owned cleanup. The first
 prototype run did not execute a model task. The contract run produced real
@@ -345,7 +354,7 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 | Feature | Reviewed `design_loop.py`; live design/implementation Arena, behavior gate and real PR still unrun |
 | Refactoring | Reviewed `design_loop.py`; live frozen baseline, equivalence and real PR still unrun |
 | Prototype | [PASS: fixed-direction behavioral core workflow](evidence/playbook-prototype.json); open visual design search unverified |
-| Perf issue | Reviewed `perf_loop.py`; portable baseline passes, live measurements/fix/PR unrun |
+| Perf issue | [FAIL: report-copy grammar](evidence/playbook-perf-copy.json); actual measurements/fix/ready PR under separate review; no complete automated pass |
 | Hillclimb | Reviewed `hillclimb_loop.py`; live sensitivity, measured attempts, independent decisions and PR unrun; unattended wake unavailable |
 | Runtime forensics | [FAIL: planning order](evidence/playbook-runtime-planning.json); all three attempts separately audited; fresh corrected run pending |
 | Trace forensics | [PASS: bounded paired-capture core workflow](evidence/playbook-trace.json); large-capture delegation unverified |

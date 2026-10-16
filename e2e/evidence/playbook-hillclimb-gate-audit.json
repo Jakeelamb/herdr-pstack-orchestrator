@@ -1,0 +1,105 @@
+{
+  "schema": "horch/independent-hillclimb-gate-audit/v1",
+  "kind": "metadata and attempted-tool reanalysis of original FAIL; not a new run",
+  "original_receipt": "playbook-hillclimb-gate.json",
+  "original_receipt_sha256": "778e30d01eb3c20aeff6296501dd6e890d6833d70bec1211d59f93e1511b0110",
+  "original_receipt_unchanged": true,
+  "original_workflow_verdict": "fail",
+  "source_revision": "08074fae76fd88a958070b00a0ea7eb7834d09e7",
+  "driver_sha256": "2b138b20326b0537b4e82edbd4ce29d3ba33156b8206eee6cac82a3c80264084",
+  "seconds": 493.463,
+  "recorded_checks": {
+    "total": 32,
+    "passed": 32,
+    "scope": "prerequisites, runtime prefix, integrity and owned cleanup; not successful stage audits"
+  },
+  "failure_categories": [
+    "worker_gate_quarantined_stop",
+    "task_snapshot_failed"
+  ],
+  "worker": {
+    "count": 1,
+    "role": "how explainer",
+    "configured_provider": "zai",
+    "configured_model": "glm-5.3",
+    "configured_effort": "max",
+    "state": "done",
+    "closed": true,
+    "actual_working_binding": true,
+    "native_sha256": "3832b0e43b71786485396f1843b44fa0de2bfdf60387054ec511d8c0a46fee11",
+    "native_rows": 35,
+    "tool_attempts": 19,
+    "successful_tool_results": 19,
+    "tool_errors": 0,
+    "pending_tool_calls": 0,
+    "calls_by_tool": {
+      "read": 13,
+      "bash": 3,
+      "write": 2,
+      "fffind": 1
+    },
+    "successful_tool_result_is_not_policy_compliance": true
+  },
+  "rejection": {
+    "safe_gate_sha256": "ff285f77b642b2d60147483dd21b327b62e652865f284fe6cb3be26a639ed2ab",
+    "category": "worker_scope_or_lifecycle_rejected",
+    "sufficient_independently_proven_violation": {
+      "native_call_row": 30,
+      "native_result_row": 31,
+      "tool": "bash",
+      "command": "git -C <owned fixture cwd> status --porcelain --branch",
+      "successful_native_result": true,
+      "assigned_rule": "The brief permits the exact status --short --branch form, and its other enumerated Git flags do not authorize --branch with --porcelain.",
+      "checker": "The frozen exact-form status predicate accepts status --short --branch; the scoped Git parser rejects the observed combination.",
+      "scope": "Read-only status inside the assigned owned fixture; no outside-repository access is established."
+    },
+    "exact_first_internal_exception": "unproven; generic gate category and earlier un-replayed audit predicates do not identify the first throw",
+    "checker_replayed": false,
+    "quarantined_payloads_consumed_by_independent_reviewers": false
+  },
+  "lead": {
+    "native_sha256": "c60b22f4c8bce384680991b334354cdc661028c0bcbd326568166ef0337fe03d",
+    "native_rows": 71,
+    "tool_attempts": 33,
+    "successful_tool_results": 33,
+    "tool_errors": 0,
+    "pending_tool_calls": 0,
+    "calls_by_tool": {
+      "read": 27,
+      "bash": 4,
+      "write": 2
+    },
+    "wait_audit_call_rows": [
+      65,
+      67,
+      69
+    ],
+    "last_tool_call_row": 69,
+    "worker_report_or_result_reads": 0,
+    "subsequent_tool_calls": 0,
+    "dependent_implementation_launches": 0,
+    "automatic_pre_forward_stop": true
+  },
+  "outcome": {
+    "native_stages": 0,
+    "optimization_iterations": 0,
+    "commits": 0,
+    "pushes": 0,
+    "child_prs": 0,
+    "behavior_verdict": "unproven",
+    "comment_bootstrap_verdict": "unproven; Comment phase not reached"
+  },
+  "integrity": {
+    "source_unchanged": true,
+    "config_unchanged": true,
+    "original_fixture_checkout_untouched": true,
+    "owned_panes_absent": true
+  },
+  "limitations": [
+    "All rejected How report/result/native-output/write/edit/raw-wait bodies and lead copies remain unread.",
+    "Scope and ordering findings use source, assigned brief and call/lifecycle metadata only.",
+    "This proves an automatic negative delivery gate, not successful How grounding, optimization, final review or full Hillclimb.",
+    "No checker change or blind repeat is justified by this worker scope breach.",
+    "The separately retained second-run measurements and public CLI replay are not fresh measurements from this run."
+  ]
+}

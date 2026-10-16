@@ -618,11 +618,11 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 |---|---|
 | Investigation | [FAIL](evidence/playbook-investigation-concat.json): native grammar gap and unresolved synthesis; correct stop does not satisfy successful presentation |
 | Bug fix | Original live-query [scope failure](evidence/playbook-forge-scope-audit.json) and later [snapshot quarantine](evidence/playbook-forge-quarantine-audit.json); full workflow unresolved |
-| Feature | [First FAIL](evidence/playbook-feature-scope.json): explorer protocol and directory-scope violations; manual stop after lead consumption, before Arena, implementation or PR |
+| Feature | [Second FAIL/contract stop](evidence/playbook-feature-contract-audit.json): manual stop before worker dispatch on two evaluator defects; prospective phase scoping and normal-behavior preservation repair; earlier scope failure retained; full workflow unresolved |
 | Refactoring | [Third FAIL/audit](evidence/playbook-refactor-comment-audit.json): eight deliveries, exact How preservation, design selection, source-grounded reader review and actual before/after equivalence verified; Comment first-output breach automatically withheld; no commit/PR |
 | Prototype | [PASS: fixed-direction behavioral core workflow](evidence/playbook-prototype.json); open visual design search unverified |
 | Perf issue | [Fourth FAIL with independent behavior audit](evidence/playbook-perf-comment-audit.json): 70.2% native / 70.0% replay reduction; original output rule and review unresolved |
-| Hillclimb | [Second FAIL/audit](evidence/playbook-hillclimb-trail-audit.json): How, three scoped changes/logs and retained 71.3% reduction verified; trail breach was forwarded before manual stop. New delivery gate awaits fresh E2E; final review/PR unresolved and unattended wake unavailable |
+| Hillclimb | [Third FAIL/audit](evidence/playbook-hillclimb-gate-audit.json): excluded owned Git status form automatically withheld before payload reads; no optimization. Separate second-run 71.3% timing/source evidence retained; final review/PR unresolved and unattended wake unavailable |
 | Runtime forensics | [PASS: five-stage owned-process diagnosis](evidence/playbook-runtime.json); raw Inspector/profile/source independently checked; large-artifact delegation unverified |
 | Trace forensics | [PASS: bounded paired-capture core workflow](evidence/playbook-trace.json); large-capture delegation unverified |
 | Visual parity | Local browser/diff tools available; UI fixture, untouched baseline, real migration, zero pixel diff and PR unrun; required `/loop` unavailable |

@@ -201,6 +201,14 @@ coverage-attribution caveats. New bootstrap text specifies the entire first
 block and a separate native read before further prose; validators remain
 unchanged. A new immutable live receipt must verify it.
 
+A later Feature preparation was manually stopped before any worker dispatch:
+shared prose required an unallocated Refactoring-only reader slot, and Feature
+eligibility did not compare promised normal behavior with the existing before
+pin. Preserve that FAIL and its separate source-contract audit. Forward repair
+scopes reader-load to Refactoring and compares all nine normal observations,
+without replacing the eight new dry-run checks or altering the oracle. A fresh
+immutable execution must verify the repaired Feature contract.
+
 The second Hillclimb run separately verified How, three scoped source changes,
 both original logs and retained final full-CLI timings (71.3% reduction).
 The simplification attempt was 0.7% slower within its declared allowance.
@@ -235,3 +243,11 @@ while distinct or ambiguous actors remain blocked.
 Current metadata has no established displayed-job-to-PID/run mapping. Merely
 recording this driver's nonce/PID cannot identify a truncated visible command;
 leave this branch blocked until a positive machine-derived link exists.
+
+The third Hillclimb run demonstrates automatic pre-forward withholding of an
+excluded owned Git status form. The worker and lead are done/cleaned up, with
+zero lead payload reads and no optimization, Comment, commit or PR. Its bodies
+remain unread. The exact first internal exception is unproven; metadata proves
+sufficient grounds for scope rejection. Keep FAIL; no checker change or blind
+repeat follows this worker breach. Use the separate retained source/CLI replay
+for behavior only.

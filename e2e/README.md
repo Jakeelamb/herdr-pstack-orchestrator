@@ -100,6 +100,16 @@ reader. No report, measured attempt or PR followed. Its original FAIL remains
 unchanged, alongside a separate unreached brief-heading parser mismatch. Its
 reviewed repair strips only the exact Horch suffix; shell restrictions remain
 unchanged and no new live Hillclimb pass is established.
+The [second Feature receipt](evidence/playbook-feature-contract.json) preserves
+an exact-owned manual stop before any worker dispatch. Independent
+[source-contract review](evidence/playbook-feature-contract-audit.json) found
+shared prose requiring an unallocated Refactoring-only reader-load slot and a
+missing Feature check for promised normal CLI equivalence. All 31 recorded
+preparation/integrity/cleanup checks passed; no workflow stage ran. The forward
+repair scopes that phase explicitly and compares all nine original normal
+observations with the frozen before pin, retaining the eight new dry cases.
+Independent static review and compilation passed; a fresh immutable Feature
+receipt is still required.
 The [second Hillclimb receipt](evidence/playbook-hillclimb-trail.json) also
 remains failed. Its [independent audit](evidence/playbook-hillclimb-trail-audit.json)
 verifies How, three distinct scoped changes, both logs and a retained 71.3%
@@ -140,8 +150,15 @@ The trail role has only four exact owned-directory listing forms and bounded
 file statistics; other roles keep their separate grammars. Exact recorder
 deltas are supplied directly, with unchanged comparison and thresholds.
 Negative receipts retain safe lifecycle metadata separately from completed
-audit claims. Static review and compilation passed; this new gate still needs
-a fresh live Hillclimb receipt. These checks remain post-execution validation.
+audit claims. The [third Hillclimb receipt](evidence/playbook-hillclimb-gate.json)
+now verifies a negative delivery barrier. Its [independent metadata audit](evidence/playbook-hillclimb-gate-audit.json)
+finds a successful but excluded owned-cwd `status --porcelain --branch` call;
+the declared exact form is `status --short --branch`. The lead stopped at the
+safe gate before reading any worker payload. All rejected bodies remain unread;
+the exact first internal exception is unproven because earlier predicates were
+not replayed. No optimization, Comment, commit or PR ran. This supports automatic
+withholding, without a successful How or full Hillclimb claim. No blind repeat or
+checker change follows. These checks remain post-execution validation.
 The [first Babysit Check receipt](evidence/playbook-babysit-grammar.json) stopped
 in preparation before any watcher or PR snapshot. Its
 [independent audit](evidence/playbook-babysit-grammar-audit.json) identifies an
@@ -221,6 +238,26 @@ exception is unproven because quarantined bodies were not replayed; this
 observed original-rule violation is sufficient to reject. Accuracy and
 verification-attribution caveats remain disclosed. This does not complete
 Refactoring or Opening a PR.
+
+The [accepted final synthetic storage source](evidence/playbook-refactor-final-storage.py)
+is byte-identical to that implementation. A [fresh local replay](evidence/playbook-refactor-replay.json)
+checks all seven existing CLI flows before and after, with matching observations
+and only `storage.py` changed. Rerun it without models, Herdr or a forge:
+
+```bash
+proof=$(mktemp -d "${TMPDIR:-/tmp}/refactor-replay-XXXXXXXX")
+python3 e2e/forge_loop.py --prepare-fixture "$proof/before"
+python3 e2e/forge_loop.py --prepare-fixture "$proof/after"
+cp e2e/evidence/playbook-refactor-final-storage.py "$proof/after/storage.py"
+python3 -B "$proof/before/e2e_import.py" --output "$proof/before-flows"
+python3 -B "$proof/after/e2e_import.py" --output "$proof/after-flows"
+```
+
+Keep both `*-flows/evidence.json` receipts and input/stdout/stderr files.
+This 14-flow replay uses the existing seven-flow oracle; the broader original
+nine-observation equivalence remains a separate retained audit. It does not
+reproduce model decisions, review or a complete Refactoring pass.
+
 Named-agent briefs now require tool-only loading of the original agent and
 required skill before any assistant text, the original greeting alone in the
 entire first text block, then a separate assigned native read before further

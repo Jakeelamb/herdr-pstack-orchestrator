@@ -55,6 +55,13 @@ PRs unmerged, and stop other isolated dispatchers. The first Perf attempt has
 actual measurements and a ready private child PR, but its native audit failed
 on a report-copy grammar gap. Preserve that failed receipt and review the
 separate observations; the other writable workflows still need live evidence.
+The second Perf machine receipt passes its checks but misses an actual How
+worker's unsupported FFF call because worker-native tools were not audited.
+Independent review rejects full Perf coverage. Preserve the machine receipt
+unchanged and disclose this separate judgment; owned-path search does not prove
+pre-dispatch containment. Its standalone Opening a PR stage has separate
+independent core eligibility: exact ready child, reviewed commit/body,
+parent/ref integrity and cleanup. Do not use that result to promote full Perf.
 Authoring additionally needs existing creator guidance
 and its validator dependencies; Runtime uses `runtime_loop.py` with Node
 Inspector and built-in WebSocket support. Preserve failed receipts and disclose

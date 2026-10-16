@@ -18,7 +18,9 @@ records all four Pause and five Pickup stages with distinct sessions, six actual
 CLI cases and independent replay. Its earlier ambiguous fixture remains failed.
 The [owned-process Runtime receipt](evidence/playbook-runtime.json) passes all
 five stages, including raw Inspector bindings, natural later observations and
-independently verified source/reduction. The other 18
+independently verified source/reduction. [Opening a PR](evidence/playbook-perf-worker-tools-audit.json)
+has independently verified ready-child-PR core evidence, separate from its
+noneligible Perf parent workflow. The other 17
 playbooks remain unresolved. Investigation preserves both an earlier explanation
 rewrite and a later erroneous synthesis that the controller correctly withheld.
 Separate artifact checks do not promote either failed workflow.
@@ -45,6 +47,13 @@ failure: the native auditor rejected a legitimate delivered-report copy.
 Its [separate independent audit](evidence/playbook-perf-copy-reanalysis.json)
 verified actual timings, behavior and the retained ready private PR, while
 preserving that failure.
+The [second Perf machine receipt](evidence/playbook-perf-worker-tools.json)
+records a pass, but independent review rejects full Perf coverage: a delivered
+How worker used an unsupported native tool, and the driver omitted worker-tool
+auditing. Its search stayed within the owned reader; no outside-source or
+network access was observed. The [separate independent audit](evidence/playbook-perf-worker-tools-audit.json)
+accepts the complete standalone Opening a PR stage while rejecting full Perf
+eligibility. Correct measurements do not erase the earlier protocol violation.
 The [snapshot investigation attempt](evidence/playbook-forge-quarantine-audit.json)
 verified automatic quarantine after an unsupported search-tool call; no report
 reached synthesis. It remains a failed workflow. Runtime's

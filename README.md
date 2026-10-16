@@ -230,7 +230,9 @@ The original Prototype playbook has an [ordered six-stage core workflow receipt]
 
 [Runtime forensics](e2e/evidence/playbook-runtime.json) passed its five-stage owned-process scenario: live CPU capture, exact reduction, benign instrumentation, later natural counter growth and source mapping. Independent review checked the raw Inspector exchange and preserved inputs; this is a diagnostic result, without a fix or speedup claim.
 
-Not verified: macOS, deliberate approval denial, task turns longer than 30 minutes, and Claude Code native discovery, which was not measured although installation was checked. Most original pstack skills and 18 other playbooks lack a complete passing scenario; see the [complete inventory](e2e/PLAYBOOKS.md), including cloud and wake capabilities this adapter does not supply. Discovery does not prove workflow execution.
+[Opening a PR](e2e/evidence/playbook-perf-worker-tools-audit.json) has independent core evidence for a reviewed commit and ready private child PR, with exact parent, head, body and remote-state checks. Its parent Perf scenario remains unresolved because independent worker-tool review rejected the machine's full Perf pass.
+
+Not verified: macOS, deliberate approval denial, task turns longer than 30 minutes, and Claude Code native discovery, which was not measured although installation was checked. Most original pstack skills and 17 other playbooks lack a complete passing scenario; see the [complete inventory](e2e/PLAYBOOKS.md), including cloud and wake capabilities this adapter does not supply. Discovery does not prove workflow execution.
 
 Historical receipts keep their original source attribution in [evidence and source attribution](e2e/README.md#evidence-and-source-attribution). To rerun the checks, use [verify-herdr-orchestrator](.agents/skills/verify-herdr-orchestrator/SKILL.md).
 

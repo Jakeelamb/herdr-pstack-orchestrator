@@ -125,7 +125,8 @@ prove automatic discovery. Runtime forensics needs Node with Inspector and
 built-in WebSocket support. A fresh live run passes all five stages after four
 retained checker-contract failures; the independent audits below distinguish them.
 Feature, Refactoring and Authoring model workflows remain unrun. The first Perf
-attempt retains a failed native-audit receipt, described below.
+attempt retains a failed native-audit receipt. A second machine pass is rejected
+by independent worker-tool review; both are described below.
 The first live Bug fix investigation was stopped for an actual
 repository-scope violation, described below; it produced no fix or PR.
 
@@ -346,6 +347,25 @@ measurement outputs, and all six CLI cases pass. Source, profiles, commit,
 ready PR, remote body, parent/ref inventory and cleanup agree. The audit records
 additional verifier/prompt mismatches without promoting the failed workflow.
 
+The [second Perf machine receipt](evidence/playbook-perf-worker-tools.json)
+records 146 passing checks, but it is not accepted as a complete Perf pass.
+The [separate independent audit](evidence/playbook-perf-worker-tools-audit.json)
+found that the delivered How worker used `fffind` despite
+its explicit seven-tool restriction; the driver checked worker metadata and
+results without auditing their native tools. The search requested only its
+owned reader and returned owned filenames. No outside-repository or network
+access was observed. The later symlink-free tree inspection is retrospective,
+without a pre-dispatch attestation. The original machine verdict remains
+unchanged. Native alternating timings measured 133.099 to 37.799 ms (71.6%
+reduction), with correct work and all six CLI cases passing. Those observations
+do not erase the protocol failure.
+The standalone Opening a PR workflow is independently eligible: actual guidance
+and complete staged diff review precede the single narrow commit, forge
+resolution precedes PR operations, and a ready child PR has exact head, base and
+body readback. Only its owned branch/PR was added; parent/local refs and cleanup
+agree. No merge or auto-merge occurred. This separate core result does not make
+the preceding Perf workflow eligible.
+
 The [fresh live-replacement receipt](evidence/hot-swap.json) verifies two real
 Pi tasks using distinct configured models. Both were held working while the
 private alias was changed and removed. A dispatch after removal failed without
@@ -385,7 +405,7 @@ observations; those do not replace a passing independent replay.
 
 ## Complete inventory
 
-Five bounded scenarios have complete core-workflow evidence. The remaining 18
+Six bounded scenarios have complete core-workflow evidence. The remaining 17
 playbooks are unresolved, as are untested branches of the passing scenarios.
 
 | Playbook | Scenario or remaining requirement |
@@ -395,7 +415,7 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 | Feature | Reviewed `design_loop.py`; live design/implementation Arena, behavior gate and real PR still unrun |
 | Refactoring | Reviewed `design_loop.py`; live frozen baseline, equivalence and real PR still unrun |
 | Prototype | [PASS: fixed-direction behavioral core workflow](evidence/playbook-prototype.json); open visual design search unverified |
-| Perf issue | [FAIL: report-copy grammar](evidence/playbook-perf-copy.json); measurements/fix/ready PR independently audited; no complete automated pass |
+| Perf issue | [Second machine PASS rejected by independent worker-tool audit](evidence/playbook-perf-worker-tools-audit.json); measured behavior and PR verified, full Perf protocol unresolved |
 | Hillclimb | Reviewed `hillclimb_loop.py`; live sensitivity, measured attempts, independent decisions and PR unrun; unattended wake unavailable |
 | Runtime forensics | [PASS: five-stage owned-process diagnosis](evidence/playbook-runtime.json); raw Inspector/profile/source independently checked; large-artifact delegation unverified |
 | Trace forensics | [PASS: bounded paired-capture core workflow](evidence/playbook-trace.json); large-capture delegation unverified |
@@ -403,7 +423,7 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 | Authoring a skill | Reviewed `authoring_loop.py`; live authored skill, structural usage cases and real PR unrun; automatic discovery separate |
 | Eval | Scoped Pi transcripts are accessible in principle; current global skill catalog violates strict blinding under unchanged settings |
 | Multi-phase plan | Validator exists; executable cloud lanes and configured swarm role are unavailable |
-| Opening a PR | Ready child PR observed and independently verified in the [Perf audit](evidence/playbook-perf-copy-reanalysis.json); complete automated workflow pass pending |
+| Opening a PR | [PASS: independently verified ready-child-PR core](evidence/playbook-perf-worker-tools-audit.json); exact parent/head/body/ref integrity; earlier Perf protocol remains noneligible |
 | Babysit | Reviewed `babysit_loop.py`; live bounded Check unrun; drive/background wake mechanism unavailable |
 | Shipping | Cloud verifier unavailable; no authorization to merge test PRs |
 | Autonomous run | Required wake mechanism unavailable |
@@ -412,7 +432,7 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 | Autopilot-stack | Cloud owners and wake mechanism unavailable; no STACK-READY evidence |
 | Pause safely | [PASS: bounded local four-stage stop](evidence/playbook-continuity.json); original checkpoint, WIP and off-context note |
 | Session pickup | [PASS: five-stage local continuation](evidence/playbook-continuity.json); distinct session, recovered route and real pending CLI verification |
-| Worktree cleanup | Owned worktrees, justified removals and active-work protection |
+| Worktree cleanup | Pinned and active-chat metadata unavailable; owned E2E teardown does not verify this playbook's deletion gates |
 
 Cloud execution and `/loop` are not supplied by the current adapter. Gate-only
 Shipping evidence cannot complete Shipping. Remote scenarios need a dedicated

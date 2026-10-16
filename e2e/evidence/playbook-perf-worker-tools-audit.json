@@ -1,0 +1,136 @@
+{
+  "schema": "horch/playbook-independent-audit/v1",
+  "kind": "post-run native, artifact, forge and cleanup review",
+  "scenario": "perf-issue and opening-a-pr",
+  "original_receipt": "playbook-perf-worker-tools.json",
+  "original_receipt_unchanged": true,
+  "original_receipt_sha256": "623092ec81347a13b3c091987b77b6e1eca5b69fc333b311eb21940d48a072eb",
+  "original_machine_verdict": "pass",
+  "original_checks_passed": 146,
+  "original_checks_total": 146,
+  "source_revision": "a01f307c46540c52d2559a6f84bcdc599e45d71c",
+  "independent_core_verdicts": {
+    "perf-issue": "noneligible: explicit worker-tool protocol violated and omitted from machine audit",
+    "opening-a-pr": "pass: independently verified bounded ready-child-PR workflow"
+  },
+  "other_playbooks_not_run": 21,
+  "findings": [
+    {
+      "priority": "P1",
+      "scope": "Perf worker-native evidence",
+      "observation": "The delivered How worker made one fffind call despite the explicit seven-tool-only assignment. The driver verified worker metadata and results without auditing worker-native calls.",
+      "effect": "The 146 passing machine checks do not establish a complete Perf workflow pass.",
+      "observed_access": "The FFF request selected the exact owned reader glob, an empty pattern and limit 100. The result contained ten owned relative filenames. No outside-repository source or network access was observed.",
+      "tree_evidence": {
+        "kind": "retrospective, after delivery",
+        "symlinks": 0,
+        "entries": 12,
+        "paths_sha256": "1aeee48780bad6a5e960f256749c70dee5784db2c9fea2b5df5b975d980b2a40",
+        "before_dispatch_attestation": false
+      },
+      "repair_status": "A future driver must bind live worker identities, audit all native attempts and explicitly declare accepted reader-tool paths and schemas. This audit does not retroactively authorize the call."
+    }
+  ],
+  "native_evidence": {
+    "lead": {
+      "sha256": "8ff036c80242e8b4b47778ae548096c397cc2ca83c5ea3517fa669c92eb73d60",
+      "tool_calls": 76,
+      "harness": "pi",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "successful_tool_calls": 75,
+      "expected_tool_failures": 1
+    },
+    "how": {
+      "sha256": "ed9263da89e8c2f7965fa10c7333bc861c25b78ce86907ca06e5dd21da1a4620",
+      "rows": 29,
+      "tool_calls": 15,
+      "calls": {
+        "read": 11,
+        "bash": 1,
+        "fffind": 1,
+        "write": 2
+      },
+      "tool_errors": 0,
+      "model": "glm-5.3",
+      "effort": "max",
+      "delivery_before_consumption": true
+    },
+    "implementation": {
+      "sha256": "714c0042f0072f17d0f5ca22a130e851e90e736f48710d1e6f9d46bd1c6c36b2",
+      "rows": 66,
+      "tool_calls": 30,
+      "calls": {
+        "read": 21,
+        "bash": 6,
+        "edit": 1,
+        "write": 2
+      },
+      "tool_errors": 0,
+      "model": "gpt-6.1-sol",
+      "effort": "xhigh",
+      "delivery_before_consumption": true
+    },
+    "worker_identity_binding": "retrospective exact-owned-cwd matching; no retained live worker-actor UUID binding",
+    "how_report_preserved": "complete delivered report copied byte for byte",
+    "implementation_scope": "one native edit within reconcile_linear; outside-function bytes unchanged; first-wins setdefault index"
+  },
+  "measurements": {
+    "unit": "ms",
+    "surface": "fresh end-to-end CLI process; startup, JSON input, validation, reconciliation and JSON output",
+    "native": {
+      "sha256": "38790063499fb93a749ce311ee546f2650b65b8ac1516eef01cf623d76e82669",
+      "before_median": 133.099238,
+      "after_median": 37.799381,
+      "reduction_fraction": 0.7160060300270089
+    },
+    "independent_replay": {
+      "sha256": "cf3e7b5f2ad9fbabff2a4f992816e114a5899e99cd06256f44a3ec7986410d01",
+      "before_median": 133.320984,
+      "after_median": 39.578028,
+      "reduction_fraction": 0.7031372945762236
+    },
+    "alternating_pairs_per_comparison": 5,
+    "all_36_measurement_results": {
+      "references": 2500,
+      "payments": 6000,
+      "errors": 0,
+      "total_units": 958008
+    },
+    "binary_profiles_independently_reduced": 6,
+    "six_flow_cli_suites_passed": 3,
+    "measurement_and_profile_timing_separate": true
+  },
+  "opening_a_pr": {
+    "independent_core_verdict": "pass",
+    "source": "native Opening a PR stage in the unchanged machine receipt plus independent retained-artifact audit",
+    "single_commit": "23d0c529787b54b84bf420fa75d116d62cca1a22",
+    "exact_parent_tip": "4654ad66e955a198a6d5e11027fc52ef7a7e1c3f",
+    "independent_pr_readback_sha256": "97925b1b252db33510c8468dac46153293ad3e8e3ab0c8e78fb8b40cff94560d",
+    "observations": [
+      "Owned stacked worktree starts at the exact open parent tip; one narrow conventional commit contains only reconcile.py and the portable PERFORMANCE.md.",
+      "Required original guidance and complete staged diff/stat review precede the commit; clean native statuses precede and follow the ready PR.",
+      "Origin absence is observed and gh fallback recorded before PR operations; one forge is used throughout.",
+      "One owned push and one ready child PR creation match independent exact head, base and body readback; the 27-line body reports measured results truthfully.",
+      "Remote head and PR inventories differ only by the owned branch and child PR; the parent and original local refs remain unchanged.",
+      "No merge, auto-merge, draft, babysit, hook/signature bypass or other forge mutation was observed."
+    ]
+  },
+  "integrity": {
+    "source_hashes_checked": 202,
+    "source_hashes_unchanged": true,
+    "configuration_unchanged": true,
+    "bundle_and_probe_unchanged": true,
+    "measured_committed_snapshots_match": true,
+    "original_fixture_checkout_unchanged": true,
+    "owned_panes_absent": true
+  },
+  "limitations": [
+    "The original machine PASS remains unchanged. Independent review rejects full Perf eligibility; this is not a fresh corrected-driver pass.",
+    "Standalone Opening a PR coverage does not make the earlier How protocol compliant and does not verify the remaining playbooks.",
+    "Worker identities were retrospectively matched within exact owned cwd sessions. No pre-dispatch reader-tree or live worker-actor UUID attestation was retained.",
+    "Observed owned-local search does not establish credential containment, pre-execution denial or absence of hidden application-level syscalls.",
+    "Measurements cover one deterministic workload on one host with process startup and warm filesystem effects; no general performance ceiling or production speedup is established.",
+    "Raw native sessions, configuration, private forge identities, binary profiles and worktrees stay private."
+  ]
+}

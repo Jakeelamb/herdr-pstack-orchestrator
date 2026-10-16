@@ -4,6 +4,20 @@ For agent-driven verification, use the project-local [verify-herdr-orchestrator 
 
 These files are repository tooling, outside the installed skills.
 
+## Original playbooks and worker replacement
+
+The [23-playbook inventory](PLAYBOOKS.md) separates native stage evidence,
+independent behavior checks, complete workflow eligibility and unavailable
+capabilities. `playbook_loop.py` drives a fresh Pi controller through the original
+skills; its initial scenarios are Investigation, Prototype and Trace forensics.
+Partial stage evidence must not be described as a completed playbook.
+
+For live replacement and removal of worker definitions, use the existing
+`check_workers.py --hot-swap-only` mode. It keeps two real reconciliation tasks
+running across alias changes, checks new-dispatch selection and removal refusal,
+then verifies outputs and configuration integrity. See the maintained
+[worker procedure](../.agents/skills/verify-herdr-orchestrator/features/workers.md#live-worker-replacement).
+
 ## Caller context preflight
 
 After a real Codex shell snapshot supplied another workspace's old IDs, a worker was created in the wrong workspace. The [observation and before/after receipt](evidence/caller-context.json) records that failure and the focused fix. Reproduce the preflight check with a verified live controller pane:

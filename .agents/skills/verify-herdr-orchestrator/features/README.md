@@ -9,9 +9,11 @@ Commands run from the repository root, using `repo` and `proof` from [Launch](..
 | [Worker setup checks](workers.md#worker-setup-checks) | `check_workers.py` | At least two authenticated configured workers, owned workspace, one-slot batching and injected exit |
 | [Workspace worker limits](workers.md#workspace-worker-limits) | `workspace_limits.py` | One authenticated worker, two owned workspaces, shared isolated task store |
 | [AI controller loop](controller.md) | `controller_loop.py` | Configured Codex controller plus workers; transcript audit |
+| [Original playbook scenarios](playbooks.md) | `playbook_loop.py` | Configured Pi controller; native session audit and independent artifacts |
+| [Live worker replacement](workers.md#live-worker-replacement) | `check_workers.py --hot-swap-only` | Two distinct configured execution definitions; owned workspace and in-flight gates |
 | [Caller context preflight](controller.md#caller-context-preflight) | `caller_context.py` | Verified live controller pane; read-only Herdr checks, no models |
 | [Caller identity](controller.md#caller-identity) | `caller_identity.py` | Run from the controller pane; scratch tab and workspace, no models |
 | [Pi integration and startup](pi.md) | `pi_preflight.py`, `pi_startup.py` | Select the reproduced failure; different prerequisites |
 | [Upstream update detection](upstream.md) | `check_upstream.py` | Git and network; no models |
 
-This is the map of existing reproducible drivers, not a claim of complete workflow coverage. Neither loop driver exercises the original pstack rubric. A separate manual `how` run is recorded in [skill-discovery.json](../../../../e2e/evidence/skill-discovery.json); other original playbooks remain unverified. Approval denial, turns longer than 30 minutes, and macOS runtime also remain unverified. Historical lifecycle/recovery/completion receipts have no distributed driver.
+This is the map of reproducible drivers, not a claim of complete workflow coverage. The invoice loop drivers do not exercise the original pstack rubric. The playbook driver audits declared original-workflow stages; full workflow eligibility and the 23-playbook inventory remain separate gates. A historical manual `how` run is recorded in [skill-discovery.json](../../../../e2e/evidence/skill-discovery.json). Approval denial, turns longer than 30 minutes, and macOS runtime remain unverified. Historical lifecycle/recovery/completion receipts have no distributed driver.

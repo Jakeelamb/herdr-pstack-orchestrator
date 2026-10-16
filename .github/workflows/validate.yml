@@ -35,6 +35,7 @@ jobs:
           python e2e/pi_startup.py --help
           python e2e/pi_preflight.py --help
           python e2e/controller_loop.py --help
+          python e2e/playbook_loop.py --help
           python e2e/caller_context.py --help
           python e2e/caller_identity.py --help
           python e2e/skill_catalogs.py --help

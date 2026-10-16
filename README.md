@@ -28,6 +28,21 @@ Two Agent Skills connect your controller to Pi, Codex CLI, and Claude Code. Each
 
 Workers open in separate tabs labeled `horch`, at most four panes per tab, without taking focus or using the controller's tab.
 
+The controller uses your existing agent CLIs and one worker configuration. No
+application-code changes are required. Worker definitions are read for each new
+task; an existing task retains its recorded launch arguments. Installing or
+updating skills can require a fresh controller session. Review same-name skill
+conflicts before installing.
+
+Live [worker replacement evidence](e2e/evidence/hot-swap.json) records two tasks
+running across a definition change and removal, with correct independently
+replayed results and unchanged user configuration. This covers worker
+definitions; role selection and skill loading remain controller responsibilities.
+
+For current limits and rerunnable original-workflow scenarios, see the
+[complete playbook evidence inventory](e2e/PLAYBOOKS.md). A successful worker
+task or package installation does not establish a complete playbook pass.
+
 ## Requirements
 
 - [Herdr](https://herdr.dev) 0.9.3 or later, with the controller agent running inside a Herdr pane (`HERDR_ENV=1`)

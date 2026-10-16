@@ -45,3 +45,12 @@ e2e/evidence/*
 !e2e/evidence/invalid-task-records.json
 !e2e/caller_identity.py
 !e2e/evidence/caller-identity.json
+!e2e/playbook_loop.py
+!e2e/playbook_cases.py
+!e2e/PLAYBOOKS.md
+!e2e/evidence/playbook-prototype-startup.json
+!e2e/evidence/playbook-prototype-contract.json
+!e2e/evidence/hot-swap-launch.json
+!e2e/evidence/hot-swap-audit.json
+!e2e/evidence/playbook-prototype-stages.json
+!e2e/evidence/hot-swap.json

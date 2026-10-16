@@ -1,5 +1,29 @@
 # Worker review loop
 
+## Live worker replacement
+
+Use two existing workers with different execution definitions. Their permission
+flags and trust settings are preserved. The isolated alias is replaced while a
+real reconciliation task is running, then removed while two tasks remain live.
+
+```bash
+python3 e2e/check_workers.py --hot-swap-only \
+  --worker <configured-worker-a> --worker <configured-worker-b> \
+  --cwd "$repo" --output "$proof" --max-seconds 1200
+```
+
+Require valid delivered results, independent 720-event reconciliation outputs,
+rerunnable scripts, unchanged task launch snapshots across replacement/removal,
+new-task selection of the second definition, refusal after alias removal without
+allocation, unchanged real config/skills/checkout, and owned cleanup. Read native
+model-audit availability and any limitations. Identical definitions produce a
+skip, never a replacement pass. This checks worker config changes; it does not
+prove an active controller reloads skill instructions.
+
+The driver owns a separate workspace and uses its real shell ancestry. It
+preserves original Mise roots when isolating XDG state and never answers a trust
+dialog. Retain the printed receipt and private diagnostics after cleanup.
+
 ## Sub-features
 
 Fresh implementation, two independent failing reviews, a fresh fix, and two passing reviews of an invoice CLI. The driver also executes edge-case invoices and checks scope, result delivery, and pane cleanup.

@@ -170,6 +170,36 @@ try:
               and x['store_before_hex'] == x['store_after_hex'] and not x['pending_exists'])
     x, value = invoke('final-export', 'export', store)
     check('all rejected imports leave full export intact', x['exit_code'] == 0 and value == expected)
+    legacy = row('persisted-missing-total', 2, 49)
+    summary_groups = [[row('new-z', 1, 101, 5000), row('new-a', 2, 333, 3333)],
+                      [row('new-m', 3, 137, 250)]]
+    initial_bytes = (json.dumps([legacy], sort_keys=True) + '\n').encode()
+    sentinel = b'preexisting pending evidence\n'
+    replacement = [legacy, *(charged(item) for group in summary_groups for item in group)]
+    replacement_bytes = json.dumps(replacement, sort_keys=True).encode()
+    summary_store = d / 'post-replace-summary.json'
+    summary_store.write_bytes(initial_bytes)
+    summary_store.with_suffix('.pending').write_bytes(sentinel)
+    normal, value = invoke('post-replace-summary-normal', 'import', summary_store, summary_groups)
+    check('normal late summary fault follows exact replacement', normal['exit_code'] == 1 and normal['stdout'] == ''
+          and normal['stderr'] == "KeyError: 'total_cents'\n"
+          and normal['store_before_hex'] == initial_bytes.hex() and normal['pending_before_hex'] == sentinel.hex()
+          and normal['store_after_hex'] == replacement_bytes.hex()
+          and not normal['pending_exists'] and normal['pending_after_hex'] is None)
+    x, value = invoke('post-replace-summary-export', 'export', summary_store)
+    check('late summary fault retains complete sorted export', x['exit_code'] == 0 and x['stderr'] == ''
+          and value == sorted(replacement, key=lambda item: item['id'])
+          and x['store_before_hex'] == x['store_after_hex'] == replacement_bytes.hex()
+          and not x['pending_exists'] and x['pending_before_hex'] is None and x['pending_after_hex'] is None)
+    if a.mode == 'feature':
+        dry_store = d / 'post-replace-summary-dry.json'
+        dry_store.write_bytes(initial_bytes)
+        dry_store.with_suffix('.pending').write_bytes(sentinel)
+        x, value = invoke('post-replace-summary-dry', 'import', dry_store, summary_groups, True)
+        check('dry late summary fault preserves exact initial ledger and sentinel',
+              (x['exit_code'], x['stdout'], x['stderr']) == (normal['exit_code'], normal['stdout'], normal['stderr'])
+              and x['store_before_hex'] == x['store_after_hex'] == initial_bytes.hex()
+              and x['pending_exists'] and x['pending_before_hex'] == x['pending_after_hex'] == sentinel.hex())
     suite = subprocess.run([sys.executable, '-B', str(r / 'e2e_import.py'), '--output', str(d / 'original-suite')], cwd=r,
                            capture_output=True, text=True, timeout=90)
     raw.append({'label': 'original-suite', 'exit_code': suite.returncode, 'stdout': suite.stdout, 'stderr': suite.stderr})
@@ -256,6 +286,104 @@ def design_readonly_git(argv, cwd, refs):
     return support.local_git(['git', *words], cwd, refs)
 
 
+def replay_worker_artifacts(calls, cwd, targets, result_path):
+    """Replay actual declared-output mutations; retain original native events."""
+    def require(value):
+        if not value:
+            raise Failure('worker_artifact_replay_rejected')
+    targets=set(targets)
+    require(result_path in targets and all(path.is_absolute() and path.resolve()==path and path.is_file()
+                                          for path in targets))
+    provenance={path:{'first':None,'last':None,'mutations':[],'changes':[]} for path in targets}
+    state={};last_result={}
+    ordered=sorted(calls,key=lambda event:(event['call_row'],event['result_row']))
+    for event in ordered:
+        if event['name'] not in ('write','edit'):
+            continue
+        args=event['args'];raw=args.get('path')
+        require(isinstance(raw,str) and bool(raw) and '~' not in raw and '\\' not in raw
+                and '..' not in raw.split('/') and not any(ord(char)<32 or ord(char)==127 for char in raw))
+        target=(cwd/raw).resolve()
+        if target not in targets:
+            continue  # Source mutations have their existing independent scope checks.
+        require(last_result.get(target,-1)<event['call_row'])
+        last_result[target]=event['result_row']
+        before=state.get(target)
+        if event['name']=='write':
+            require(set(args)=={'path','content'} and isinstance(args.get('content'),str))
+            candidate=args['content']
+        else:
+            require(before is not None)
+            edits=args.get('edits',[args])
+            require(set(args)==({'path','edits'} if 'edits' in args else {'path','oldText','newText'})
+                    and isinstance(edits,list) and bool(edits))
+            candidate=before
+            for edit in edits:
+                require(isinstance(edit,dict) and set(edit)==({'oldText','newText'} if 'edits' in args
+                        else {'path','oldText','newText'}) and isinstance(edit.get('oldText'),str)
+                        and bool(edit['oldText']) and isinstance(edit.get('newText'),str)
+                        and candidate.count(edit['oldText'])==1)
+                candidate=candidate.replace(edit['oldText'],edit['newText'],1)
+        # An error cannot establish whether a partial filesystem write occurred.
+        # Never advance successful state or release an uncertain artifact.
+        require(event.get('successful') is True)
+        state[target]=candidate
+        proof=provenance[target]
+        if proof['first'] is None:
+            require(event['name']=='write')
+            proof['first']=event
+        proof['last']=event;proof['mutations'].append(event)
+        proof['changes'].append({'event':event,'before':before,'after':candidate})
+    require(all(provenance[path]['first'] is not None and bool(state[path].strip())
+                and state[path].encode('utf-8')==path.read_bytes()
+                for path in targets))
+    first_result=provenance[result_path]['first']['call_row']
+    for event in ordered:
+        args=event['args']
+        result_mutation=(event['name'] in ('write','edit') and isinstance(args.get('path'),str)
+                         and (cwd/args['path']).resolve()==result_path)
+        require(result_mutation or event['result_row']<first_result)
+    return provenance
+
+
+def how_summary_refinement(artifacts, calls, cwd, report_path, inputs):
+    """Require a real additive evidence paragraph; semantic correctness remains reviewed."""
+    def require(value):
+        if not value:
+            raise Failure('how_summary_refinement_unresolved')
+    proof=artifacts[report_path];draft=proof['first']['args']['content']
+    texts={name:(cwd/name).read_text() for name in SOURCE_FILES}
+    successful=[event for event in calls if event['successful']]
+    start=proof['first']['call_row']
+    require(bool(draft.strip()) and all(core.workflow_reads(successful,cwd,path,before=start)
+            for path in [*(cwd/name for name in SOURCE_FILES),*inputs]))
+    def grounded(text):
+        for name,line in re.findall(r'\b(money\.py|storage\.py|cli\.py|e2e_import\.py):(\d+)\b',text):
+            lines=texts[name].splitlines();number=int(line)
+            if 0<number<=len(lines) and lines[number-1].strip() and lines[number-1] in text:
+                return True
+        return False
+    require(grounded(draft))
+    for index,change in enumerate(proof['changes']):
+        event=change['event']
+        if event['name']!='edit':
+            continue
+        for edit in event['args'].get('edits',[event['args']]):
+            old,new=edit['oldText'],edit['newText']
+            if new.count(old)!=1:
+                continue
+            addition=new.replace(old,'',1)
+            if not re.search(r'\n[ \t]*\n',addition):
+                continue
+            for paragraph in re.split(r'\n[ \t]*\n',addition):
+                paragraph=paragraph.strip()
+                if (paragraph and grounded(paragraph) and paragraph not in draft and paragraph not in change['before']
+                        and all(paragraph in later['after'] for later in proof['changes'][index:])):
+                    return {'edit_call_row':event['call_row'],'edit_result_row':event['result_row'],
+                            'draft_call_row':proof['first']['call_row'],'retained_evidence_paragraph':True}
+    raise Failure('how_summary_refinement_unresolved')
+
+
 def comment_gate_contract(native, task, cwd, bundle, base, scenario, source_hashes):
     """Apply original agent bootstrap and actual review witnesses before release."""
     def require(value):
@@ -297,9 +425,9 @@ def comment_gate_contract(native, task, cwd, bundle, base, scenario, source_hash
             if event['successful'] and argv == sha_argv:
                 require(event['output'].rstrip('\n') == hashes); observed_hash.append(event)
     require(bool(observed_diff) and bool(observed_hash))
-    reports = [core.workflow_writes(successful, cwd, directory / name, final=True) for name in ('report.md', 'review.json')]
-    require(all(len(items) == 1 for items in reports))
-    start = min(items[0]['call_row'] for items in reports)
+    artifacts = replay_worker_artifacts(calls, cwd,
+        {directory / name for name in ('report.md', 'review.json', 'result.json')}, directory / 'result.json')
+    start = min(artifacts[directory / name]['first']['call_row'] for name in ('report.md', 'review.json'))
     require(max(observed_diff[0]['result_row'], observed_hash[0]['result_row']) < start)
     for path in [*guides, *(cwd / name for name in scope)]:
         require(bool(core.workflow_reads(successful, cwd, path, before=start)))
@@ -392,6 +520,21 @@ Reader-tree descriptors must equal the immutable pre-dispatch snapshot after
 delivery and contain no symlinks; external concurrent mutation is assumed absent.
 This is a bounded evidence grammar, not universal FFF support or containment.'''
                  if how else 'No FFF or Bash ls/grep/find exception applies to this phase.')
+    refinement = (f'''Feature how-summary refinement witness: FULL-read all four actual owned
+source files ({', '.join(SOURCE_FILES)}) and both delivered explorer report inputs
+before writing a correct, source-grounded complete report.md draft with native
+write. The draft must cite an actual FILE:LINE and quote that exact nonempty
+source line. Then use at least one successful native edit to ADD a substantive
+source/evidence-boundary or reconciliation paragraph before result.json. Choose
+an actual unique existing anchor; newText retains oldText EXACTLY ONCE and adds the new
+paragraph separated by a blank line. The new paragraph must cite actual FILE:LINE
+and quote its exact nonempty source line, be absent from the draft, and remain
+in every later report state through delivery. Do not use placeholders, filler,
+a deliberately incorrect draft, prescribed semantic claims or add/remove/re-add
+round trips. If no legitimate refinement is justified, stop unresolved rather
+than manufacture one. The gate checks actual reads, bytes and edit provenance;
+final report correctness and substantive reconciliation require manual review.'''
+                  if scenario == 'feature' and slot == 'how-summary' else '')
     return f'''BEGIN DESIGN WORKER EVIDENCE GRAMMAR
 Slot {slot}; exact owned cwd {cwd}; source writes {json.dumps(source if writer else [])}.
 Only native read/write/edit/bash/grep/find/ls, except the How phase forms below;
@@ -405,10 +548,17 @@ Native ls/find/grep require an explicit owned directory/file; no ../, tilde,
 backslash, control-character or symlink paths. offset/limit may be omitted/null
 for read; otherwise positive integers, context nonnegative, booleans typed.
 Writes/edits only declared canonical flat task outputs plus the source files
-above; never brief.md/task.json/state.json. Write complete report.md and result.json
-with native write; result.json LAST in a separate tool call after every prior
-tool result, completed real nonce, question null. All
-outputs must be unique flat names declared by Output: NAME, include report.md.
+above; never brief.md/task.json/state.json. Establish each complete artifact by
+native write; later native full writes or exact native edits are allowed. Edits
+use nonempty unique oldText and string newText, either one replacement or an
+ordered nonempty edits array. Serialize mutations per file after the preceding
+result; independent files may batch. Failed mutations do not advance replayed
+state and uncertain partial failure is unresolved. Every final artifact must
+contain non-whitespace content; final UTF-8 bytes must equal the actual delivered
+file. The FIRST result.json mutation is in a separate tool
+call after ALL prior tool results; thereafter ONLY serialized result.json
+mutations, no other calls. Complete real nonce, question null. All outputs must
+be unique flat names declared by Output: NAME, include report.md.
 Bash is ONE literal command; no newline ; | & > < backtick dollar or backslash,
 even quoted; no shell wrappers/expansion, network/forge/config/delegation or Git
 writes. Allowed: pwd; cat or sha256sum ONE allowed FILE; literal readonly Git in
@@ -430,6 +580,7 @@ Do not delegate, use native subagents, or run a whole playbook. All attempts,
 including errors, are audited; violations quarantine before forwarding. This is
 post-execution evidence checking, not sandbox or credential containment.
 {how_forms}
+{refinement}
 END DESIGN WORKER EVIDENCE GRAMMAR'''
 
 
@@ -619,18 +770,9 @@ def design_scope_audit(policy_path, task_id):
             and result.get('question') is None and isinstance(result.get('files'), list)
             and len(result['files']) == len(expected) and all(isinstance(name, str) for name in result['files'])
             and set(result['files']) == set(expected))
-    result_writes = core.workflow_writes(successful, cwd, directory / 'result.json', final=True)
-    require(len(result_writes) == 1 and result_writes[0]['args']['content'] == (directory / 'result.json').read_text()
-            and all(event['call_row'] < result_writes[0]['call_row']
-                    or event['name'] == 'write' and canonical(event['args'].get('path')) == directory / 'result.json'
-                    for event in calls)
-            and all(event['result_row'] < result_writes[0]['call_row']
-                    for event in calls if event['call_row'] < result_writes[0]['call_row']))
-    for name in expected:
-        target = directory / name
-        require(target.resolve() == target and target.is_file())
-        writes = core.workflow_writes(successful, cwd, target, before=result_writes[0]['call_row'], final=True)
-        require(len(writes) == 1 and writes[0]['args']['content'] == target.read_text())
+    artifacts = replay_worker_artifacts(calls, cwd, output_paths, directory / 'result.json')
+    refinement = (how_summary_refinement(artifacts, calls, cwd, directory / 'report.md', inputs)
+                  if policy['scenario'] == 'feature' and slot == 'how-summary' else None)
     brief_reads = core.workflow_reads(successful, cwd, directory / 'brief.md')
     require(bool(brief_reads) and all(event in brief_reads or event['call_row'] > brief_reads[0]['result_row'] for event in calls))
     comment_native = (comment_gate_contract(native, task, cwd, bundle, policy['base'], policy['scenario'], before)
@@ -643,7 +785,10 @@ def design_scope_audit(policy_path, task_id):
             'source_sha256': {name: core.sha(cwd / name) for name in SOURCE_FILES},
             'how_reader_tree_before': policy['how_reader_trees'][slot] if how else None,
             'how_reader_tree_after': tree_after if how else None,
-            'comment_native_contract': comment_native}
+            'comment_native_contract': comment_native, 'how_summary_refinement': refinement,
+            'artifact_mutations': {path.name: {'first_call_row': proof['first']['call_row'],
+                'last_result_row': proof['last']['result_row'], 'count': len(proof['mutations'])}
+                for path, proof in artifacts.items()}}
 
 
 def design_wait_audit(policy_path, task_id, seconds):
@@ -1051,6 +1196,10 @@ task report/external file directly as --brief. All run flags remain explicit.
 Declare each prior worker input FILE with Input artifact: ABSOLUTE_PATH; it must
 come from a prior PASSED gate and be fully read after that safe delivery before
 launching dependents. No sibling directories, config, unpassed reports or raw waits.
+Controller private stage artifacts keep their complete-native-write witnesses:
+after any native edit, write the final complete artifact with native write before
+consumption/dispatch, and do not edit it after that final witness. This excludes
+the separately specified source import/graft protocol.
 Fixed lead stage FILES use Controller input: ABSOLUTE_PATH, only native-written
 grounding.md/architect-task.md/architect-rubric.json/rationale.md/implementation-task.md/
 implementation-rubric.json/interrogate-task.md already completed before launch.
@@ -1125,7 +1274,9 @@ Final output is {self.directory / 'native-after'} with mode {self.args.scenario 
 HOW: full complex route, two fresh how explorer tasks in how-a/how-b before
 first wait, angles cli-contract and staging-persistence. Read all delivered
 findings before how-summary. Its brief includes BOTH complete explorer report
-bodies and angle keys. Read the delivered full explanation; include its COMPLETE
+bodies and angle keys. Feature how-summary additionally must perform the actual
+correct-draft plus substantive retained native-edit refinement required by its
+generated protocol; do not substitute another write or invent a refinement. Read the delivered full explanation; include its COMPLETE
 EXACT TEXT verbatim in {self.artifacts / 'grounding.md'}. Treat the report body as
 opaque text: preserve all backslashes, quotes, Unicode, spacing and line breaks,
 including inside Mermaid diagrams. Do not unescape, normalize, reformat, abridge
@@ -1177,7 +1328,7 @@ in full after its write and before framing that task; freeze it through final
 verification. Candidates implement and verify independently in disjoint worktrees,
 no integration writes, and report actual changes and rejected alternatives. This
 conservative driver requires every implementation candidate to pass the real
-Feature CLI oracle AND preserve all nine frozen-before normal observations and
+Feature CLI oracle AND preserve all eleven frozen-before normal observations and
 missing-field status exactly; a failed candidate leaves the run unresolved. Cross-judge
 starts after all are done. Read every candidate source file in full after delivery.
 Assess every loser honestly even when no graft is worthwhile.
@@ -1195,8 +1346,11 @@ report synthesis unresolved. Refactoring has NO controller source-write permissi
 Run final oracle yourself on same CLI after implementation. Both scenarios must
 preserve every frozen-before normal CLI observation exactly by its original
 record label: normalized exit/stdout/stderr, full ledger bytes and pending state,
-including malformed/rejected inputs and the actual late missing-field outcome.
-Feature's new dry-run observations are additional; all nine original non-dry
+including malformed/rejected inputs, the actual late missing-field outcome, and
+the observed post-replace total_cents summary fault with its replaced ledger.
+The matching dry fault case starts from a separate identical initial ledger and
+preexisting pending sentinel and must preserve both byte-for-byte.
+Feature's new dry-run observations are additional; all eleven original non-dry
 observations must still equal frozen before. Feature has no reader-load slot.
 Refactoring additionally compares its complete record and missing-field status.
 For Refactoring ONLY, then run the reader-load slot using configured how explainer
@@ -1370,13 +1524,9 @@ nested delegation. Follow the original CommentSicko scope and report honestly.
                     self.check('comment_source_hashes_bound_to_final_commit', event['output'].rstrip('\n') == expected)
                     hashes.append(event)
         self.check('comment_actual_diff_and_hash_observations', bool(diffs) and bool(hashes))
-        writes = []
-        for name in ('report.md', 'review.json'):
-            native = core.workflow_writes(successful, self.worktree, directory / name, final=True)
-            self.check('comment_complete_native_report_' + name, len(native) == 1
-                       and native[0]['args']['content'] == (directory / name).read_text())
-            writes.append(native[0])
-        start = min(event['call_row'] for event in writes)
+        artifacts = replay_worker_artifacts(calls, self.worktree, outputs, directory / 'result.json')
+        self.check('comment_native_artifacts_exact_replay', all(proof['first'] is not None for proof in artifacts.values()))
+        start = min(artifacts[directory / name]['first']['call_row'] for name in ('report.md', 'review.json'))
         for path in [*guides, *scoped]:
             self.check('comment_complete_native_scope_read_' + path.name, bool(core.workflow_reads(
                 successful, self.worktree, path, before=start)))
@@ -1937,7 +2087,7 @@ nested delegation. Follow the original CommentSicko scope and report honestly.
     def verify_feature_normal_observations(self, observation, scope):
         normal_before = self.before['record']
         labels = [row['label'] for row in normal_before]
-        self.check('feature_' + scope + '_pinned_nine_normal_cli_observations', len(normal_before) == 9
+        self.check('feature_' + scope + '_pinned_eleven_normal_cli_observations', len(normal_before) == 11
                    and len(set(labels)) == len(labels))
         for original in normal_before:
             observed = [row for row in observation['record'] if row.get('label') == original['label']]

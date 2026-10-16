@@ -111,6 +111,27 @@ before the driver's native audit. This was a manual stop after forwarding, with 
 or PR. Trail payloads and all derived review/documentation bodies stay unread
 by independent reviewers. The retained timings are arithmetic/provenance
 evidence, without a fresh independent timing replay or complete workflow pass.
+
+The [retained final fixture source](evidence/playbook-hillclimb-final.py) has
+SHA256 `2cf48cf2e4b15daf4e29a5f0501b470f88e18beb7c8a690aa5792df773699b8b`.
+It preserves the assigned CLI's list-input contract; it requires reversible
+references and is not an iterator-compatible general replacement. To rerun the
+six real CLI flows for both baseline and candidate without models or a forge:
+
+```bash
+proof=$(mktemp -d "${TMPDIR:-/tmp}/hillclimb-replay-XXXXXXXX")
+python3 e2e/perf_loop.py --prepare-fixture "$proof/before"
+python3 e2e/perf_loop.py --prepare-fixture "$proof/after"
+cp e2e/evidence/playbook-hillclimb-final.py "$proof/after/reconcile.py"
+python3 -B "$proof/before/e2e_reconcile.py" --output "$proof/before-flows"
+python3 -B "$proof/after/e2e_reconcile.py" --output "$proof/after-flows"
+```
+
+Keep `$proof/before-flows/evidence.json`, `$proof/after-flows/evidence.json`
+and their input/stdout/stderr files. The [fresh replay receipt](evidence/playbook-hillclimb-replay.json)
+records all 12 flows with both source hashes. This replays
+fixture behavior; it does not reproduce the retained alternating timings or
+complete the model-driven playbook.
 The [first Babysit Check receipt](evidence/playbook-babysit-grammar.json) stopped
 in preparation before any watcher or PR snapshot. Its
 [independent audit](evidence/playbook-babysit-grammar-audit.json) identifies an

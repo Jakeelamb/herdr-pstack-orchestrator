@@ -1,0 +1,174 @@
+{
+  "schema": "horch/hillclimb-public-cli-replay/v1",
+  "kind": "Fresh independent CLI replay of publicly retained synthetic source",
+  "verdict": "pass",
+  "playbook_verdict": "not_run",
+  "timing_verdict": "not_run",
+  "source_revision": "e5f299d",
+  "fixture_generator": "e2e/perf_loop.py",
+  "fixture_generator_sha256": "f65635c64ebf35488163682e6d56380ab5b63317bc4ea54e64a542df322c144a",
+  "candidate_artifact": "playbook-hillclimb-final.py",
+  "candidate_artifact_sha256": "2cf48cf2e4b15daf4e29a5f0501b470f88e18beb7c8a690aa5792df773699b8b",
+  "sides": {
+    "before": {
+      "source_sha256": {
+        "reconcile.py": "098cfd482cdaa0fa0b61b398e7ca0a8d8127d9b238a96e704019f98dfb78ba15",
+        "cli.py": "32e3598c358c514ef5a81c478e766fd9d375925f149c351f3b51c6b82fbcef68",
+        "e2e_reconcile.py": "adcdee8fa5e71fdc1cf2f37c2fb226388e45b95a8ca3409dd21445d1fdfe59a1",
+        "workload.json": "6bdc69c6b243ee7934b12ce2e7594b979680dc53659f46457b4ffec7c59e4ea8",
+        "contract.json": "f2f3d7c7089e409e7ed9bc302daf6693948cac8cabb436222bcc96fcab6e563a"
+      },
+      "original_receipt_sha256": "c5cf9c990dd625d0af60a39cf953224387ab9c78baf0633b188b474eb28e85cd",
+      "original_receipt": {
+        "schema": "reconcile/cli-e2e/v1",
+        "verdict": "pass",
+        "flows": [
+          {
+            "name": "full-workload",
+            "exit_code": 0,
+            "ok": true,
+            "output": {
+              "errors": 0,
+              "payments": 6000,
+              "references": 2500,
+              "total_units": 958008
+            }
+          },
+          {
+            "name": "repeated-and-zero",
+            "exit_code": 0,
+            "ok": true,
+            "output": {
+              "errors": 0,
+              "payments": 4,
+              "references": 3,
+              "total_units": 126
+            }
+          },
+          {
+            "name": "empty-payments",
+            "exit_code": 0,
+            "ok": true,
+            "output": {
+              "errors": 0,
+              "payments": 0,
+              "references": 3,
+              "total_units": 0
+            }
+          },
+          {
+            "name": "duplicate-reference",
+            "exit_code": 2,
+            "ok": true,
+            "output": {
+              "error": "invalid or duplicate reference",
+              "errors": 1
+            }
+          },
+          {
+            "name": "missing-account",
+            "exit_code": 2,
+            "ok": true,
+            "output": {
+              "error": "invalid payment",
+              "errors": 1
+            }
+          },
+          {
+            "name": "invalid-amount",
+            "exit_code": 2,
+            "ok": true,
+            "output": {
+              "error": "invalid payment",
+              "errors": 1
+            }
+          }
+        ],
+        "workload_sha256": "6bdc69c6b243ee7934b12ce2e7594b979680dc53659f46457b4ffec7c59e4ea8"
+      }
+    },
+    "after": {
+      "source_sha256": {
+        "reconcile.py": "2cf48cf2e4b15daf4e29a5f0501b470f88e18beb7c8a690aa5792df773699b8b",
+        "cli.py": "32e3598c358c514ef5a81c478e766fd9d375925f149c351f3b51c6b82fbcef68",
+        "e2e_reconcile.py": "adcdee8fa5e71fdc1cf2f37c2fb226388e45b95a8ca3409dd21445d1fdfe59a1",
+        "workload.json": "6bdc69c6b243ee7934b12ce2e7594b979680dc53659f46457b4ffec7c59e4ea8",
+        "contract.json": "f2f3d7c7089e409e7ed9bc302daf6693948cac8cabb436222bcc96fcab6e563a"
+      },
+      "original_receipt_sha256": "c5cf9c990dd625d0af60a39cf953224387ab9c78baf0633b188b474eb28e85cd",
+      "original_receipt": {
+        "schema": "reconcile/cli-e2e/v1",
+        "verdict": "pass",
+        "flows": [
+          {
+            "name": "full-workload",
+            "exit_code": 0,
+            "ok": true,
+            "output": {
+              "errors": 0,
+              "payments": 6000,
+              "references": 2500,
+              "total_units": 958008
+            }
+          },
+          {
+            "name": "repeated-and-zero",
+            "exit_code": 0,
+            "ok": true,
+            "output": {
+              "errors": 0,
+              "payments": 4,
+              "references": 3,
+              "total_units": 126
+            }
+          },
+          {
+            "name": "empty-payments",
+            "exit_code": 0,
+            "ok": true,
+            "output": {
+              "errors": 0,
+              "payments": 0,
+              "references": 3,
+              "total_units": 0
+            }
+          },
+          {
+            "name": "duplicate-reference",
+            "exit_code": 2,
+            "ok": true,
+            "output": {
+              "error": "invalid or duplicate reference",
+              "errors": 1
+            }
+          },
+          {
+            "name": "missing-account",
+            "exit_code": 2,
+            "ok": true,
+            "output": {
+              "error": "invalid payment",
+              "errors": 1
+            }
+          },
+          {
+            "name": "invalid-amount",
+            "exit_code": 2,
+            "ok": true,
+            "output": {
+              "error": "invalid payment",
+              "errors": 1
+            }
+          }
+        ],
+        "workload_sha256": "6bdc69c6b243ee7934b12ce2e7594b979680dc53659f46457b4ffec7c59e4ea8"
+      }
+    }
+  },
+  "limitations": [
+    "Twelve real CLI flows validate only the assigned synthetic list-input contract, not a complete model-driven playbook.",
+    "No model, forge, Herdr dispatcher, performance timing or profile was used by this replay.",
+    "The candidate requires reversible references; iterator inputs are outside this fixture contract.",
+    "Both retained CLI receipts are byte-identical because all observed CLI outputs and the workload hash agree. Source identities are recorded separately here."
+  ]
+}

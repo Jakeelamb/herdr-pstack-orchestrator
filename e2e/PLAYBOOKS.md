@@ -81,7 +81,7 @@ Read the measured results and each fresh receipt before reporting coverage.
 | Driver | Scope and prerequisites |
 |---|---|
 | `pause_pickup.py` | Two fresh Pi sessions, one local WIP commit, scoped prior trail and persisted importer verification; no remote writes |
-| `forge_loop.py` | Bug fix and Opening a PR against an existing private invoice fixture and ready baseline PR |
+| `forge_loop.py` | Private invoice fixture; captured repository snapshot, audited How/Why delivery, two ordered test/fix commits and a ready child PR; original live-source Why remains unresolved |
 | `design_loop.py` | Feature or Refactoring, actual How/Architect/Arena stages, independent behavior/equivalence and a ready private child PR |
 | `perf_loop.py` | Fresh profiles, separate unprofiled alternating CLI timings, one-function fix and a ready private child PR |
 | `authoring_loop.py` | Actual skill-authoring guidance, existing validator, two independently traced usage cases and a ready private child PR |
@@ -122,7 +122,7 @@ bootstrap checks are not native playbook executions.
 Skill authoring needs existing creator guidance and its validator's PyYAML
 dependency; it never installs that dependency. Explicit forward use does not
 prove automatic discovery. Runtime forensics needs Node with Inspector and
-built-in WebSocket support. Two live receipts failed on checker contracts;
+built-in WebSocket support. Three live receipts failed on checker contracts;
 the separate manual audits below support the actual runtime observations.
 Feature, Refactoring, Perf issue and Authoring model workflows remain unrun.
 The first live Bug fix investigation was stopped for an actual
@@ -251,9 +251,22 @@ The lead had read a report containing the unrelated repository's identity, but
 no returned issue titles. This was manual intervention, not an automatic adapter
 denial. The unchanged failed receipt records `operator_interrupted`.
 
-Do not repeat that live-query profile with broad forge access. A subsequent
-snapshot/gateway investigation lane needs its own source attribution and live
-evidence. It would not prove credential containment or live worker-forge access.
+Do not repeat that live-query profile with broad forge access. The replacement
+driver captures only the assigned repository's paginated issues, comments,
+labels and PR1 discussion, then exposes an offline list/search/read gateway.
+Its two investigators still examine the available issue and Git categories,
+including empty results, before separate configured synthesis.
+
+The delivery wrapper runs real `horch wait` privately, retaining its exact argv
+and raw receipt. It emits only fixed metadata until the closed worker's complete
+native transcript passes a scope audit, including failed calls. The final driver
+independently binds that audit, the original assignment and native delivery to
+every report read or forwarding operation. Violations quarantine output before
+synthesis. This lane still needs its own live evidence; it detects violations
+after execution and does not prevent credential use or hidden application-level
+network access. Snapshot stages, fixture behavior and Opening a PR have separate
+verdicts. A passing fixture experiment would leave original live-source Why and
+the full Bug fix workflow unresolved.
 
 The [first Runtime receipt](evidence/playbook-runtime-env.json) remains failed.
 Its checker rejected legitimate `uptime` and `nproc` observations, then independent
@@ -274,6 +287,17 @@ and cleanup. The checker now accepts either the operation record or its raw
 artifact for the signal and reduction, while retaining independent raw-data
 checks. The prompt declares those citation groups and the literal shell grammar.
 A fresh passing automated run is still required.
+
+The [third Runtime receipt](evidence/playbook-runtime-planning.json) preserves a
+further ordering failure. Before capture, the controller appended explicitly
+tentative measurement planning to the checklist's separate pending section,
+then recorded completion after the actual observations. The checker incorrectly
+treated every checklist edit as completion. The
+[separate independent audit](evidence/playbook-runtime-planning-reanalysis.json)
+supports all five stages, exact profile reduction, raw Inspector bindings,
+source identity and cleanup. Chronological edit replay now permits earlier
+planning while requiring final completion after all operations and source reads.
+The original receipt remains failed; a fresh automated pass is still required.
 
 The [fresh live-replacement receipt](evidence/hot-swap.json) verifies two real
 Pi tasks using distinct configured models. Both were held working while the
@@ -303,6 +327,7 @@ This verifies worker definition replacement, not automatic role or skill reload.
 | [Forge repository scope](evidence/playbook-forge-scope.json) | Investigator queried outside the assigned repository; independent audit triggered manual halt before synthesis/fix/PR |
 | [Runtime observation grammar](evidence/playbook-runtime-env.json) | Checker rejected required environment observations; separate review found checklist and citation format mismatches |
 | [Runtime citation contract](evidence/playbook-runtime-citations.json) | Checker required undeclared direct raw-file links despite valid citations to independently bound operation records |
+| [Runtime planning order](evidence/playbook-runtime-planning.json) | Checker treated an explicitly tentative planning edit as premature completion |
 
 Each attempt retained its failure verdict and confirmed owned cleanup. The first
 prototype run did not execute a model task. The contract run produced real
@@ -322,7 +347,7 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 | Prototype | [PASS: fixed-direction behavioral core workflow](evidence/playbook-prototype.json); open visual design search unverified |
 | Perf issue | Reviewed `perf_loop.py`; portable baseline passes, live measurements/fix/PR unrun |
 | Hillclimb | Reviewed `hillclimb_loop.py`; live sensitivity, measured attempts, independent decisions and PR unrun; unattended wake unavailable |
-| Runtime forensics | [FAIL: citation contract](evidence/playbook-runtime-citations.json); both attempts' five-stage observations separately audited; fresh corrected run pending |
+| Runtime forensics | [FAIL: planning order](evidence/playbook-runtime-planning.json); all three attempts separately audited; fresh corrected run pending |
 | Trace forensics | [PASS: bounded paired-capture core workflow](evidence/playbook-trace.json); large-capture delegation unverified |
 | Visual parity | Untouched screenshots, real migration, zero pixel diff, real PR |
 | Authoring a skill | Reviewed `authoring_loop.py`; live authored skill, structural usage cases and real PR unrun; automatic discovery separate |

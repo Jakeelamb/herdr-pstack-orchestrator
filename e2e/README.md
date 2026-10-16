@@ -33,6 +33,10 @@ Runtime retains the [first checker failure](evidence/playbook-runtime-env.json)
 and [separate actual-data audit](evidence/playbook-runtime-reanalysis.json), plus a
 [second citation-check failure](evidence/playbook-runtime-citations.json) and its
 [independent audit](evidence/playbook-runtime-citations-reanalysis.json).
+The [third failed receipt](evidence/playbook-runtime-planning.json) exposed a
+checker that classified tentative planning edits as completion; its
+[independent audit](evidence/playbook-runtime-planning-reanalysis.json) supports
+the actual five-stage observations while preserving the failed verdict.
 Correcting a verifier does not promote the historical receipt.
 
 For live replacement and removal of worker definitions, use the existing

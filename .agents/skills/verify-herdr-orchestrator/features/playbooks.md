@@ -64,11 +64,19 @@ the prompted source-symbol-line citation. The second receipt also remains failed
 it cited the operation records, but the checker required undeclared direct links
 to the raw profile and full reduction. The declared citation groups now accept
 either record or raw artifact, retaining the independent raw/CDP checks. Both
-attempts have separate manual audits; a fresh automated pass is still needed.
+attempts have separate manual audits. A third failed receipt exposed a planning
+edit incorrectly classified as completion. Its independent raw-evidence audit
+supports all five stages; the checker now replays all edits chronologically and
+requires final completion after observations and source reads. A fresh automated
+pass is still needed.
 The first Bug fix investigation was manually stopped after a worker queried
 outside the assigned repository. Its failed receipt and redacted scope audit
-remain published. Do not repeat that profile with broad forge access; a new
-snapshot/gateway lane must be separately reviewed and measured.
+remain published. Do not repeat that profile with broad forge access. The new
+snapshot/gateway lane captures only the assigned repository and gates result
+consumption through a private real-horch wait plus complete native audit. It
+retains raw wait receipts privately and emits fixed metadata. Review its separate
+snapshot/behavior/OpeningPR verdicts; it does not establish credential containment
+or original live-source Why/full Bug fix eligibility. Live evidence is pending.
 
 `hillclimb_loop.py` additionally requires an explicit configured different-family
 `--trail-reviewer` and the pristine reconciliation baseline. It retains all

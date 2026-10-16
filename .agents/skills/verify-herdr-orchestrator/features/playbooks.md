@@ -141,7 +141,12 @@ Its final Comment Sicko review follows the stable attempts and trail audit,
 before final PR review and the documentation commit.
 `babysit_loop.py` requires a real bottom-to-top `--stack-prs` base chain and
 existing Bun. It runs one original watcher Check with private locked dependencies
-and independent forge snapshots. Neither driver has live evidence yet. Check
+and independent forge snapshots. The first Check stopped in preparation before
+the watcher: a checker rejected the Herdr skill's required environment guard and
+help, plus brief-directed visible actor inspection. Preserve its FAIL. The
+reviewed grammar repair permits only the exact guard/help forms and unique
+prior-listed caller-workspace actors after the frozen native snapshot. A new
+live Check is required. Hillclimb has no passing live evidence yet. Check
 does not establish drive/background or a complete Babysit workflow.
 
 Inspect retained worktrees under `handoff/<run>/worktree`, then remove only the

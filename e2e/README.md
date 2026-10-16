@@ -94,6 +94,13 @@ missing working-state binding and incomplete early task accounting. Its lead
 had already consumed both reports and launched synthesis. There was no source
 change, commit or PR; this was not automatic quarantine. Existing recorded
 checks cover setup and cleanup only, without a completed worker or workflow audit.
+The [first Babysit Check receipt](evidence/playbook-babysit-grammar.json) stopped
+in preparation before any watcher or PR snapshot. Its
+[independent audit](evidence/playbook-babysit-grammar-audit.json) identifies an
+undeclared checker restriction on required environment/help and brief-directed
+actor inspection. The new contract admits only those bounded forms and
+previously listed caller-workspace actors. Code review is complete; a fresh
+Check run is still required, and would not complete the whole Babysit playbook.
 Named-agent briefs now require tool-only loading of the original agent and
 required skill before any assistant text. The original instructions and exact
 output rules remain unchanged; this forward repair needs fresh live evidence.

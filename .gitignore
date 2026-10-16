@@ -100,3 +100,5 @@ e2e/evidence/*
 
 !e2e/evidence/playbook-feature-scope.json
 !e2e/evidence/playbook-feature-scope-audit.json
+!e2e/evidence/playbook-babysit-grammar.json
+!e2e/evidence/playbook-babysit-grammar-audit.json

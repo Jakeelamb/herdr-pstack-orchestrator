@@ -13,7 +13,7 @@ Commands run from the repository root, using `repo` and `proof` from [Launch](..
 | [Pause and pickup](playbooks.md) | `pause_pickup.py` | Two fresh Pi sessions, normal Git identity and local WIP; no forge writes |
 | [Private PR workflows](playbooks.md) | `forge_loop.py`, `design_loop.py`, `perf_loop.py`, `hillclimb_loop.py`, `authoring_loop.py` | Bug fix and Feature scope failures; Perf and Authoring unresolved; private fixture, ready parent PR and role-specific prerequisites |
 | [Live runtime diagnosis](playbooks.md) | `runtime_loop.py` | Fresh five-stage owned-process pass; earlier failed receipts and separate audits retained |
-| [PR-chain status](playbooks.md) | `babysit_loop.py` | Reviewed driver; explicit private base chain and existing Bun; one read-only Check only, live unrun |
+| [PR-chain status](playbooks.md) | `babysit_loop.py` | First preparation failure retained; bounded Herdr command repair reviewed; explicit private chain and Bun; one Check only |
 | [Live worker replacement](workers.md#live-worker-replacement) | `check_workers.py --hot-swap-only` | Two distinct configured execution definitions; owned workspace and in-flight gates |
 | [Caller context preflight](controller.md#caller-context-preflight) | `caller_context.py` | Verified live controller pane; read-only Herdr checks, no models |
 | [Caller identity](controller.md#caller-identity) | `caller_identity.py` | Run from the controller pane; scratch tab and workspace, no models |

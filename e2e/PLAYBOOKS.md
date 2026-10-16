@@ -154,8 +154,10 @@ base-chain order. It executes the original watcher once and binds its actual
 `STATUS` rows to separate forge snapshots. Its private copied bootstrap may
 install locked Bun dependencies at execution time. Unsupported Origin selection,
 unavailable checks or a changing forge snapshot remain unresolved. Even a pass
-would cover bounded Check only, not the entire Babysit playbook. Both new live
-workflows remain unrun.
+would cover bounded Check only, not the entire Babysit playbook. The first Check
+attempt stopped in preparation on a checker-contract gap; its original failed
+receipt and independent audit are preserved below. Hillclimb has no passing
+live evidence yet.
 
 ## Interpret evidence
 
@@ -434,6 +436,18 @@ final review/commit. Perf also audits every worker tool attempt and records
 before/after reader-tree evidence. These repairs have independent code review;
 a fresh complete live pass is still required.
 
+The [first Babysit Check receipt](evidence/playbook-babysit-grammar.json) retains
+its preparation FAIL: 34 of 35 checks passed, without executing the watcher or
+creating before/after forge snapshots. Its
+[independent audit](evidence/playbook-babysit-grammar-audit.json) identifies an
+undeclared command restriction: the installed Herdr skill requires its exact
+environment guard and CLI help, while the actual brief requests actor inspection.
+The visible read followed the exact native actor-list capture and targeted a
+unique actor in the caller workspace. The reviewed repair declares and permits
+only those bounded forms, freezes the actor snapshot and retains all-attempt
+auditing. It still needs new live evidence; no Check or full Babysit pass results
+from correcting this verifier.
+
 The [first Feature receipt](evidence/playbook-feature-scope.json) remains an
 operator-stopped FAIL. Its [metadata-only audit](evidence/playbook-feature-scope-audit.json)
 records unsupported explorer FFF tools and shell commands, including task-store
@@ -505,7 +519,7 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 | Eval | Scoped Pi transcripts are accessible in principle; current global skill catalog violates strict blinding under unchanged settings |
 | Multi-phase plan | Validator exists; executable cloud lanes and configured swarm role are unavailable |
 | Opening a PR | [Earlier eligibility withdrawn](evidence/playbook-opening-pr-correction.json): ready PR facts verified, mandatory Comment Sicko review omitted |
-| Babysit | Reviewed `babysit_loop.py`; live bounded Check unrun; drive/background wake mechanism unavailable |
+| Babysit | [First preparation FAIL](evidence/playbook-babysit-grammar-audit.json): bounded Herdr inspection grammar repaired; new live Check required; drive/background wake unavailable |
 | Shipping | Cloud verifier unavailable; no authorization to merge test PRs |
 | Autonomous run | Required wake mechanism unavailable |
 | Orchestrate | Cloud execution and durable wake mechanism unavailable |

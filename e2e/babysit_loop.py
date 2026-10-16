@@ -51,6 +51,7 @@ READS = ('poteto-mode/SKILL.md', 'pstack-herdr/SKILL.md',
 NOTES = ('checklist.md', 'mode.json', 'forge-resolution.json', 'actors.json',
          'ownership.json', 'ready.json', 'watcher.json', 'report.json', 'triage.json',
          'ci.json', 'reply.md')
+HERDR_GUARD = 'test "${HERDR_ENV:-}" = 1'
 
 
 def digest(value):
@@ -126,6 +127,7 @@ class Run(core.Run):
         self.binary_hashes = {}
         self.watch = self.frontier = None
         self.report_status = self.report_reason = None
+        self.actor_snapshot = None
 
     def git(self, *args, repo=None, cleanup=False):
         return self.call(['git', '-C', repo or self.args.repo, *args], cleanup=cleanup).strip()
@@ -228,9 +230,10 @@ class Run(core.Run):
         b, a = self.bundle / 'skills', self.artifacts
         return f'''This is an authentic bounded original Babysit CHECK-mode evaluation, not drive/background/threads-only or Shipping. The private fixture is {self.worktree}; exact frozen bottom-to-top queue is {self.args.stack_prs}, forge repository {self.args.forge_repo}. Never merge, fix, push, rebase, retarget, reply/comment, resolve threads, rerun jobs, install elsewhere, change configuration, or answer trust dialogs. Do not delegate, substitute models, use codemode/wrappers, or invent a loop. Only direct native read/bash/write/edit/grep/find/ls are visible. Use separate full-file reads, no offset/limit, or literal cat of a single file; truncated required instructions are unsupported.
 Read all these original instructions and source in full: {json.dumps([str(b / name) for name in READS])}.
+Complete preparation Bash grammar: exactly {HERDR_GUARD}; herdr --help; herdr agent; command -v origin; the exact repository-only Origin resolution below; herdr agent list; herdr agent read TARGET --source visible for a unique actor from the prior native actors.json snapshot in caller workspace {self.caller['workspace_id']}; pwd; cat ONE_ABSOLUTE_FILE; sha256sum ONE_ABSOLUTE_FILE. The exact environment guard is the sole shell-expansion exception. Every other command must be one literal command without newline, shell expansion, composition, redirection, wrappers or inline interpreters. Do not inspect actors in other workspaces. Store the exact agent-list JSON in actors.json before reading an actor. Help may exit nonzero and grants no mutation permission. No other Bash command is accepted in preparation; use native tools for other inspection.
 Before ANY PR poll, native-write {a / 'checklist.md'} with the COMPLETE original nine numbered Babysit stages including every continuation paragraph. Native-write {a / 'mode.json'} with mode='check', stack_prs={self.args.stack_prs}, repository='{self.args.forge_repo}', owner_authority={json.dumps(self.args.owner_authority)}, no_merge_authorized=true.
 Resolve the forge before any PR poll. Run literal command -v origin. If it exists, actually attempt the read-only repository resolution command origin repo view --repo {self.args.forge_repo} --json nameWithOwner. If it resolves this repository, select origin and STOP with unsupported_origin_path=true; this original public watcher is GitHub-only and this bounded driver cannot pretend to implement Origin. If origin is absent or that actual resolution fails, select gh and record the witnessed fallback. Write {a / 'forge-resolution.json'} with selected, reason, discovery_output (actual stripped output, empty for absent), origin_resolution ('absent', 'failed', or 'resolved'), unsupported_origin_path (boolean). Do not poll a PR to discover the forge.
-Inspect the scoped lease by fully reading {self.directory / 'lease.json'} and {self.directory / 'previous-lease.txt'}. Run literal herdr agent list, then native-write its exact returned JSON to {a / 'actors.json'}. Inspect known live actors; if one is visibly already babysitting this same repository, stop and report the overlap. Never claim global exclusivity from an incomplete local view. Native-write {a / 'ownership.json'} with nonce='{self.nonce}', lease_scope='cooperating-local-drivers-in-this-repository', global_exclusivity='unproven', visible_conflicts (list), limits (nonempty actual limitations), actor_evidence='actors.json'.
+Inspect the scoped lease by fully reading {self.directory / 'lease.json'} and {self.directory / 'previous-lease.txt'}. Run literal herdr agent list, then native-write its exact returned JSON to {a / 'actors.json'} exactly once and keep it unchanged. Inspect known live actors in the caller workspace only; if one is visibly already babysitting this same repository, stop and report the overlap. The global list is metadata only; other workspaces' visible output is outside this assignment. Never claim global exclusivity from an incomplete local view. Native-write {a / 'ownership.json'} with nonce='{self.nonce}', lease_scope='cooperating-local-drivers-in-this-repository', global_exclusivity='unproven', visible_conflicts (list), limits (nonempty actual limitations), actor_evidence='actors.json'.
 If selected gh and no visible conflict, write {a / 'ready.json'} with ready=true, mode='check'. Then STOP this turn without polling any PR or watcher. The evaluator will obtain independent read-only before snapshots and send a continuation in THIS SAME native session. This is an observation barrier, not a second watcher loop. Do not run any forge command except the repository-only Origin resolution in this preparation turn. All native writes are restricted to these exact note paths: {json.dumps([str(a / name) for name in NOTES])}. Do not edit fixture, watcher, captures, evaluator or bundle.
 '''
 
@@ -247,6 +250,7 @@ If selected gh and no visible conflict, write {a / 'ready.json'} with ready=true
         a = self.artifacts
         commands = '\n'.join(shlex.join(self.view_argv(number)) for number in self.args.stack_prs)
         return f'''Continue the original nine-stage Babysit CHECK in this same session, preserving the declared mode, resolved gh forge, scoped lease and exact frozen queue. Independent real before snapshots are now retained at {self.directory / 'before.json'}. Do not modify/read-write that evidence. No external writes, fixes, retries, merges, source changes, dependency substitutions or second watcher/sleep loop.
+The complete preparation Bash grammar still applies, with exactly the additional watcher, topology, conditional diff/source/CI commands specified below. No generic shell expansion or extra commands are permitted. Keep actors.json frozen and visible actor reads restricted to its unique prior caller-workspace actors.
 Read the actual PR topology with exactly these separate literal commands, before the watcher:
 {commands}
 Verify their real IDs/head/base/states. The queue must form a base-branch chain, each upper PR baseRefName equal to lower headRefName and baseRefOid equal to lower headRefOid. A sibling/fork list is unsupported: stop rather than guess or retarget. Lowest unmerged entry is the frontier. Do not fix upstack if it is red.
@@ -313,6 +317,18 @@ Write {a / 'report.json'} with mode='check', watcher_kind='STATUS', stack_prs={s
         actor_calls = [e for e in events if e['name'] == 'bash' and forge.literal(e['args'].get('command', '')) == ['herdr', 'agent', 'list']]
         self.check('actual_visible_actor_snapshot', len(actor_calls) == 1 and json.loads(actor_calls[0]['output']) == actors
                    and actor_calls[0]['result_row'] < actor_events[0]['call_row'])
+        actor_rows = actors.get('result', {}).get('agents')
+        self.check('actual_actor_list_schema', isinstance(actor_rows, list)
+                   and all(isinstance(row, dict) for row in actor_rows))
+        targets = {}
+        for row in actor_rows:
+            if row.get('workspace_id') != self.caller['workspace_id']:
+                continue
+            for target in (row.get('pane_id'), row.get('name')):
+                if isinstance(target, str) and target and sum(
+                        target in (other.get('pane_id'), other.get('name')) for other in actor_rows) == 1:
+                    targets[target] = actor_events[0]['result_row']
+        self.actor_snapshot = {'targets': targets, 'sha256': core.sha(self.artifacts / 'actors.json')}
         ownership, ownership_events = self.artifact(events, 'ownership.json')
         self.check('scoped_lease_honest_ownership', ownership.get('nonce') == self.nonce
                    and ownership.get('lease_scope') == 'cooperating-local-drivers-in-this-repository'
@@ -339,10 +355,26 @@ Write {a / 'report.json'} with mode='check', watcher_kind='STATUS', stack_prs={s
         self.check('all_native_write_attempts_scoped', all(isinstance(e['args'].get('path'), str)
                    and (self.worktree / e['args']['path']).resolve() in allowed
                    for e in events if e['name'] in ('write', 'edit')))
-        self.check('all_native_bash_attempts_readonly_literal', all(
-            (argv := forge.literal(e['args'].get('command', ''))) in permitted
-            or (len(argv) == 2 and argv[0] in ('cat', 'sha256sum') and Path(argv[1]).is_absolute())
-            or argv == ['pwd'] for e in events if e['name'] == 'bash'))
+        actor_writes = [e for e in events if e['name'] in ('write', 'edit')
+                        and isinstance(e['args'].get('path'), str)
+                        and (self.worktree / e['args']['path']).resolve() == self.artifacts / 'actors.json']
+        self.check('single_frozen_actor_snapshot', self.actor_snapshot is not None
+                   and len(actor_writes) == 1 and actor_writes[0]['name'] == 'write'
+                   and core.sha(self.artifacts / 'actors.json') == self.actor_snapshot['sha256'])
+
+        def allowed(event):
+            command = event['args'].get('command', '')
+            if command == HERDR_GUARD:
+                return True
+            argv = forge.literal(command)
+            if len(argv) == 6 and argv[:3] == ['herdr', 'agent', 'read'] and argv[4:] == ['--source', 'visible']:
+                available = self.actor_snapshot['targets'].get(argv[3]) if self.actor_snapshot else None
+                return available is not None and available < event['call_row']
+            return (argv in permitted or argv in (['herdr', '--help'], ['herdr', 'agent'], ['pwd'])
+                    or len(argv) == 2 and argv[0] in ('cat', 'sha256sum') and Path(argv[1]).is_absolute())
+
+        self.check('all_native_bash_attempts_readonly_protocol', all(
+            allowed(e) for e in events if e['name'] == 'bash'))
 
     def read_command(self, argv, *, codes=(0,)):
         timeout = min(90, self.deadline - time.monotonic())

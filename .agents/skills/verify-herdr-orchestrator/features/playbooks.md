@@ -60,7 +60,11 @@ The first Runtime receipt remains failed because of checker grammar; a separate
 native/artifact audit supports its five observed stages. The corrected driver
 accepts the required literal `uptime`/`nproc`, binds the initial checklist and
 declared completion edits separately, and resolves retained artifact links and
-the prompted source-symbol-line citation. A fresh automated run is still needed.
+the prompted source-symbol-line citation. The second receipt also remains failed:
+it cited the operation records, but the checker required undeclared direct links
+to the raw profile and full reduction. The declared citation groups now accept
+either record or raw artifact, retaining the independent raw/CDP checks. Both
+attempts have separate manual audits; a fresh automated pass is still needed.
 The first Bug fix investigation was manually stopped after a worker queried
 outside the assigned repository. Its failed receipt and redacted scope audit
 remain published. Do not repeat that profile with broad forge access; a new

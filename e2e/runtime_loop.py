@@ -383,6 +383,7 @@ class Run(core.Run):
         command = lambda action: shlex.join(self.argv(action))
         return f'''Read {skills / 'poteto-mode/SKILL.md'} fully, then execute its ORIGINAL Runtime forensics playbook and Herdr mapping. Diagnose why the live invoice reconciliation service consumes CPU with no HTTP traffic. Deliver a cited diagnosis only. The already-running owned target is scoped for benign live instrumentation; no fixes, reloads, restarts, PRs, external services, configuration changes, trust answers, retries or substitutions.
 Use ONLY direct native read, bash, write, edit, grep, find, ls. No codemode, tool wrappers, inline scripts, arbitrary eval, shell redirection, pipelines, compound commands, or delegation. This captured artifact is bounded: reduce it using the maintained immutable helper and keep its small reduced finding locally; if it actually requires a subagent, stop and report the unsupported stage. Never invent delegation evidence.
+Bash accepts only the exact fixed probe commands below, bare uptime, nproc or pwd, and cat or sha256sum with exactly one assigned absolute file path. Use the native read/grep/find/ls tools for other inspection; do not add bash arguments, commands or wrappers outside that literal grammar.
 Every required source document must have a separate full read with no offset/limit, or literal cat of that one file, whose complete contents appear in the result. Read all: {json.dumps([str(skills / name) for name in READS])}.
 Before target inspection or any forensic work, use exactly one native write to {notes / 'checklist.md'} containing the full original FIVE numbered Runtime forensics instructions (including continuation text). Preserve that complete original-instruction prefix unchanged. After capture, record completion in a separate section in checklist.md only through native edit calls, using nonempty, uniquely matching oldText and nonempty newText; an initial separate pending section may be replaced. Do not rewrite checklist.md with a later native write. Read {self.probe} fully; this maintained control-cli harness accepts fixed operations and instruments only a selected existing source function. All notes may be written ONLY to checklist.md, decision.json, diagnosis.json, reply.md under {notes}; source, probe, descriptor, captures and evaluator are immutable. Failed write attempts are audited too.
 1. Capture the real live CPU signal via control-cli using this exact literal command:
@@ -399,7 +400,7 @@ Read {self.directory / 'observe.json'} fully. Require increasing real counter/ti
 4. Map actual captured frames and live script to source:
 {command('source')}
 Read {self.directory / 'source.json'}, {self.directory / 'runtime-source.json'} and {self.worktree / 'target.mjs'} fully. Write {notes / 'diagnosis.json'} with symbol, caller, source_line (one-based hot function definition), timer_line (one-based setInterval scheduling line), profile_sha256, source_sha256, counter_before, counter_after, requests=0, mechanism and limitations. Use exact actual evidence, not source-only theory. Source location must agree with live script/profile and unchanged file hash.
-5. Write {notes / 'reply.md'} after all observations and source mapping, citing the signal, actual reduced finding, increasing instrumentation counter and caller stack, exact source file:symbol:line plus timer line, private artifact paths, and principles read that changed a decision. Include EXACTLY one line:
+5. Write {notes / 'reply.md'} after all observations and source mapping, citing the signal, actual reduced finding, increasing instrumentation counter and caller stack, exact source file:symbol:line plus timer line, private artifact paths, and principles read that changed a decision. Cite the signal through capture.json OR cpu.cpuprofile, the reduced finding through reduce.json OR reduced-frames.json, and the observation through observe.json. Use local Markdown links resolved relative to reply.md or exact absolute artifact paths. The summary JSONs remain independently bound to the original profile, complete reduction and raw CDP evidence. Include EXACTLY one line:
 {CHECKPOINT}
 Report uncertainty honestly. Do not claim a fix, throughput benchmark, other playbooks, full inventory, cloud, or wake/sleep coverage.
 '''
@@ -595,10 +596,11 @@ Keep this directory private; do not commit native sessions or raw captures.
                 if target.is_file():
                     linked_targets.add(target)
         citation_end = r'(?=$|[\s`<>()\[\],;"\']|\.(?=$|\s))'
-        artifacts_cited = all(path.resolve() in linked_targets or re.search(
+        artifact_groups = (('capture.json', 'cpu.cpuprofile'),
+                           ('reduce.json', 'reduced-frames.json'), ('observe.json',))
+        artifacts_cited = all(any(path.resolve() in linked_targets or re.search(
             r'(?<![\w/.-])' + re.escape(str(path)) + citation_end, reply)
-            for path in (self.directory / 'cpu.cpuprofile', self.directory / 'reduced-frames.json',
-                         self.directory / 'observe.json'))
+            for path in (self.directory / name for name in group)) for group in artifact_groups)
         source_cited = re.search(r'(?<![\w/.-])' + re.escape(str(self.worktree / 'target.mjs'))
                                  + r':(?:' + re.escape(symbol) + r':)?' + str(source_line) + citation_end, reply)
         self.check('cited_final_diagnosis_checkpoint', reply.splitlines().count(CHECKPOINT) == 1

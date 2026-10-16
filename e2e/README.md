@@ -29,8 +29,10 @@ runtime model workflows still require passing live receipts; implementation and 
 checks do not establish those passes. The live Bug fix investigation was
 [manually halted for a repository-scope violation](evidence/playbook-forge-scope-audit.json).
 No fix or new PR resulted, and unrelated query content remains private.
-Runtime also retains a [failed checker receipt](evidence/playbook-runtime-env.json)
-and [separate actual-data audit](evidence/playbook-runtime-reanalysis.json).
+Runtime retains the [first checker failure](evidence/playbook-runtime-env.json)
+and [separate actual-data audit](evidence/playbook-runtime-reanalysis.json), plus a
+[second citation-check failure](evidence/playbook-runtime-citations.json) and its
+[independent audit](evidence/playbook-runtime-citations-reanalysis.json).
 Correcting a verifier does not promote the historical receipt.
 
 For live replacement and removal of worker definitions, use the existing

@@ -122,8 +122,8 @@ bootstrap checks are not native playbook executions.
 Skill authoring needs existing creator guidance and its validator's PyYAML
 dependency; it never installs that dependency. Explicit forward use does not
 prove automatic discovery. Runtime forensics needs Node with Inspector and
-built-in WebSocket support. Its first live receipt failed on checker grammar;
-the separate manual audit below supports the actual runtime observations.
+built-in WebSocket support. Two live receipts failed on checker contracts;
+the separate manual audits below support the actual runtime observations.
 Feature, Refactoring, Perf issue and Authoring model workflows remain unrun.
 The first live Bug fix investigation was stopped for an actual
 repository-scope violation, described below; it produced no fix or PR.
@@ -264,7 +264,16 @@ supports all five observed stages without promoting the receipt. It replayed
 callbacks produced 132,000 measured calls across 22 ticks, with zero HTTP requests
 and the correct reconciliation result of 958008. Source identity and owned cleanup
 matched. These are runtime observations, not a speedup or CPU-saturation claim.
-The corrected checker and explicit checklist witness await a fresh automated run.
+The [second Runtime receipt](evidence/playbook-runtime-citations.json) also remains
+failed, with 70 of 71 checks passing. It cited the actual capture, reduction and
+observation records; the checker additionally required direct raw-profile and
+full-reduction links that the prompt had not specified. Its
+[independent audit](evidence/playbook-runtime-citations-reanalysis.json) verified
+all five observed stages, exact reduction, raw Inspector bindings, source identity
+and cleanup. The checker now accepts either the operation record or its raw
+artifact for the signal and reduction, while retaining independent raw-data
+checks. The prompt declares those citation groups and the literal shell grammar.
+A fresh passing automated run is still required.
 
 The [fresh live-replacement receipt](evidence/hot-swap.json) verifies two real
 Pi tasks using distinct configured models. Both were held working while the
@@ -293,6 +302,7 @@ This verifies worker definition replacement, not automatic role or skill reload.
 | [Forge authentication visibility](evidence/playbook-forge-auth.json) | Isolated XDG hid existing GitHub CLI configuration; preflight stopped before any model or remote mutation |
 | [Forge repository scope](evidence/playbook-forge-scope.json) | Investigator queried outside the assigned repository; independent audit triggered manual halt before synthesis/fix/PR |
 | [Runtime observation grammar](evidence/playbook-runtime-env.json) | Checker rejected required environment observations; separate review found checklist and citation format mismatches |
+| [Runtime citation contract](evidence/playbook-runtime-citations.json) | Checker required undeclared direct raw-file links despite valid citations to independently bound operation records |
 
 Each attempt retained its failure verdict and confirmed owned cleanup. The first
 prototype run did not execute a model task. The contract run produced real
@@ -312,7 +322,7 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 | Prototype | [PASS: fixed-direction behavioral core workflow](evidence/playbook-prototype.json); open visual design search unverified |
 | Perf issue | Reviewed `perf_loop.py`; portable baseline passes, live measurements/fix/PR unrun |
 | Hillclimb | Reviewed `hillclimb_loop.py`; live sensitivity, measured attempts, independent decisions and PR unrun; unattended wake unavailable |
-| Runtime forensics | [FAIL: checker grammar](evidence/playbook-runtime-env.json); actual five-stage observations separately audited; fresh corrected run pending |
+| Runtime forensics | [FAIL: citation contract](evidence/playbook-runtime-citations.json); both attempts' five-stage observations separately audited; fresh corrected run pending |
 | Trace forensics | [PASS: bounded paired-capture core workflow](evidence/playbook-trace.json); large-capture delegation unverified |
 | Visual parity | Untouched screenshots, real migration, zero pixel diff, real PR |
 | Authoring a skill | Reviewed `authoring_loop.py`; live authored skill, structural usage cases and real PR unrun; automatic discovery separate |

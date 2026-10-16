@@ -1,0 +1,189 @@
+{
+  "schema": "horch/design-preservation-audit/v1",
+  "kind": "independent retained-evidence review",
+  "scenario": "second Refactoring attempt",
+  "original_receipt": "playbook-refactor-preservation.json",
+  "original_receipt_sha256": "1ebc8eef9638f28061efadd70a379a83260b18f26b2262c2db84610daf4ae69a",
+  "original_receipt_unchanged": true,
+  "original_workflow_verdict": "fail",
+  "source_revision": "d08bee777730cfcc224051af6447863cea329497",
+  "driver_sha256": "6933aef5358da75dad4259f652a43714c0935db89060f5382dd234782d1127d7",
+  "failure_category": "operator_interrupted",
+  "last_phase": "runtime",
+  "seconds": 1546.486,
+  "stop": "Root manually interrupted the exact owned driver before writable implementation after confirming an undeclared literal How-preservation check. This is not automatic quarantine or a final checker rejection.",
+  "operator_stop_record_sha256": "24caa04e1b1c770679b23e9066b9a24ab68a571e9f8be536a2663363c6019e80",
+  "recorded_checks": {
+    "passed": 55,
+    "total": 55,
+    "meaning": "Recorded prefix, input-provenance and final integrity/cleanup checks; final stage verification was not executed."
+  },
+  "tasks": {
+    "actual_launches": 5,
+    "live_working_bindings_verified": 5,
+    "approved_how_deliveries": 3,
+    "unfinished_architect_workers_closed": 2,
+    "final_task_facts_count": 0,
+    "early_lifecycle_records_count": 5
+  },
+  "how_explorers": {
+    "attempts": 70,
+    "successful_results": 69,
+    "retained_valid_scope_git_usage_errors": 1,
+    "fffind_calls": 5,
+    "ffgrep_calls": 11,
+    "exact_owned_ls_calls": 2,
+    "all_attempt_scope_identity_input_output_nonce_checks_verified": true,
+    "all_three_original_guides_and_full_briefs_read": true,
+    "results_written_last": true,
+    "reader_trees_and_source_unchanged": true,
+    "returned_fff_paths_owned": true,
+    "source_lines_checked": 129,
+    "citation_ranges_in_bounds": 192,
+    "how_a_gate_sha256": "eb93588620ae6523da80e0795b977d7747c1e35175937c9e54c480bd5f71bb5c",
+    "how_a_report_sha256": "5360be184ef8198ee9f1243221324ba097a0cb3e5884e2401bc7eb74c8758107",
+    "how_b_gate_sha256": "a9abfb9ac9723e96c3a93e90e069df668968686020408c2e7f168f7d7acf3197",
+    "how_b_report_sha256": "dd21b71820f74a1b3c9343938d9331883b79f9df0319013a235931584379db7b",
+    "retained_how_b_accuracy_errors": [
+      {
+        "report_line": 14,
+        "claim": "Failure occurs before any I/O.",
+        "source_fact": "storage.py:9 reads the persisted store before validation; writes occur at25\u201326."
+      },
+      {
+        "report_line": 223,
+        "claim": "The original E2E covers all three ValueError messages.",
+        "source_fact": "e2e_import.py:80\u201393 exercises duplicate transaction and invalid discount, excluding invalid money field."
+      }
+    ]
+  },
+  "how_explainer": {
+    "attempts": 17,
+    "errors": 0,
+    "tool_counts": {
+      "read": 11,
+      "bash": 3,
+      "write": 3
+    },
+    "owned_ls_calls": 1,
+    "fff_calls": 0,
+    "result_versions": 2,
+    "final_nonce_valid_and_written_last": true,
+    "provider": "zai",
+    "model": "glm-5.3",
+    "effort": "max",
+    "citation_ranges_in_bounds": 148,
+    "gate_sha256": "e27fd8e071910e2b611dd0b0c2bbe6a3cf9e4fcc509ebf3a5db08df66aa29c2d",
+    "native_sha256": "aefdaee8972d898e9ebdaf4e0da0c3b7ceea8823282d709708efd1ce38abc431",
+    "report_sha256": "1347b4e86f69fd11fdd453134007cd9debe09387b3fe55c25c4ea1eede695beb",
+    "semantic_assessment": "The final explanation correctly distinguishes reads from writes and lists the actual original rejection cases/two exercised validation messages. Its reconciliation does not explicitly acknowledge the earlier coverage error; retain both original explorer errors."
+  },
+  "lead": {
+    "native_sha256": "7c27394d91a20fd0710e5a69365e1ff48260fa466c21da648bb4f3b0a3c80edc",
+    "native_rows": 146,
+    "attempts": 71,
+    "successful_results": 70,
+    "pending_safe_wait_calls": 1,
+    "launch_call_rows_zero_based": [
+      87,
+      89,
+      107,
+      139,
+      141
+    ],
+    "explorer_pass_response_rows_zero_based": [
+      94,
+      96
+    ],
+    "explorer_full_read_rows_zero_based": [
+      97,
+      98,
+      99,
+      100,
+      101,
+      102,
+      103,
+      104
+    ],
+    "explainer_pass_call_result_rows_zero_based": [
+      117,
+      118
+    ],
+    "explainer_full_read_rows_zero_based": [
+      119,
+      120,
+      121,
+      122
+    ],
+    "grounding_write_rows_zero_based": [
+      123,
+      124
+    ],
+    "all_how_reads_follow_matching_pass": true,
+    "architect_payload_reads": 0,
+    "source_writes": 0,
+    "commits": 0,
+    "pushes": 0,
+    "pr_creates": 0
+  },
+  "preservation_mismatch": {
+    "severity": "P2 checker-contract mismatch",
+    "actual_brief_requirement": "Preserve the complete explanation without dropping content.",
+    "original_how_allows_light_edits": true,
+    "literal_grounding_requirement_explicit_in_actual_instructions": false,
+    "checker_requires": "Literal full report-body inclusion in native grounding write content.",
+    "before_mermaid_line": "A -->|\\\"command store files unpack at cli.py:8\\\"| B",
+    "after_mermaid_line": "A -->|\"command store files unpack at cli.py:8\"| B",
+    "removed_backslashes": 2,
+    "other_body_changes": 0,
+    "node_edge_and_label_text_preserved": true,
+    "literal_predicate_false_on_retained_artifacts": true,
+    "final_predicate_executed": false,
+    "renderer_executed": false,
+    "rendering_equivalence_claimed": false,
+    "forward_repair": "Explicitly declare opaque/verbatim full-text preservation, including literal escapes and whitespace, while leaving the literal checker unchanged. A fresh run is required."
+  },
+  "baseline": {
+    "native_call_result_rows_zero_based": [
+      125,
+      126
+    ],
+    "observation_sha256": "960813616f70072eeaa56accda53e4737d94dcbf3607b6fb7d098919cc74b039",
+    "mode": "characterize",
+    "verdict": "pass",
+    "checks": 11,
+    "direct_cli_records": 9,
+    "original_suite_flows": 7,
+    "original_suite_checks": 8,
+    "original_suite_pass": true,
+    "independent_decimal_totals_cents": [
+      98,
+      994
+    ],
+    "two_file_success_rows": 6,
+    "value_error_rejections": 4,
+    "preserved_existing_missing_discount_key_error_rejections": 1,
+    "all_five_rejections_preserve_exact_ledger_bytes_and_pending_absence": true,
+    "native_after_present": false
+  },
+  "integrity": {
+    "integration_head_and_four_source_files_match_baseline": true,
+    "source_files": 217,
+    "bundled_resources": 198,
+    "source_maps_equal": true,
+    "worker_config_unchanged": true,
+    "original_fixture_unchanged": true,
+    "two_exact_owned_worker_close_commands_succeeded": true,
+    "owned_lead_closed": true,
+    "owned_panes_absent": true
+  },
+  "review_scope": "Approved How gates, captured working identities, task/brief/native/input/output hashes and source facts were validated before those three delivered payloads were read. Retained controller-native ordering, baseline observations and integrity/cleanup metadata were independently checked without new model, network or CLI behavior replay.",
+  "limitations": [
+    "The original FAIL remains unchanged; no full Refactoring, Opening a PR or inventory pass is established.",
+    "Three approved How deliveries establish bounded positive tool and delivery evidence, not a completed playbook.",
+    "Both unfinished Architect report/result/native-output/write/edit payloads remain unread; no design or implementation claim follows.",
+    "The unexecuted final literal predicate explains the forward repair; it was not the machine failure category.",
+    "Before-only behavior observations do not establish post-refactor equivalence.",
+    "Post-execution evidence checks are not a sandbox or credential boundary."
+  ]
+}

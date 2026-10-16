@@ -152,6 +152,19 @@ The reviewed Design and Hillclimb contracts now admit How-only typed
 `fffind`/`ffgrep` requests and exact owned-cwd shell listings, with identical
 symlink-free before/after reader trees. Other roles gain no exception. Startup
 settings stay unchanged; static review does not prove successful live delivery.
+The [second Refactoring receipt](evidence/playbook-refactor-preservation.json)
+retains a manual interruption before implementation. Its
+[independent audit](evidence/playbook-refactor-preservation-audit.json) verifies
+three real How PASS deliveries, 87 attempted worker calls, actual bounded FFF
+and listing compatibility, lead reads after gates, and a correct before-only
+behavior pin. Original explorer accuracy errors remain disclosed. The final
+How explanation correctly limits I/O ordering and exercised validation cases.
+The lead then removed two Mermaid quote escapes while copying it. Original How
+allows light edits and the actual prompt required complete content, but the
+unreached checker required literal inclusion. The minimal forward repair
+explicitly declares opaque/verbatim text preservation and retains that checker.
+Both unfinished Architect payloads remain unread. No complete Refactoring,
+post-change equivalence or PR pass follows; new live evidence is required.
 Named-agent briefs now require tool-only loading of the original agent and
 required skill before any assistant text. The original instructions and exact
 output rules remain unchanged; this forward repair needs fresh live evidence.

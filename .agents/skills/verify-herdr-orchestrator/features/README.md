@@ -11,7 +11,7 @@ Commands run from the repository root, using `repo` and `proof` from [Launch](..
 | [AI controller loop](controller.md) | `controller_loop.py` | Configured Codex controller plus workers; transcript audit |
 | [Original playbook scenarios](playbooks.md) | `playbook_loop.py` | Configured Pi controller; native session audit and independent artifacts |
 | [Pause and pickup](playbooks.md) | `pause_pickup.py` | Two fresh Pi sessions, normal Git identity and local WIP; no forge writes |
-| [Private PR workflows](playbooks.md) | `forge_loop.py`, `design_loop.py`, `perf_loop.py`, `hillclimb_loop.py`, `authoring_loop.py` | Bug fix/Feature scope failures and automatic Refactoring quarantine; How compatibility repair reviewed, workflows unresolved; private fixture and ready parent PR |
+| [Private PR workflows](playbooks.md) | `forge_loop.py`, `design_loop.py`, `perf_loop.py`, `hillclimb_loop.py`, `authoring_loop.py` | Three Refactoring How deliveries/baseline verified; manual preservation stop and earlier scope failures retained; full workflows unresolved; private fixture and ready parent PR |
 | [Live runtime diagnosis](playbooks.md) | `runtime_loop.py` | Fresh five-stage owned-process pass; earlier failed receipts and separate audits retained |
 | [PR-chain status](playbooks.md) | `babysit_loop.py` | Fourth Check blocked on ambiguous visible launch; supervisor witness needed before another run; explicit private chain and Bun; one Check only |
 | [Live worker replacement](workers.md#live-worker-replacement) | `check_workers.py --hot-swap-only` | Two distinct configured execution definitions; owned workspace and in-flight gates |

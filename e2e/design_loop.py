@@ -1124,9 +1124,14 @@ Final output is {self.directory / 'native-after'} with mode {self.args.scenario 
 HOW: full complex route, two fresh how explorer tasks in how-a/how-b before
 first wait, angles cli-contract and staging-persistence. Read all delivered
 findings before how-summary. Its brief includes BOTH complete explorer report
-bodies and angle keys. Read the delivered full explanation; preserve it in
-{self.artifacts / 'grounding.md'} without dropping content. This is Architect
-Ground. Do not redefine ownership/layering; persistence remains storage-owned.
+bodies and angle keys. Read the delivered full explanation; include its COMPLETE
+EXACT TEXT verbatim in {self.artifacts / 'grounding.md'}. Treat the report body as
+opaque text: preserve all backslashes, quotes, Unicode, spacing and line breaks,
+including inside Mermaid diagrams. Do not unescape, normalize, reformat, abridge
+or edit it. You may add Architect grounding context before or after that exact
+body. Original How permits light edits, but this narrower E2E witness requires
+literal full-body inclusion. This is Architect Ground. Do not redefine
+ownership/layering; persistence remains storage-owned.
 If evidence shows a change to ownership is needed, report the required why
 investigation as unresolved rather than quietly skipping it.
 

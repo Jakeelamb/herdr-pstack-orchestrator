@@ -175,6 +175,16 @@ Design and Hillclimb now declare typed How-only own-cwd FFF search and exact
 shell listings, bound to stable symlink-free reader trees. Other roles receive
 no exception; preserve current startup settings. Code review is complete, but
 the revised contract still requires fresh live evidence.
+The second Refactoring run delivered all three How tasks through PASS gates,
+with independently verified actual FFF/listing calls and the before-only CLI
+pin. It was manually halted before implementation on an undeclared literal
+preservation requirement: grounding removed two Mermaid quote escapes without
+dropping prose, while the checker expected exact text. Preserve FAIL and the
+separate audit, including original explorer accuracy caveats. Both unfinished
+Architect payloads stay unread. The forward prompt explicitly declares opaque
+verbatim preservation, including escapes and whitespace; the checker is intact.
+Use a new immutable source/run to verify it. No full Refactoring or PR follows
+from the three bounded deliveries.
 
 The third Check retains FAIL on lowercase-only cloud gap matching, despite
 correct exact footer lines and an independently verified real status flow.

@@ -524,6 +524,25 @@ descriptors must match the pre-dispatch symlink-free snapshot. Other roles
 retain their grammars, and startup settings remain unchanged. Independent code
 review is complete; successful fresh live delivery remains required.
 
+The [second Refactoring receipt](evidence/playbook-refactor-preservation.json)
+retains manual FAIL after three approved How deliveries. Its
+[independent audit](evidence/playbook-refactor-preservation-audit.json) verifies
+87 worker attempts, all identities/scopes/input-output hashes, real bounded
+FFF/listing compatibility and lead consumption after PASS. The before-only
+behavior pin passes eleven checks and the original seven-flow suite, with
+independent Decimal totals and byte-preserving rejection observations. Two
+original explorer accuracy errors remain disclosed; the final explanation
+correctly limits read/write ordering and actual validation-test coverage.
+The lead's grounding changes only two Mermaid quote escapes. The actual
+instruction permits complete-content preservation and original How permits
+light edits, while the final checker requires literal full-body inclusion.
+That predicate was not executed: the operator manually stopped before writable
+implementation, and both unfinished Architect payloads remain unread. This was
+not automatic quarantine or a machine checker rejection. The reviewed forward
+prompt explicitly requires opaque/verbatim text, including escapes and
+whitespace, and discloses the narrower witness; the checker stays unchanged.
+No post-change equivalence, complete workflow or new PR is established.
+
 The [first Babysit Check receipt](evidence/playbook-babysit-grammar.json) retains
 its preparation FAIL: 34 of 35 checks passed, without executing the watcher or
 creating before/after forge snapshots. Its
@@ -584,6 +603,7 @@ This verifies worker definition replacement, not automatic role or skill reload.
 | [Hillclimb shell grammar](evidence/playbook-hillclimb-shell.json) | Manual stop on explicitly excluded local How shell listings; no delivered report, measured attempt or PR |
 | [Refactoring quarantine](evidence/playbook-refactor-quarantine.json) | Automatic gate stopped explicitly excluded How shell forms before lead consumption; complete workflow unresolved |
 | [Babysit visible overlap](evidence/playbook-babysit-overlap.json) | Conservative preparation stop on an ambiguously identified visible launch; no watcher or forge snapshots |
+| [Refactoring preservation](evidence/playbook-refactor-preservation.json) | Manual stop before implementation after an undeclared literal How-copy requirement; three How deliveries and baseline verified |
 
 Each attempt retained its failure verdict and confirmed owned cleanup. The first
 prototype run did not execute a model task. The contract run produced real
@@ -599,7 +619,7 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 | Investigation | [FAIL](evidence/playbook-investigation-concat.json): native grammar gap and unresolved synthesis; correct stop does not satisfy successful presentation |
 | Bug fix | Original live-query [scope failure](evidence/playbook-forge-scope-audit.json) and later [snapshot quarantine](evidence/playbook-forge-quarantine-audit.json); full workflow unresolved |
 | Feature | [First FAIL](evidence/playbook-feature-scope.json): explorer protocol and directory-scope violations; manual stop after lead consumption, before Arena, implementation or PR |
-| Refactoring | [First FAIL](evidence/playbook-refactor-quarantine-audit.json): automatic quarantine before lead consumption; successful delivery, frozen-baseline equivalence and real PR unresolved |
+| Refactoring | [Second FAIL with partial audit](evidence/playbook-refactor-preservation-audit.json): three How deliveries and baseline verified; manual stop on undeclared literal preservation, forward prompt repaired; equivalence and PR unresolved |
 | Prototype | [PASS: fixed-direction behavioral core workflow](evidence/playbook-prototype.json); open visual design search unverified |
 | Perf issue | [Fourth FAIL with independent behavior audit](evidence/playbook-perf-comment-audit.json): 70.2% native / 70.0% replay reduction; original output rule and review unresolved |
 | Hillclimb | [First FAIL](evidence/playbook-hillclimb-shell.json): manual stop on explicitly excluded How shell listings; measured attempts and PR unresolved; unattended wake unavailable |

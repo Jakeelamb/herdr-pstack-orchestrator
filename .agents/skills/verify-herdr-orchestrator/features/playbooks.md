@@ -196,6 +196,16 @@ before the driver's native audit. All trail and derived review bodies remain
 unread by independent reviewers. There was no push or PR. This is a real
 pre-forwarding gate gap, not automatic quarantine; retained measurement
 reduction does not complete Hillclimb or replace independent fresh timings.
+The current Hill driver adds its own same-file safe delivery gate for all four
+roles. Use the unchanged outer launch command and let its lead follow the exact
+private wait/audit command supplied in the prompt; raw Horch polling is no
+longer admitted. Actual WORKING bindings, scoped inputs/outputs, attempted
+commands, source replay and lead dependency order are checked. Only trail
+review receives the separately declared four-directory listing and bounded
+file-statistics forms. Private full bindings stay outside worker-readable
+space; its task capture has only four identity fields. Recorder evaluation now
+supplies the exact delta for copying. Static review/compilation passed; a new
+immutable live run is required, without promoting the old FAIL.
 
 The third Check retains FAIL on lowercase-only cloud gap matching, despite
 correct exact footer lines and an independently verified real status flow.

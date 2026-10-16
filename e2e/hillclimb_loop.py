@@ -190,7 +190,10 @@ elif a.mode == 'evaluate':
     result['tests'] = suite(attempt / 'after', 'attempt-' + str(a.id) + '-regression')
     verdict, why = classify(result['observation'], result['tests'], attempt / 'before', attempt / 'after',
                             hypothesis.get('simplification') is True)
-    result.update(verdict=verdict, reason=why, scope_changed=contract(attempt / 'before', attempt / 'after'))
+    measured = result['observation'].get('measurement')
+    result.update(verdict=verdict, reason=why, scope_changed=contract(attempt / 'before', attempt / 'after'),
+                  expected_delta=(measured['timings']['after']['median_ms']-measured['timings']['before']['median_ms'])
+                                 if measured else None)
     write(attempt / 'evaluation.json', result)
 elif a.mode == 'record':
     attempt = state / ('attempt-' + str(a.id))
@@ -338,6 +341,206 @@ def measured(value):
     return value.get('speedup_fraction') == 1 - value['timings']['after']['median_ms'] / value['timings']['before']['median_ms']
 
 
+def hill_scope_audit(policy_path,task_id):
+    """Replay existing role audits before making any worker payload lead-readable."""
+    policy=core.read_json(policy_path);home=policy_path.parent
+    def require(value):
+        if not value:
+            raise Failure('hillclimb_worker_gate_rejected')
+    require(re.fullmatch(r't-[0-9a-f]{6}',task_id))
+    require(all(core.sha(Path(name))==digest for name,digest in policy['integrity'].items()))
+    directory=Path(policy['task_root'])/task_id
+    task=core.read_json(directory/'task.json');state=core.read_json(directory/'state.json')
+    binding=core.read_json(home/'bindings'/(task_id+'.json'))
+    require(task['task_id']==task_id and Path(task['task_dir']).resolve()==directory
+            and Path(task['result_path']).resolve()==directory/'result.json'
+            and Path(task['brief_path']).resolve()==directory/'brief.md'
+            and state.get('state')=='done' and state.get('closed') is True
+            and core.sha(directory/'task.json')==binding['task_sha256']
+            and core.sha(directory/'brief.md')==binding['brief_sha256']
+            and binding.get('working_agent',{}).get('agent_status')=='working'
+            and binding['working_agent'].get('pane_id')==task['pane_id']
+            and binding['working_agent'].get('agent_session')==binding['session'])
+    result=core.read_json(directory/'result.json')
+    require(horch.validate_result(result,task)=='valid' and result.get('status')=='completed')
+    # Reuse this file's maintained role-specific audits without launching a Run.
+    audit=Run.__new__(Run)
+    audit.checks=[];audit.config=policy['config'];audit.role_workers=policy['roles']
+    audit.args=argparse.Namespace(**policy['args']);audit.base=policy['base'];audit.nonce=policy['nonce']
+    for name in ('directory','task_root','worktree','reader','bundle','agent_dir'):
+        setattr(audit,name,Path(policy[name]))
+    audit.gate_home=home;audit.gate_policy=policy_path
+    audit.probe=audit.directory/'hillclimb-probe.py';audit.engine=audit.directory/'engine.py'
+    audit.artifacts=audit.directory/'artifacts'
+    audit.task_sessions={task_id:binding['session']}
+    audit.how_tree_before=policy['how_tree_before'];audit.how_tree_captured_at=policy['how_tree_captured_at']
+    assignment=audit.controller_assignment(task)
+    match=re.match(r'\A\s*Role: ([^\r\n]+)(?:\r?\n|\Z)',assignment)
+    role=match[1] if match else None
+    require(role in policy['roles'] and task['worker'] in policy['roles'][role])
+    spec=policy['config']['workers'][task['worker']]
+    require(task.get('harness')=='pi' and task.get('model')==spec['model']
+            and task.get('argv')==horch.launch_args(spec,directory)
+            and Path(task['cwd']).resolve()==(audit.reader if role=='how explainer' else audit.worktree))
+    for item in binding['dependencies']:
+        path=home/'gates'/(item['task_id']+'.json')
+        require(core.sha(path)==item['gate_sha256'] and core.read_json(path).get('verdict')=='pass')
+    require(all(core.sha(Path(item['path']))==item['sha256'] for item in binding['inputs']))
+    require(core.sha(Path(binding['source_path']))==binding['source_sha256'])
+    lead=list((audit.directory/'native-sessions').glob('*.jsonl'))
+    require(len(lead)==1)
+    events,all_events=audit.native_events(lead[0]),audit.native_events(lead[0],include_errors=True)
+    launches,_=core.workflow_launches(events,[task],audit.worktree,audit.bundle)
+    require(task_id in launches)
+    launch=launches[task_id]
+    argv=core.literal_horch_command(launch['name'],launch['args'],audit.worktree,audit.bundle)
+    require(argv.count('--brief')==1)
+    source=Path(argv[argv.index('--brief')+1])
+    expected={'how explainer':'how-brief.md','bounded trail audit':'trail-brief.md',
+              'judgment and prose':'comment-brief.md'}
+    require(source.parent==audit.artifacts/'hillclimb' and (source.name==expected.get(role)
+            or role=='hillclimb' and re.fullmatch(r'brief-[1-9]\d*\.md',source.name)))
+    audit.bind_brief(events,all_events,task,launch,source,role)
+    native,native_audit=audit.audit_task_native(task)
+    native_rows=[json.loads(line) for line in native.read_text().splitlines() if line.strip()]
+    header=native_rows[0]
+    require(not native.is_symlink() and header.get('id')==native.stem.rsplit('_',1)[-1]
+            and Path(header.get('cwd','')).resolve()==Path(task['cwd']).resolve()
+            and core.stamp(task['created_at'])<=core.stamp(header['timestamp'])<=binding['captured_at'])
+    calls=audit.native_events(native,include_errors=True)
+    cwd=Path(task['cwd']).resolve()
+    inputs={Path(item['path']) for item in binding['inputs']}
+    def readable(raw):
+        if not isinstance(raw,str) or not raw or '~' in raw or '\x00' in raw:
+            return False
+        target=(cwd/raw).resolve()
+        return target in inputs or any(target==root or root in target.parents for root in (cwd,directory,audit.bundle))
+    brief_reads=core.workflow_reads(audit.native_events(native),cwd,directory/'brief.md')
+    require(bool(brief_reads) and task['nonce'] in (directory/'brief.md').read_text()
+            and all(any(read['result_row']<call['call_row'] for read in brief_reads) for call in calls
+                    if call['name'] in ('bash','fffind','ffgrep','write','edit')))
+    document=Path(binding['source_path']).read_bytes().decode('utf-8')
+    initial=document;artifacts={};last={};mutations={}
+    allowed={'report.md','result.json'}|({'review.json'} if role=='judgment and prose' else set())
+    for event in calls:
+        name,args=event['name'],event['args']
+        if name in ('read','grep','find','ls'):
+            require(readable(args.get('path','.' if name!='read' else None)))
+        elif name=='bash':
+            words=forge_helpers.literal(args.get('command',''))
+            if words and words[0] in ('cat','sha256sum','wc'):
+                operands=words[2:] if words[0]=='wc' else words[1:]
+                require(bool(operands) and all(readable(raw) for raw in operands))
+        if name not in ('write','edit'):
+            continue
+        raw=args.get('path');require(isinstance(raw,str) and '~' not in raw and '\x00' not in raw)
+        target=(cwd/raw).resolve()
+        writer=role=='hillclimb' and target==cwd/'reconcile.py'
+        require(writer or target.parent==directory and target.name in allowed)
+        require(last.get(target,-1)<event['call_row']);last[target]=event['result_row']
+        candidate=document if writer else artifacts.get(target,'')
+        if name=='write':
+            require(set(args)=={'path','content'} and isinstance(args['content'],str));candidate=args['content']
+        else:
+            edits=args.get('edits',[args])
+            require(set(args)==({'path','edits'} if 'edits' in args else {'path','oldText','newText'})
+                    and isinstance(edits,list) and bool(edits))
+            for edit in edits:
+                require(isinstance(edit,dict) and set(edit)==({'oldText','newText'} if 'edits' in args else {'path','oldText','newText'})
+                        and isinstance(edit.get('oldText'),str) and bool(edit['oldText'])
+                        and isinstance(edit.get('newText'),str) and candidate.count(edit['oldText'])==1)
+                candidate=candidate.replace(edit['oldText'],edit['newText'],1)
+        if writer:
+            require(perf.outside_function(candidate)==perf.outside_function(initial))
+        if event['successful']:
+            if writer:
+                document=candidate
+            else:
+                artifacts[target]=candidate
+            mutations.setdefault(target,[]).append(event)
+    files=result.get('files')
+    require(isinstance(files,list) and all(isinstance(name,str) for name in files)
+            and len(set(files))==len(files) and 'report.md' in files and set(files)<=allowed)
+    output_names=set(files)|{'result.json'}
+    require(set(path.name for path in artifacts)==output_names)
+    result_calls=mutations.get(directory/'result.json',[])
+    require(bool(result_calls) and all(event['result_row']<result_calls[0]['call_row'] for event in calls
+            if event['name'] in ('write','edit') and (cwd/event['args']['path']).resolve()!=directory/'result.json'))
+    for name in output_names:
+        path=directory/name
+        require(path.is_file() and path.resolve()==path and artifacts.get(path) is not None and artifacts[path].encode()==path.read_bytes())
+    require(all(core.sha(cwd/name)==digest for name,digest in binding['fixture_sha256'].items()))
+    snapshot=home/'sources'/(task_id+'.py')
+    if role=='hillclimb':
+        if snapshot.exists():
+            require(snapshot.read_bytes()==document.encode())
+        else:
+            require((cwd/'reconcile.py').read_bytes()==document.encode())
+            snapshot.write_bytes(document.encode());snapshot.chmod(0o444)
+    else:
+        require((cwd/'reconcile.py').read_bytes()==initial.encode())
+    outputs={str(directory/name):core.sha(directory/name) for name in sorted(output_names)}
+    if role=='hillclimb':
+        outputs[str(cwd/'reconcile.py')]=core.sha(snapshot)
+    return {'schema':'hillclimb/worker-gate/v1','verdict':'pass','task_id':task_id,'role':role,
+            'task_sha256':core.sha(directory/'task.json'),'brief_sha256':core.sha(directory/'brief.md'),
+            'binding_sha256':core.sha(home/'bindings'/(task_id+'.json')),'native_sha256':core.sha(native),
+            'calls_audited':len(calls),'outputs':outputs,'source_sha256':hashlib.sha256(document.encode()).hexdigest()}
+
+
+def hill_wait_audit(policy_path,task_id,seconds):
+    """Only safe fixed metadata crosses this delivery boundary, including failure."""
+    home=policy_path.parent
+    try:
+        policy=core.read_json(policy_path)
+        if not re.fullmatch(r't-[0-9a-f]{6}',task_id) or not 1<=seconds<=120:
+            raise Failure('invalid_gate_request')
+        if any(core.sha(Path(name))!=digest for name,digest in policy['integrity'].items()):
+            raise Failure('gate_integrity_changed')
+        target=home/'gates'/(task_id+'.json')
+        if target.exists() and core.read_json(target).get('verdict')!='pass':
+            raise Failure('quarantine_is_final')
+        argv=[sys.executable,str(Path(policy['bundle'])/'skills/herdr-orchestrator/scripts/horch.py'),
+              'wait',task_id,'--max-seconds',str(seconds)]
+        began=time.time()
+        try:
+            raw=subprocess.run(argv,capture_output=True,text=True,timeout=seconds+20)
+            receipt={'argv':argv,'returncode':raw.returncode,'stdout':raw.stdout,'stderr':raw.stderr,
+                     'started_at':began,'completed_at':time.time()}
+        except subprocess.TimeoutExpired as error:
+            decode=lambda value:value.decode(errors='replace') if isinstance(value,bytes) else value or ''
+            receipt={'argv':argv,'returncode':None,'stdout':decode(error.stdout),'stderr':decode(error.stderr),
+                     'started_at':began,'completed_at':time.time()}
+        destination=home/'waits'/task_id;destination.mkdir(parents=True,exist_ok=True)
+        (destination/(str(time.time_ns())+'.json')).write_text(json.dumps(receipt,indent=2)+'\n')
+        lines=[json.loads(line) for line in receipt['stdout'].splitlines() if line.strip()]
+        if receipt['returncode']!=0 or len(lines)!=1 or lines[0].get('task_id')!=task_id:
+            raise Failure('invalid_wait')
+        event=lines[0]
+        if event.get('state') in ('running','starting','long_running') and event.get('closed') is not True:
+            return {'schema':'hillclimb/safe-delivery/v1','task_id':task_id,'verdict':'pending','state':'pending','closed':False}
+        if event.get('state')!='done' or event.get('closed') is not True:
+            raise Failure('not_done_closed')
+        facts=hill_scope_audit(policy_path,task_id)
+        if target.exists() and core.read_json(target)!=facts:
+            raise Failure('gate_changed')
+        if not target.exists():
+            target.write_text(json.dumps(facts,indent=2)+'\n');target.chmod(0o444)
+        return {'schema':'hillclimb/safe-delivery/v1','task_id':task_id,'verdict':'pass','state':'done','closed':True,
+                'gate_sha256':core.sha(target),'outputs':list(facts['outputs']),'native_sha256':facts['native_sha256']}
+    except Exception:
+        value={'schema':'hillclimb/safe-delivery/v1','task_id':task_id if re.fullmatch(r't-[0-9a-f]{6}',task_id) else None,
+               'verdict':'fail','state':'quarantined','closed':None,'category':'worker_scope_or_lifecycle_rejected'}
+        if value['task_id']:
+            try:
+                target=home/'gates'/(task_id+'.json')
+                if not target.exists():
+                    target.write_text(json.dumps(value,indent=2)+'\n');target.chmod(0o444)
+            except Exception:
+                pass
+        return value
+
+
 class Run(core.Run):
     git = perf.Run.git
     forge = perf.Run.forge
@@ -359,6 +562,9 @@ class Run(core.Run):
         self.session_settings_hashes = {}
         self.how_tree_before = None
         self.how_tree_captured_at = None
+        self.gate_home = self.directory/'hillclimb-gate'
+        self.gate_policy = self.gate_home/'policy.json'
+        self.gate_hash = None
 
     def preflight(self):
         self.check('positive_deadline', self.args.max_seconds > 0)
@@ -478,28 +684,199 @@ class Run(core.Run):
             time.sleep(1)
         else:
             raise Failure('controller_session_not_ready')
+        self.gate_home.mkdir()
+        for name in ('bindings','gates','waits','sources'):
+            (self.gate_home/name).mkdir()
+        integrity={str(ROOT/name):digest for name,digest in self.hashes.items()}
+        integrity.update({str(self.bundle/name):digest for name,digest in self.hashes.items() if name.startswith('skills/')})
+        integrity.update({str(self.probe):self.probe_hash,str(self.engine):self.engine_hash,
+                          str(self.config_path):self.config_hash,str(destination):self.config_hash})
+        policy={'directory':str(self.directory),'task_root':str(self.task_root.resolve()),'worktree':str(self.worktree),
+            'reader':str(self.reader),'bundle':str(self.bundle),'agent_dir':str(self.agent_dir),'base':self.base,
+            'nonce':self.nonce,'config':self.config,'roles':self.role_workers,'args':vars(self.args),
+            'controller_session':self.session,'controller_spec':self.spec,'wall_started':self.wall_started,
+            'how_tree_before':self.how_tree_before,'how_tree_captured_at':self.how_tree_captured_at,
+            'integrity':integrity}
+        policy['args']={key:str(value) if isinstance(value,Path) else value for key,value in policy['args'].items()}
+        self.gate_policy.write_text(json.dumps(policy,indent=2)+'\n');self.gate_policy.chmod(0o444)
+        self.gate_hash=core.sha(self.gate_policy)
         self.check('controller_prompted', self.herdr('agent', 'prompt', self.agent, f'Read {brief} in full and execute it.',
                    '--wait', '--until', 'working', '--timeout', '30000').get('type') == 'agent_prompted')
 
 
     def scan(self):
-        rows = super().scan()
-        for task, state in rows:
+        rows=super().scan()
+        self.guard_live_lead_access(rows)
+        if self.gate_hash and core.sha(self.gate_policy)!=self.gate_hash:
+            raise Failure('immutable_worker_gate_policy_changed')
+        for task,state in rows:
+            gate=self.gate_home/'gates'/(task['task_id']+'.json')
+            if gate.is_file() and core.read_json(gate).get('verdict')!='pass':
+                raise Failure('worker_gate_quarantined_stop')
             if task['task_id'] in self.task_sessions or state.get('closed'):
                 continue
             try:
-                entry = self.herdr('agent', 'get', task['agent'])['agent']
-            except Failure:
-                continue  # A just-closed pane cannot supply identity; audit fails closed.
-            if (entry.get('pane_id') == task['pane_id'] and entry.get('agent_session', {}).get('value')
-                    and entry['agent_session'].get('agent') == 'pi'
-                    and entry['agent_session'].get('source') == 'herdr:pi'):
-                self.task_sessions[task['task_id']] = entry['agent_session']
-                (Path(task['task_dir']) / 'native-session-capture.json').write_text(
-                    json.dumps({'session': entry['agent_session'], 'captured_at': time.time(),
-                                'task_sha256': core.sha(Path(task['task_dir']) / 'task.json'),
-                                'brief_sha256': core.sha(Path(task['brief_path']))}, indent=2))
+                entry=self.herdr('agent','get',task['agent'])['agent']
+                session=entry.get('agent_session') or {}
+                if (entry.get('pane_id')!=task['pane_id'] or entry.get('agent_status')!='working'
+                        or session.get('agent')!='pi' or session.get('source')!='herdr:pi' or not session.get('value')):
+                    continue
+                binding=self.capture_gate_binding(task,session)
+                binding['working_agent']={key:entry.get(key) for key in ('agent_status','pane_id','agent_session')}
+                self.check('captured_agent_is_working',binding['working_agent']['agent_status']=='working')
+            except Failure as error:
+                if str(error)=='working_launch_receipt_not_yet_available':
+                    continue
+                raise
+            target=self.gate_home/'bindings'/(task['task_id']+'.json')
+            target.write_text(json.dumps(binding,indent=2)+'\n');target.chmod(0o444)
+            (Path(task['task_dir'])/'native-session-capture.json').write_text(json.dumps(
+                {key:binding[key] for key in ('session','captured_at','task_sha256','brief_sha256')},indent=2)+'\n')
+            self.task_sessions[task['task_id']]=session
         return rows
+
+    def guard_live_lead_access(self,rows):
+        """Stop on attempted raw forwarding; never inspect tool-result payloads here."""
+        paths=list((self.directory/'native-sessions').glob('*.jsonl'))
+        if len(paths)!=1:
+            return
+        for line in paths[0].read_text().splitlines():
+            row=json.loads(line);message=row.get('message',{})
+            if message.get('role')!='assistant':
+                continue
+            for block in message.get('content',[]):
+                if block.get('type')!='toolCall':
+                    continue
+                name,args=block.get('name'),block.get('arguments',{})
+                if not isinstance(args,dict):
+                    raise Failure('lead_tool_schema_rejected')
+                command=args.get('command','') if name=='bash' else ''
+                if name=='bash' and not self.controller_command_allowed(command):
+                    raise Failure('lead_bash_command_quarantined')
+                safe=self.gate_invocation(command) if name=='bash' else None
+                horch_args=core.literal_horch_command(name,args,self.worktree,self.bundle)
+                words=forge_helpers.literal(command) if name=='bash' else []
+                if words and words[0] in ('python','python3') and str(Path(__file__).resolve()) in words and safe is None:
+                    raise Failure('unparsed_delivery_gate_quarantined')
+                if name=='bash' and str(self.bundle/'skills/herdr-orchestrator/scripts/horch.py') in command and not horch_args:
+                    raise Failure('unparsed_horch_command_quarantined')
+                if horch_args and horch_args[0]!='run':
+                    raise Failure('raw_horch_poll_quarantined')
+                if safe is not None or horch_args:
+                    continue
+                target=None
+                if name in ('read','grep','find','ls','write','edit'):
+                    raw=args.get('path','.' if name in ('grep','find','ls') else None)
+                    if isinstance(raw,str):
+                        target=(self.worktree/raw).resolve()
+                words=forge_helpers.literal(command) if name=='bash' else []
+                if len(words)==2 and words[0] in ('cat','sha256sum'):
+                    target=(self.worktree/words[1]).resolve()
+                elif name=='bash' and any(task['task_id'] in command or task['task_dir'] in command for task,_ in rows):
+                    raise Failure('unparsed_task_access_quarantined')
+                if str(self.gate_home) in command:
+                    raise Failure('raw_gate_access_quarantined')
+                if target is None:
+                    continue
+                if (target==self.gate_home or self.gate_home in target.parents or target in self.gate_home.parents
+                        or target.suffix=='.jsonl'):
+                    raise Failure('raw_audit_access_quarantined')
+                if target==self.task_root.resolve() or target in self.task_root.resolve().parents:
+                    raise Failure('task_parent_access_quarantined')
+                if self.task_root.resolve() in target.parents:
+                    owner=[task for task,_ in rows if Path(task['task_dir']).resolve() in target.parents]
+                    if len(owner)!=1:
+                        raise Failure('unknown_task_access_quarantined')
+                    task=owner[0];gate=self.gate_home/'gates'/(task['task_id']+'.json')
+                    if (not gate.is_file() or core.read_json(gate).get('verdict')!='pass'
+                            or str(target) not in core.read_json(gate).get('outputs',{}) or name in ('write','edit')):
+                        raise Failure('ungated_output_access_quarantined')
+
+    def capture_gate_binding(self,task,session):
+        paths=list((self.directory/'native-sessions').glob('*.jsonl'))
+        self.check('one_working_lead_session',len(paths)==1)
+        events=self.native_events(paths[0])
+        launches,_=core.workflow_launches(events,[task],self.worktree,self.bundle)
+        if task['task_id'] not in launches:
+            raise Failure('working_launch_receipt_not_yet_available')
+        launch=launches[task['task_id']]
+        assignment=self.controller_assignment(task)
+        match=re.match(r'\A\s*Role: ([^\r\n]+)(?:\r?\n|\Z)',assignment)
+        role=match[1] if match else None
+        self.check('working_bound_configured_role',role in self.role_workers and task['worker'] in self.role_workers[role])
+        dependencies=[]
+        for other in self.tasks.values():
+            if other['task_id']==task['task_id'] or core.stamp(other['created_at'])>=core.stamp(task['created_at']):
+                continue
+            gate=self.gate_home/'gates'/(other['task_id']+'.json')
+            self.check('dependent_work_requires_prior_pass_gate',gate.is_file() and core.read_json(gate).get('verdict')=='pass')
+            safe=[e for e in events if self.gate_invocation(e['args'].get('command','')) is not None
+                  and e['name']=='bash' and self.gate_invocation(e['args']['command'])[0]==other['task_id']
+                  and e['result_row']<launch['call_row'] and json.loads(e['output']).get('verdict')=='pass']
+            self.check('dependent_work_after_safe_delivery',bool(safe))
+            for raw_path in core.read_json(gate)['outputs']:
+                path=Path(raw_path)
+                if path.parent==Path(other['task_dir']).resolve():
+                    self.check('dependency_full_outputs_read_after_safe_delivery',bool(core.workflow_reads(
+                        events,self.worktree,path,after=safe[-1]['result_row'],before=launch['call_row'])))
+            dependencies.append({'task_id':other['task_id'],'gate_sha256':core.sha(gate),
+                                 'delivery_result_row':safe[-1]['result_row']})
+        inputs=[]
+        allowed_inputs=self.role_input_paths(role)
+        for raw in re.findall(r'^Input artifact: (.+)$',assignment,re.M):
+            path=Path(raw)
+            allowed=(path.is_absolute() and path.resolve()==path and path.is_file()
+                     and path in allowed_inputs)
+            self.check('working_declared_input_owned',allowed)
+            digest=core.sha(path)
+            # Every extra input is a completed native stage artifact, not a guessed file.
+            writes=core.workflow_writes(events,self.worktree,path,before=launch['call_row'],final=True)
+            reads=core.workflow_reads(events,self.worktree,path,before=launch['call_row'])
+            ready=[e for e in events if e['name']=='bash' and self.lever_invocation(e['args'].get('command',''))==('review-ready',None)
+                   and e['result_row']<launch['call_row']]
+            manifest=core.read_json(self.directory/'review/manifest.json') if ready else {}
+            staged={self.directory/'review/controller-transcript.jsonl':manifest.get('transcript_sha256'),
+                    self.artifacts/'hillclimb/decision.tsv':manifest.get('ledger_sha256'),
+                    self.artifacts/'trail/decision.tsv':manifest.get('trail_sha256')}
+            stage_bound=bool(ready) and json.loads(ready[-1]['output'])==manifest and staged.get(path)==digest
+            self.check('working_input_actual_native_stage_provenance',bool(writes or reads or stage_bound))
+            inputs.append({'path':str(path),'sha256':digest})
+        source=Path(task['cwd'])/'reconcile.py'
+        if role=='hillclimb':
+            argv=core.literal_horch_command(launch['name'],launch['args'],self.worktree,self.bundle)
+            brief=Path(argv[argv.index('--brief')+1])
+            number=re.fullmatch(r'brief-([1-9]\d*)\.md',brief.name)
+            self.check('writer_exact_attempt_brief',number is not None)
+            source=self.directory/('attempt-'+number[1])/'before/reconcile.py'
+            begins=[e for e in events if e['name']=='bash' and forge_helpers.literal(e['args'].get('command',''))==
+                    self.lever_argv('begin',int(number[1])) and e['result_row']<launch['call_row']]
+            self.check('writer_native_begin_source_binding',len(begins)==1
+                       and json.loads(begins[0]['output'])['before_sha256']['reconcile.py']==core.sha(source))
+        return {'session':session,'captured_at':time.time(),'inputs':inputs,'dependencies':dependencies,
+            'task_sha256':core.sha(Path(task['task_dir'])/'task.json'),'brief_sha256':core.sha(Path(task['brief_path'])),
+            'source_path':str(source),'source_sha256':core.sha(source),
+            'fixture_sha256':{name:core.sha(Path(task['cwd'])/name) for name in FILES if name!='reconcile.py'}}
+
+    def role_input_paths(self,role):
+        if role=='how explainer':
+            return set()
+        if role=='hillclimb':
+            return {self.artifacts/'hillclimb/explanation.md',
+                    *(self.artifacts/f'hillclimb/hypothesis-{i}.json' for i in range(1,self.args.max_attempts+1))}
+        logs={self.artifacts/'hillclimb/decision.tsv',self.artifacts/'trail/decision.tsv'}
+        if role=='judgment and prose':
+            return logs|{self.directory/'final.json',self.artifacts/'pr-body.md',
+                         *(self.artifacts/('hillclimb/'+name) for name in ('comment-scope.json','comment-diff.patch','attention.md'))}
+        return logs|{self.directory/'review/controller-transcript.jsonl',self.directory/'review/manifest.json',
+            *(self.artifacts/f'hillclimb/{kind}-{i}.json' for i in range(1,self.args.max_attempts+1) for kind in ('hypothesis','decision')),
+            *(self.directory/f'attempt-{i}/{kind}.json' for i in range(1,self.args.max_attempts+1) for kind in ('evaluation','record'))}
+
+    def gate_invocation(self,command):
+        argv=forge_helpers.literal(command)
+        if (len(argv)==6 and argv[:4]==['python3',str(Path(__file__).resolve()),'--wait-audit',str(self.gate_policy)]
+                and re.fullmatch(r't-[0-9a-f]{6}',argv[4]) and argv[5].isdigit() and 1<=int(argv[5])<=120):
+            return argv[4],int(argv[5])
+        return None
 
     def lever_argv(self, mode, number=None):
         argv = ['python3', '-B', str(self.probe), '--mode', mode, '--root', str(self.worktree),
@@ -514,12 +891,17 @@ class Run(core.Run):
         return f"""Read {b / 'poteto-mode/SKILL.md'} and follow original Hillclimb in one ATTENDED lead turn.
 Goal: sustained measured improvement of the real reconciliation CLI on the frozen 2,500-reference/6,000-payment workload. User target is at least {self.args.target_reduction}% lower end-to-end wall median and at least {self.args.attempt_floor} genuinely distinct measured attempts. Maximum {self.args.max_attempts} attempts is a resource bound, not an alternate successful predicate. If unmet, stop honestly unresolved; do not lower the floor/target. No unattended wake exists or is claimed.
 
-Except for the explicitly declared How-only installed FFF exception below, use ONLY native read, bash, write, edit, grep, find, ls. No codemode, eval, shell pipelines/redirection/substitution, inline scripts/Python, or invented wrappers. Use literal direct CLI commands and absolute paths. Literal bash rejects newline, semicolon, pipe, ampersand, redirection, backtick, dollar or backslash even inside quotes; no home-expansion (~ or ~user) filesystem paths. Native ls uses path/limit fields, not shell flags. Controller bash grammar: exact lever commands below; bare uptime/nproc/pwd; command -v origin; literal bash original-log.sh assigned-trail-path plus five row fields; direct python/python3 bundled horch.py run/wait/list/stats/close/detect; cat FILE or sha256sum FILE for one absolute file; git -C exact_worktree readonly status/diff/show/log/rev-parse/rev-list/diff-tree/ls-files/ls-remote, branch --show-current, remote get-url origin, add only reconcile.py or PERFORMANCE.md, commit -m normal perf/docs scoped subject, exact restore --source=HEAD -- reconcile.py, push [-u/--set-upstream] origin owned_branch; selected gh/origin repo view, pr view/list or the exact assigned ready pr create. No other controller bash forms. All worker briefs must repeat this tool protocol, no nested workers and no trust/approval dialog answers. Worker bash is limited to readonly Git, cat/sha256sum/wc/pwd, direct frozen CLI/oracle invocations, or python -m py_compile/json.tool; source/report/result writes use native edit/write only, scoped to assigned function and owned task directory. Do not retune models/settings or retry failed model tasks.
+Except for the explicitly declared How-only installed FFF exception below, use ONLY native read, bash, write, edit, grep, find, ls. No codemode, eval, shell pipelines/redirection/substitution, inline scripts/Python, or invented wrappers; the one declared same-file --wait-audit delivery command is the required maintained exception. Use literal direct CLI commands and absolute paths. Literal bash rejects newline, semicolon, pipe, ampersand, redirection, backtick, dollar or backslash even inside quotes; no home-expansion (~ or ~user) filesystem paths. Native ls uses path/limit fields, not shell flags. Controller bash grammar: exact lever commands below; bare uptime/nproc/pwd; command -v origin; literal bash original-log.sh assigned-trail-path plus five row fields; direct python/python3 bundled horch.py run only; cat FILE or sha256sum FILE for one absolute file; git -C exact_worktree readonly status/diff/show/log/blame/rev-parse/rev-list/diff-tree/ls-files/ls-remote, branch --show-current, remote get-url origin, add only reconcile.py or PERFORMANCE.md, commit -m normal perf/docs scoped subject, exact restore --source=HEAD -- reconcile.py, push [-u/--set-upstream] origin owned_branch; selected gh/origin repo view, pr view/list or the exact assigned ready pr create. No other controller bash forms. For every task, delivery is ONLY python3 {Path(__file__).resolve()} --wait-audit {self.gate_policy} TASK_ID 120 (1..120 seconds); repeat pending waits, never retry failure. Raw horch wait/list/stats/close/detect, raw policy/bindings/waits/gates/native-session/output copies and task-store-parent inspection are prohibited. Read exact declared outputs ONLY after verdict=pass, state=done, closed=true; a failure quarantines the run immediately, exposes no model payload and requires STOP. This is post-execution validation, not containment. Do not inspect or execute a writer's integration cwd/source before its PASS. Dispatch each later worker only after all earlier safe PASS deliveries and full required report reads. All worker briefs must repeat this tool protocol, no nested workers and no trust/approval dialog answers. Worker Bash follows the exact role-specific forms below; no generic module/script execution is authorized; source/report/result writes use native edit/write only, scoped to assigned function and owned task directory. Do not retune models/settings or retry failed model tasks.
 Only fresh configured hillclimb workers may edit app source, ONLY body of reconcile_linear in {self.worktree / 'reconcile.py'}. No other app/workload/oracle/harness/config edits. You supervise/review; never author source. Only owned branch {self.branch} may be pushed. No merges/automerge/other PR mutations.
 Named controller-native-write artifacts only: checklist.md; hillclimb/workload.json, hillclimb/metric.json, hillclimb/vetting.json, hillclimb/freeze.json, hillclimb/how-brief.md, hillclimb/explanation.md, hillclimb/stop.json, hillclimb/trail-brief.md, hillclimb/attention.md, hillclimb/comment-brief.md, hillclimb/comment-scope.json, hillclimb/comment-diff.patch, hillclimb/comment-decision.json; hillclimb/hypothesis-N.json, hillclimb/brief-N.md, hillclimb/review-N.json, hillclimb/decision-N.json for integer N=1..{self.args.max_attempts}; pr-body.md, forge-resolution.json, reply.md; and sanitized PERFORMANCE.md in worktree. No direct writes/edits to either decision.tsv, probe state, snapshots, measurements, results or raw transcripts. Ledger writes happen only through the immutable lever; generic trail rows only through original log.sh.
 
-Read full required instructions: {json.dumps([str(b / resource) for resource in READS])}. Read original 8-stage Hillclimb; first native-write {a / 'checklist.md'} with exact original top-level numbered instructions before any task/work. Do How SIMPLE route first: one readonly explainer configured {self.role_workers['how explainer'][0]} on detached {self.reader}, with original explainer prompt, assignment in {a / 'hillclimb/how-brief.md'}. Literal horch run --brief that path. All task briefs first line Role: exact role (how explainer, hillclimb, bounded trail audit, or judgment and prose), selected worker and reason in the full controller-authored prefix before Horch's appended rules, 'Do not delegate', absolute {b / 'pstack-herdr/references/agents/poteto-agent.md'} and {b / 'poteto-mode/SKILL.md'}. Wait for actual done/closed, then read result JSON and FULL listed report. Preserve How explanation verbatim in {a / 'hillclimb/explanation.md'}.
-The actual How brief MUST explicitly declare this role-only installed-tool contract: native read/write/edit/bash plus exact fffind(pattern:string,path?:string,exclude?:string|string[],limit?:positive integer) and ffgrep with those fields plus caseSensitive?:boolean/context?:nonnegative integer. No cursor/unknown fields/null numeric FFF values; empty patterns allowed. FFF path defaults to owned cwd and accepts only owned absolute/relative paths/globs such as **; no surrounding whitespace/BOM, tilde, .. component, backslash, NUL, braces, comma, ! or leading -. exclude is only a filter. Use actual FFF native search or Git ls-files for search/enumeration, NOT unavailable native grep/find/ls. Bash grep/find are DISALLOWED. Bash allows only bare pwd, cat/sha256sum ONE readable owned file, exact {shlex.join(['ls',str(self.reader)])} or {shlex.join(['ls','-la',str(self.reader)])} (no other directories/flags/recursive forms/bare ls), and readonly LOCAL GIT with optional -C exact cwd: log/blame/show/diff/status/rev-parse/ls-files/rev-list/diff-tree; standard readonly flags as enumerated in the Comment grammar below, plus branch --show-current/diff --check/status --short --branch. Git show HEAD:OWNED_RELATIVE_PATH or HEAD~:OWNED_RELATIVE_PATH permits exactly one operand/no options; no absolute/home/traversal/empty/dot components/backslash/control characters/extra colon/leading -. No application/test/measurement/config/network commands, delegation or wrappers. Every Bash argument is literal with the same forbidden characters as above. Native reads are limited to this reader, its actual task directory and the bundle; no tilde/NUL/symlink escape. Write/edit only canonical task report.md/result.json, never reader source or task identity; full-read nonce-bound brief before Bash/FFF/write/edit. read offset/limit may be null, otherwise positive integer; bash timeout null/omitted or finite positive. Before/after symlink-free reader trees must remain identical; this is post-execution auditing under a stable-tree assumption, not containment. The controller, implementation, trail and Comment roles retain their existing grammars and gain NO FFF or Bash ls exception. Repeat these declarations in the actual How assignment.
+Read full required instructions: {json.dumps([str(b / resource) for resource in READS])}. Read original 8-stage Hillclimb; first native-write {a / 'checklist.md'} with exact original top-level numbered instructions before any task/work. Do How SIMPLE route first: one readonly explainer configured {self.role_workers['how explainer'][0]} on detached {self.reader}, with original explainer prompt, assignment in {a / 'hillclimb/how-brief.md'}. Literal horch run --brief that path; raw horch polling is never authorized. All task briefs first line Role: exact role (how explainer, hillclimb, bounded trail audit, or judgment and prose), selected worker and reason in the full controller-authored prefix before Horch's appended rules, 'Do not delegate', absolute {b / 'pstack-herdr/references/agents/poteto-agent.md'} and {b / 'poteto-mode/SKILL.md'}. Wait ONLY through the same-file safe gate; after actual PASS/done/closed, read result JSON and FULL listed report. Preserve How explanation verbatim in {a / 'hillclimb/explanation.md'}.
+All non-How local readonly Git is recognized only by the owned-cwd local grammar: optional -C must be the exact canonical owned cwd; log/blame/show/diff/status/rev-parse/ls-files/rev-list/diff-tree, the readonly flags/value forms enumerated in the Comment grammar below, owned path operands and actual base/HEAD ancestry/hex revisions only. No --no-index, external operands (including relative/./ aliases resolving outside cwd), output/ext-diff/textconv execution, configuration overrides or generic rev:path. Additional exact readonly forms: branch --show-current, diff --check, status --short --branch. The controller additionally permits exact diff --cached and diff --staged for complete documentation review; ls-remote --heads origin optionally followed by refs/heads/{self.branch} or refs/heads/{self.args.base_ref}; remote get-url origin, and the already specified explicit add/commit/restore/push forms. These retain normal Git configuration/hooks and do not authorize arbitrary flags.
+Writer-only Python Bash is python or python3, optional ONE leading -B, then exactly cli.py workload.json, -m py_compile reconcile.py, or e2e_reconcile.py --output NEW_DIR. Each named file operand is either its literal basename in owned cwd or its exact absolute owned path; no ./ aliases, flags, additional operands or alternative scripts/modules. Oracle NEW_DIR is an exact canonical absolute fresh directory strictly inside this writer's actual task directory, outside app, with no symlink components; choose a distinct directory for every invocation, never task identity/report names. No other writer Python, json.tool or output operands are admitted.
+Trail-only file Bash: cat ONE_READABLE_FILE; sha256sum 1..3 readable files without flags; wc -l 1..4 explicitly declared Input artifact files; wc -c ONE_READABLE_FILE; bare pwd; the exact four ls forms stated in its brief; readonly local Git as above. Readable files are only its owned cwd, bundle, own task directory or exact declared inputs, never private gate policy/bindings/sources/waits/native copies. Trail-only Python is python or python3 with optional ONE leading -B followed by exactly -m json.tool ABSOLUTE_OWN_TASK_REPORT_MD or -m json.tool ABSOLUTE_OWN_TASK_RESULT_JSON; no other modules/scripts, flags or output operands. The authored trail brief must explicitly repeat these forms and boundaries.
+The worker-visible TASK_DIR/native-session-capture.json is a declared read-only identity exception in its own task directory, containing ONLY session, captured_at, task_sha256 and brief_sha256. It may be read or counted with the admitted wc -c form. Full source/input/dependency/WORKING bindings remain exclusively in private gate storage and are never worker-readable. Do not modify either capture or any identity file. How and Comment keep their separate existing grammars; these Python/wc/variadic forms do not apply to them.
+Every actual assignment must fully declare its role grammar, read its nonce-bound full brief before Bash/FFF/write/edit, and write only canonical report.md/result.json (Comment may also write review.json). result.files must uniquely list report.md and every supplementary output, in any order. Native write+edit is allowed with unique nonempty oldText; mutations are sequential per file, independent files may be batched; finish ALL source/report edits before the first result.json mutation, write result last. No task identity/config writes. For every external artifact the worker needs, add one literal Input artifact: ABSOLUTE_PATH line: writers use only explanation.md and their own hypothesis-N.json; trail uses review/controller-transcript.jsonl, review/manifest.json, both logs, each actual hypothesis/decision and attempt evaluation/record; Comment uses its scope JSON, patch, final.json, both logs, attention.md and pr-body.md. Other reads are only its owned cwd, own task directory and bundle. No other input files, raw gate metadata or other task stores. The gate binds live WORKING UUID, exact launch/brief/nonce/cwd/config, native input provenance and prior safe deliveries; missing WORKING capture is unresolved, not an identity fallback.
+The actual How brief MUST explicitly declare this role-only installed-tool contract: native read/write/edit/bash plus exact fffind(pattern:string,path?:string,exclude?:string|string[],limit?:positive integer) and ffgrep with those fields plus caseSensitive?:boolean/context?:nonnegative integer. No cursor/unknown fields/null numeric FFF values; empty patterns allowed. FFF path defaults to owned cwd and accepts only owned absolute/relative paths/globs such as **; no surrounding whitespace/BOM, tilde, .. component, backslash, NUL, braces, comma, ! or leading -. exclude is only a filter. Use actual FFF native search or Git ls-files for search/enumeration, NOT unavailable native grep/find/ls. Bash grep/find are DISALLOWED. Bash allows only bare pwd, cat/sha256sum ONE readable owned file, exact {shlex.join(['ls',str(self.reader)])} or {shlex.join(['ls','-la',str(self.reader)])} (no other directories/flags/recursive forms/bare ls), and readonly LOCAL GIT with optional -C exact cwd: log/blame/show/diff/status/rev-parse/ls-files/rev-list/diff-tree; standard readonly flags as enumerated in the Comment grammar below, plus branch --show-current/diff --check/status --short --branch. Git show HEAD:OWNED_RELATIVE_PATH or HEAD~:OWNED_RELATIVE_PATH permits exactly one operand/no options; no absolute/home/traversal/empty/dot components/backslash/control characters/extra colon/leading -. No application/test/measurement/config/network commands, delegation or wrappers. Every Bash argument is literal with the same forbidden characters as above. Native reads are limited to this reader, its actual task directory and the bundle; no tilde/NUL/symlink escape. Write/edit only canonical task report.md/result.json, never reader source or task identity; full-read nonce-bound brief before Bash/FFF/write/edit. read offset/limit may be null, otherwise positive integer; bash timeout null/omitted or finite positive. Before/after symlink-free reader trees must remain identical; this is post-execution auditing under a stable-tree assumption, not containment. How grants no exceptions to other roles. The controller, implementation and Comment retain their existing grammars without FFF or Bash ls. Trail has no FFF and permits only its separately declared four-directory Bash ls exception. Repeat these declarations in the actual How assignment.
 Write {a / 'hillclimb/workload.json'} with architecture_sha256 (actual explanation file sha via sha256sum), dimensions (data size/history/state/concurrency), complaint, target_case, simpler_case, relevance. Then choose metric in {a / 'hillclimb/metric.json'} with metric='full_cli_wall_median_ms', direction='lower', target_reduction={self.args.target_reduction}, attempt_floor={self.args.attempt_floor}, attended=true, workload_sha256 (actual frozen workload hash). Do not choose a source-count proxy.
 
 Read {self.probe} AND {self.engine} in full, uptime and nproc; read benchmark-checklist before running sensitivity. Native-write {a / 'hillclimb/vetting.json'} BEFORE measurements, keys claim, timed_surface, included_work, ignored_work, cache_state, production_config, limiter_plan, bounds, correctness, errors, repetitions. State startup+JSON+validation+complete reconciliation+output; private stdlib fixture, not an inferred production ceiling, warmed filesystem. Profiles separate from reported numbers; AB five per side with work/error/result checks.
@@ -539,7 +921,7 @@ For N>1 use the SAME literal command with --id N. Then native-write actual bound
 Then evaluate snapshots, real alternating measurements and real six-flow regression:
 {command('evaluate', 1)}
 Read actual attempt-N/evaluation.json fully. The immutable evaluator supplies the actual verdict, not a requested outcome. Keep only a gap exceeding observed full ranges, or a strictly smaller AST holding overlapping median within 2% and explicit simplification=true. Invalid measurements/gates are rejected.
-Native-write {a / 'hillclimb/decision-N.json'} with EXACT fields id,hypothesis,change,before,after,delta,tests,verdict,note: hypothesis/changed mechanism from hypothesis; medians from evaluation.observation.measurement (null if invalid), delta=after-before, tests='green' or 'failed', verdict and note EXACT evaluator verdict/reason.
+Native-write {a / 'hillclimb/decision-N.json'} with EXACT fields id,hypothesis,change,before,after,delta,tests,verdict,note: hypothesis/changed mechanism from hypothesis; medians from evaluation.observation.measurement (null if invalid), delta copied verbatim from evaluation.expected_delta (do not reconstruct/round it), tests='green' or 'failed', verdict and note EXACT evaluator verdict/reason.
 If kept: normal Git add reconcile.py, then ONE normal perf(scope): ... commit for this accepted fix, explicit file only. If reverted: ONLY git -C {self.worktree} restore --source=HEAD -- reconcile.py; no reset/clean/broad restore, no rejected commit. Verify source bytes match exact prior accepted snapshot, clean tree.
 Record the actual ledger row only AFTER keep commit or full revert:
 {command('record', 1)}
@@ -551,14 +933,14 @@ Write {a / 'hillclimb/stop.json'} keys target_reduction, attempt_floor, attempts
 
 Before handoff audit both logs against this run's actual native trace:
 {command('review-ready')}
-This freezes current scoped controller transcript and trail manifest under {d / 'review'}. Read actual manifest. Native-write {a / 'hillclimb/trail-brief.md'} for one bounded trail audit (not formal Interrogate), configured worker {self.args.trail_reviewer}, cwd {self.worktree}, readonly/no delegation. Explain choice is an explicit existing configured worker of a different actual model family; no applicable role is invented. Task must read full frozen controller transcript (chunk native reads if needed), both full ledgers, review manifest, all hypotheses/decisions/evaluation+record artifacts, flag weak evidence/skipped verification/risky choices/gaps. Produce listed report.md containing only a JSON object with reviewed_model, reviewed_manifest_sha256, flags(list), blocking(list), scope='bounded trail audit', checked_distinct_mechanisms=true, checked_mantra_order=true, checked_plateau_response=true, checked_log_native_consistency=true ONLY when actually supported; otherwise flag and mark false; no fabricated 'no flags'. Actual native task session/model/effort is independently audited. Wait done/closed; read actual result and full JSON report. If blockers, stop unresolved; never hide or rerun the same audit to erase flags.
+This freezes current scoped controller transcript and trail manifest under {d / 'review'}. Read actual manifest. Native-write {a / 'hillclimb/trail-brief.md'} for one bounded trail audit (not formal Interrogate), configured worker {self.args.trail_reviewer}, cwd {self.worktree}, readonly/no delegation. Explain choice is an explicit existing configured worker of a different actual model family; no applicable role is invented. Its actual authored brief must repeat four lines 'Trail-only literal ls: ABSOLUTE_DIRECTORY', one for each of {d}, {self.bundle}, {b}, and TASK_DIR (a declared literal placeholder resolved only to this task's actual task directory from the appended result path). This prospectively permits only ls with that single absolute operand, no flags/bare/recursive/multioperand/other-directory forms; all path components must be symlink-free. No trail FFF exception. Full-read actual nonce-bound brief before any Bash command. Task must read full frozen controller transcript (chunk native reads if needed), both full ledgers, review manifest, all hypotheses/decisions/evaluation+record artifacts, flag weak evidence/skipped verification/risky choices/gaps. Produce listed report.md containing only a JSON object with reviewed_model, reviewed_manifest_sha256, flags(list), blocking(list), scope='bounded trail audit', checked_distinct_mechanisms=true, checked_mantra_order=true, checked_plateau_response=true, checked_log_native_consistency=true ONLY when actually supported; otherwise flag and mark false; no fabricated 'no flags'. Actual native task session/model/effort is independently audited. Wait done/closed; read actual result and full JSON report. If blockers, stop unresolved; never hide or rerun the same audit to erase flags.
 Native-write {a / 'hillclimb/attention.md'} beginning 'reviewed by <actual model>' followed by each actual flag, or 'No flags'. This leaf's Attention is mandatory.
 
 If predicate met and audit nonblocking, read OpeningPR/deslop/no-comments/technical-writing/unslop/sequence. Write {self.worktree / 'PERFORMANCE.md'} EXACT final.json portable_report (no private paths). Prepare {a / 'pr-body.md'} original headings Why/What changed/Scope/[Tradeoffs]/Blast Radius/Verification, one exact primary_number from final.json and [measurement and iterations](PERFORMANCE.md) link. Preserve accepted fixes in original order. Before the final documentation commit and final diff review, complete ONE mandatory fresh CommentSicko phase, AFTER all measured attempts and the trail audit. Never spawn one per attempt. Read original {b / 'no-comments/SKILL.md'} and {b / 'pstack-herdr/references/agents/comment-sicko.md'} fully. Capture literal git -C {self.worktree} diff {self.base} -- reconcile.py and native-write its exact full output to {a / 'hillclimb/comment-diff.patch'}. Native-write {a / 'hillclimb/comment-scope.json'} with EXACT keys base='{self.base}', source='reconcile.py', report='PERFORMANCE.md', source_sha256, performance_sha256, final_sha256, ledger_sha256, trail_sha256, diff_sha256; bind actual final source, PERFORMANCE.md, {d / 'final.json'}, both decision.tsv files and patch via actual sha256sum single-file commands. These files remain frozen through review, final commit and PR.
 Native-write {a / 'hillclimb/comment-brief.md'} first line Role: judgment and prose; configured worker {self.role_workers['judgment and prose'][0]}, cwd {self.worktree}, selected worker/reason, Do not delegate and absolute poteto-agent/poteto-mode paths as above. CommentSicko is the original instruction agent, NOT a different worker/model. Assign full native reads of original no-comments and comment-sicko instructions, current reconcile.py and PERFORMANCE.md, scope JSON, exact patch, final.json, both logs, attention.md and pr-body.md; include those exact absolute input paths. Do not restate or copy the agent's greeting or rules. Include this exact bootstrap instruction in its actual assignment: {COMMENT_BOOTSTRAP} It is report-only and may not change any source, report, logs, measurements, task identity or configuration. It may native-write only its canonical report.md, result.json and optional supplementary review.json in its actual task directory; list report.md and any supplementary review.json in result.files (unique entries in any order), write result last. Result.files may include its own result.json as well; optional review.json is supplementary, the typed report.md is authoritative. No extra tasks, retries or substitutions.
 The CommentSicko brief must declare this complete tool grammar: seven native read/bash/write/edit/grep/find/ls only, never FFF/codemode/wrappers/delegation/network/forge/application or test/measurement execution. Native schemas read(path,offset?,limit?), write(path,content), edit(path,oldText,newText) OR edit(path,edits:[{{oldText,newText}}]), bash(command,timeout?), grep(pattern,path?,glob?,ignoreCase?,literal?,context?,limit?), find(pattern,path?,limit?), ls(path?,limit?); no extra fields. read offset/limit and bash timeout may be null; otherwise numbers positive (context nonnegative), booleans actual booleans, text fields strings. Read/search paths are only its own integration cwd, its actual task directory, supplied bundle, or these explicitly assigned external input files. Paths contain no tilde (~ or ~user), NUL or symlink escape; do not expand home paths. Git HEAD~ / HEAD^ revisions before -- are allowed. Bash literal commands reject newline, semicolon, pipe, ampersand, redirection, backtick, dollar or backslash even inside quotes. Accepted bash is bare pwd; cat FILE or sha256sum FILE for one assigned readable file; or readonly git [-C exact_owned_cwd] log/blame/show/diff/status/rev-parse/ls-files/rev-list/diff-tree with owned paths, base or HEAD ancestry, local hashes and these read-only flags only: --oneline,--follow,-p,--patch,--stat,--name-only,--name-status,--short,--porcelain,--porcelain=v1,--no-patch,--all,--reverse,--abbrev-commit,--no-renames,--no-color,--color=never,--show-toplevel,--show-prefix,--no-commit-id,-r,--stage,-s,--no-ext-diff,--no-textconv,--decorate,--graph; -N integer shorthand; -L numeric line[,numeric-or-+numeric]; -n/--max-count integer; --format/--pretty/-S/-G/--since/--until followed by query data; --max-count=/--format=/--pretty=/--since=/--until=/--unified=/--grep= values. No output/ext-diff/textconv/no-index execution. branch --show-current, diff --check and status --short --branch also allowed. Prefer native tools for other inspection. Native ls(path?,limit?) is supported. Read full nonce-bound brief before shell/write/edit use. No shell mutations; native task-artifact edits use nonempty unique exact oldText/newText matches. Mutations of each individual artifact must be sequential; independent report.md/review.json writes may share an assistant message. Finish all report/supplement mutations before the first result.json write/edit; native write followed by native edit is allowed and final replayed bytes must match the delivered file. Repeat this grammar in the brief; it applies to this readonly role, not permission to rerun any workflow.
 Require canonical report.md to contain one JSON object: scope equals exact comment-scope.json; touched_files=[], deletion_count=0, restored_comments=[]; findings is a list of unique nonempty id, path (reconcile.py or PERFORMANCE.md), positive one-based line, symbol, kind (delete/keep/reshape/suppression/constraint), reason and exact nonempty evidence_excerpt on/including cited nonempty line; must_kill contains finding IDs; skips is a list of path/reason/evidence_excerpt objects from those same files; encoding_offers and open_work are lists. Findings must be truthful, never forced empty. Wait actual done and closed, then read actual nonce-bound result and ALL listed complete artifacts. Fully reread final source, PERFORMANCE.md, patch, final.json and both logs after report delivery. Record {a / 'hillclimb/comment-decision.json'}: scope_sha256, report_sha256, report_accepted, verdict pass/unresolved, dispositions (one per actual finding: id, decision accept/reject, concrete reason, actual scoped evidence_excerpt), deletion_count=0, restored_comments=[], flags=actual must_kill, skips=actual skips, reruns=0, architect_sketch=null, fixes=[], encoding_offers=actual offers, encodings=[], unenforced_constraints=[], open_work=actual open_work. Accept keeps only with proof; reject false findings only with concrete disproof. Accepted actionable findings, rejected whole report, required rerun/How/Why/Architect, encoding offer or open work leave this bounded run unresolved. Stop without final commit/PR; never fake zero findings, fix measured source, retry or pretend correction coverage. After dispatch no source/log/PERFORMANCE/scope/patch rewrites. Then review the complete actual PERFORMANCE.md documentation patch with literal git -C {self.worktree} diff, git -C {self.worktree} diff --cached, or git -C {self.worktree} diff --staged before making one separate normal docs(scope): ... commit of ONLY PERFORMANCE.md. Since accepted source fixes are already committed and PERFORMANCE.md is new, stage PERFORMANCE.md first and use the complete cached/staged diff; empty output or --stat/--check never counts as review. Final PR remains READY only after this actual nested stage succeeds.
-Discover Origin with literal 'command -v origin', if present actually origin repo view {self.args.forge_repo} before choosing; prefer if resolves, otherwise gh. Record selected/reason in {a / 'forge-resolution.json'}. Push ONLY owned {self.branch}, create exactly one READY child PR explicit --base {self.args.base_ref}, --head {self.branch}, --body-file {a / 'pr-body.md'}, repo {self.args.forge_repo}. Origin requires --status open. Native readback same resolved forge with actual head/base/ready; no merges/automerge.
+Discover Origin with literal 'command -v origin', if present actually origin repo view {self.args.forge_repo} before choosing; prefer if resolves, otherwise gh. Record selected/reason in {a / 'forge-resolution.json'}. Push ONLY owned {self.branch}, create exactly one READY child PR explicit --base {self.args.base_ref}, --head {self.branch}, --body-file {a / 'pr-body.md'}, repo {self.args.forge_repo}. The exact ready create grammar is gh/origin pr create followed only by unique flag/value pairs in any order: --base {self.args.base_ref}, --head {self.branch}, --body-file {a / 'pr-body.md'}, --title NONEMPTY_TEXT, and optional --repo {self.args.forge_repo}; Origin additionally requires --status open (gh does not accept it). Base/head/body-file/title are mandatory, no duplicate flags, other file inputs, unknown options, positional operands or draft flags. Native readback same resolved forge with actual head/base/ready; no merges/automerge.
 Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attempts kept/reverted, each accepted fix one line, private decision.tsv path, grounded next idea, actual PR URL; end with an Attention section containing exact attention.md contents. Explicitly attended-only; all other playbooks/wake/cloud remain unverified.
 """
 
@@ -573,13 +955,59 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
                     return mode, number
         return None
 
+    def local_read_git(self,argv,cwd,*,controller=False):
+        if not argv or argv[0]!='git':
+            return False
+        rest=argv[1:]
+        if rest[:1]==['-C']:
+            if len(rest)<3 or rest[1]!=str(cwd):
+                return False
+            rest=rest[2:]
+        if forge_helpers.local_git(argv,cwd,{self.base}) is not None:
+            return True
+        exact=(['branch','--show-current'],['diff','--check'],['status','--short','--branch'])
+        if rest in exact:
+            return True
+        return controller and rest in (['diff','--cached'],['diff','--staged'])
+
+    def worker_python_allowed(self,argv,role,cwd,task_dir,oracle_outputs):
+        if not argv or argv[0] not in ('python','python3'):
+            return False
+        rest=argv[1:]
+        if rest[:1]==['-B']:
+            rest=rest[1:]
+        if role=='bounded trail audit':
+            return rest in (['-m','json.tool',str(task_dir/'report.md')],
+                            ['-m','json.tool',str(task_dir/'result.json')])
+        if role!='hillclimb':
+            return False
+        own=lambda raw,name:raw in (name,str(cwd/name))
+        if len(rest)==2 and own(rest[0],'cli.py') and own(rest[1],'workload.json'):
+            return True
+        if len(rest)==3 and rest[:2]==['-m','py_compile'] and own(rest[2],'reconcile.py'):
+            return True
+        if len(rest)==3 and own(rest[0],'e2e_reconcile.py') and rest[1]=='--output':
+            raw=rest[2]
+            if not raw or '~' in raw or '\x00' in raw:
+                return False
+            output=Path(raw)
+            if (not output.is_absolute() or raw!=str(output) or output.resolve()!=output or task_dir not in output.parents
+                    or output==task_dir or output in oracle_outputs
+                    or output.relative_to(task_dir).parts[0] in ('report.md','result.json','brief.md','task.json','state.json',
+                                                                 'native-session-capture.json')
+                    or any(part.is_symlink() for part in (output,*output.parents))):
+                return False
+            oracle_outputs.add(output)
+            return True
+        return False
+
     def controller_command_allowed(self, command):
         argv = forge_helpers.literal(command)
         if not argv:
             return False
         if argv in (['uptime'], ['nproc'], ['pwd'], ['command', '-v', 'origin']):
             return True
-        if self.lever_invocation(command) is not None:
+        if self.lever_invocation(command) is not None or self.gate_invocation(command) is not None:
             return True
         if argv[0] == 'bash':
             return (len(argv) == 8 and Path(argv[1]).resolve() == self.bundle / 'skills/show-me-your-work/scripts/log.sh'
@@ -588,16 +1016,17 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
                          or re.fullmatch(r'attempt-[1-9]\d*', argv[3])
                          and argv[7] in ('tests green kept','tests green reverted','tests failed reverted')))
         if argv[0] in ('python', 'python3'):
-            return (len(argv) >= 3 and Path(argv[1]).resolve() == self.bundle / 'skills/herdr-orchestrator/scripts/horch.py'
-                    and argv[2] in ('run', 'wait', 'list', 'stats', 'close', 'detect'))
+            return (len(argv) >= 3 and argv[1] == str(self.bundle / 'skills/herdr-orchestrator/scripts/horch.py')
+                    and argv[2] == 'run')
         if argv[0] in ('cat', 'sha256sum'):
             return len(argv) == 2 and Path(argv[1]).is_absolute()
         if argv[:3] == ['git', '-C', str(self.worktree)] and len(argv) > 3:
             rest = argv[3:]
-            if rest[0] in ('status', 'diff', 'show', 'log', 'rev-parse', 'rev-list', 'diff-tree', 'ls-files', 'ls-remote'):
-                return not any(word.startswith(('--output', '--ext-diff', '--textconv')) for word in rest)
-            if rest[0] == 'branch':
-                return rest[1:] == ['--show-current']
+            if self.local_read_git(argv,self.worktree,controller=True):
+                return True
+            if rest[0]=='ls-remote':
+                return rest[1:] in (['--heads','origin'],['--heads','origin','refs/heads/'+self.branch],
+                                    ['--heads','origin','refs/heads/'+self.args.base_ref])
             if rest[0] == 'remote':
                 return rest[1:] == ['get-url', 'origin']
             if rest[0] == 'add':
@@ -613,10 +1042,29 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
         if argv[0] in ('gh', 'origin'):
             if argv[1:3] in (['pr', 'view'], ['pr', 'list'], ['repo', 'view']):
                 return True
-            return argv[1:3] == ['pr', 'create'] and '--draft' not in argv and all(
-                flag in argv and argv.index(flag) + 1 < len(argv) and argv[argv.index(flag) + 1] == value
-                for flag, value in {'--base':self.args.base_ref, '--head':self.branch,
-                                    '--body-file':str(self.artifacts / 'pr-body.md')}.items())
+            if argv[1:3]!=['pr','create']:
+                return False
+            expected={'--base':self.args.base_ref,'--head':self.branch,
+                      '--body-file':str(self.artifacts/'pr-body.md'),'--repo':self.args.forge_repo}
+            if argv[0]=='origin':
+                expected['--status']='open'
+            operands=argv[3:]
+            if len(operands)%2:
+                return False
+            observed={}
+            for flag,value in zip(operands[::2],operands[1::2]):
+                if flag in observed or flag not in {*expected,'--title'}:
+                    return False
+                if flag=='--title':
+                    if not value.strip():
+                        return False
+                elif value!=expected[flag]:
+                    return False
+                observed[flag]=value
+            required={'--base','--head','--body-file','--title'}
+            if argv[0]=='origin':
+                required.add('--status')
+            return required<=set(observed)
         return False
 
     def lever_event(self, events, mode, number=None):
@@ -781,6 +1229,10 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
         if role == 'judgment and prose':
             self.audit_comment_native(task, path)
             return path, audit
+        if role=='bounded trail audit':
+            self.check('trail_only_ls_contract_declared', all('Trail-only literal ls: '+str(path) in assignment
+                for path in (self.directory,self.bundle,self.bundle/'skills'))
+                and 'Trail-only literal ls: TASK_DIR' in assignment)
         writer=role == 'hillclimb'
         task_dir=Path(task['task_dir']).resolve()
         native_events=self.native_events(path,include_errors=True)
@@ -789,29 +1241,41 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
                 task_dir in (Path(task['cwd'])/e['args']['path']).resolve().parents
                 or writer and (Path(task['cwd'])/e['args']['path']).resolve()==self.worktree/'reconcile.py')
             for e in native_events if e['name'] in ('write','edit')))
+        extra={Path(raw) for raw in re.findall(r'^Input artifact: (.+)$',assignment,re.M)}
+        def readable(raw):
+            if not isinstance(raw,str) or not raw or '~' in raw or '\x00' in raw:
+                return False
+            target=(cwd/raw).resolve()
+            return target in extra or any(target==root or root in target.parents for root in (cwd,task_dir,self.bundle))
+        oracle_outputs=set()
         for event in native_events:
             if event['name']!='bash':
                 continue
             argv=forge_helpers.literal(event['args'].get('command',''))
             allowed=False
             if argv:
-                binary=Path(argv[0]).name
-                if binary in ('cat','sha256sum','wc','pwd'):
+                binary=argv[0]
+                if argv==['pwd']:
                     allowed=True
+                elif binary=='cat':
+                    allowed=len(argv)==2 and readable(argv[1])
+                elif binary=='sha256sum':
+                    allowed=(1<=len(argv[1:])<=(3 if role=='bounded trail audit' else 1)
+                             and all(not raw.startswith('-') and readable(raw) for raw in argv[1:]))
+                elif binary=='wc' and role=='bounded trail audit':
+                    allowed=(len(argv)>=3 and argv[1] in ('-l','-c')
+                             and 1<=len(argv[2:])<=(4 if argv[1]=='-l' else 1)
+                             and all(not raw.startswith('-') and readable(raw)
+                                     and (argv[1]!='-l' or (cwd/raw).resolve() in extra) for raw in argv[2:]))
+                elif binary=='ls' and role=='bounded trail audit':
+                    allowed=(len(argv)==2 and argv[0]=='ls' and Path(argv[1]) in
+                             {self.directory,self.bundle,self.bundle/'skills',task_dir}
+                             and Path(argv[1]).is_absolute() and Path(argv[1]).resolve()==Path(argv[1])
+                             and not any(part.is_symlink() for part in (Path(argv[1]),*Path(argv[1]).parents)))
                 elif binary=='git':
-                    rest=argv[1:]
-                    if rest[:1]==['-C']:
-                        allowed=len(rest)>2 and Path(rest[1]).resolve()==Path(task['cwd']).resolve()
-                        rest=rest[2:]
-                    else:
-                        allowed=True
-                    allowed=allowed and bool(rest) and rest[0] in ('diff','show','status','log','rev-parse','ls-files')
-                    allowed=allowed and not any(arg.startswith(('--output','--ext-diff','--textconv')) for arg in rest)
+                    allowed=self.local_read_git(argv,cwd)
                 elif binary in ('python','python3'):
-                    rest=[arg for arg in argv[1:] if arg!='-B']
-                    allowed=(bool(rest) and cwd in {self.reader,self.worktree}
-                        and (cwd/rest[0]).resolve() in {cwd/'cli.py',cwd/'e2e_reconcile.py'}
-                        or len(rest)>=2 and rest[0]=='-m' and rest[1] in ('py_compile','json.tool'))
+                    allowed=self.worker_python_allowed(argv,role,cwd,task_dir,oracle_outputs)
             self.check('bounded_worker_no_native_delegation_or_wrappers',allowed)
         return path, audit
 
@@ -1091,6 +1555,127 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
             events,self.worktree,Path(task['result_path']),after=delivery['result_row'],before=before)))
         return reads
 
+    def gated_deliveries(self,tasks,events,all_events):
+        """Independently bind safe waits and reject all premature/raw access attempts."""
+        native=next((self.directory/'native-sessions').glob('*.jsonl'))
+        rows=[json.loads(line) for line in native.read_text().splitlines() if line.strip()]
+        launches,direct=core.workflow_launches(events,tasks,self.worktree,self.bundle)
+        self.check('no_raw_horch_wait_delivery',not direct)
+        deliveries,gates={},{}
+        for task in tasks:
+            task_id=task['task_id'];path=self.gate_home/'gates'/(task_id+'.json')
+            facts=hill_scope_audit(self.gate_policy,task_id)
+            self.check('independent_worker_gate_replay',path.is_file() and core.read_json(path)==facts)
+            gates[task_id]=facts
+            self.check('one_owned_launch_before_gate',task_id in launches)
+            for event in events:
+                invocation=self.gate_invocation(event['args'].get('command','')) if event['name']=='bash' else None
+                if invocation is None or invocation[0]!=task_id:
+                    continue
+                seconds=invocation[1];value=json.loads(event['output'])
+                receipts=[core.read_json(item) for item in (self.gate_home/'waits'/task_id).glob('*.json')]
+                matching=[raw for raw in receipts if raw['returncode']==0
+                    and raw['argv'][1:]==[str(self.bundle/'skills/herdr-orchestrator/scripts/horch.py'),
+                                         'wait',task_id,'--max-seconds',str(seconds)]
+                    and core.stamp(rows[event['call_row']]['timestamp'])<=raw['started_at']
+                    and raw['completed_at']<=core.stamp(rows[event['result_row']]['timestamp'])]
+                self.check('safe_delivery_real_private_wait',bool(matching)
+                           and launches[task_id]['result_row']<event['call_row'])
+                if value.get('verdict')=='pending':
+                    self.check('pending_safe_metadata_only',value=={'schema':'hillclimb/safe-delivery/v1',
+                        'task_id':task_id,'verdict':'pending','state':'pending','closed':False})
+                    continue
+                expected={'schema':'hillclimb/safe-delivery/v1','task_id':task_id,'verdict':'pass','state':'done',
+                    'closed':True,'gate_sha256':core.sha(path),'outputs':list(facts['outputs']),
+                    'native_sha256':facts['native_sha256']}
+                self.check('safe_pass_metadata_exact',value==expected and task_id not in deliveries)
+                witnessed=[]
+                for raw in matching:
+                    observed=[json.loads(line) for line in raw['stdout'].splitlines() if line.strip()]
+                    if (len(observed)==1 and observed[0].get('task_id')==task_id and observed[0].get('state')=='done'
+                            and observed[0].get('closed') is True and observed[0].get('result_path')==task['result_path']):
+                        witnessed.append(raw)
+                self.check('actual_done_closed_before_pass_gate',bool(witnessed)
+                    and path.stat().st_mtime<=core.stamp(rows[event['result_row']]['timestamp'])
+                    and any(raw['completed_at']<=path.stat().st_mtime for raw in witnessed))
+                deliveries[task_id]=event
+            self.check('each_worker_has_safe_delivery',task_id in deliveries)
+        self.check('all_launches_safely_delivered',set(deliveries)==set(launches)=={task['task_id'] for task in tasks})
+        for task in tasks:
+            binding=core.read_json(self.gate_home/'bindings'/(task['task_id']+'.json'))
+            self.check('all_prior_workers_gated_before_dependent_launch',all(
+                dep['task_id'] in deliveries and deliveries[dep['task_id']]['result_row']<launches[task['task_id']]['call_row']
+                and core.sha(self.gate_home/'gates'/(dep['task_id']+'.json'))==dep['gate_sha256']
+                for dep in binding['dependencies']))
+            for dep in binding['dependencies']:
+                owner=next(item for item in tasks if item['task_id']==dep['task_id'])
+                for raw in gates[dep['task_id']]['outputs']:
+                    path=Path(raw)
+                    if path.parent==Path(owner['task_dir']).resolve():
+                        self.check('independent_dependency_full_read_before_launch',bool(core.workflow_reads(
+                            events,self.worktree,path,after=deliveries[dep['task_id']]['result_row'],
+                            before=launches[task['task_id']]['call_row'])))
+        for event in all_events:
+            name,args=event['name'],event['args'];target=None
+            words=forge_helpers.literal(args.get('command','')) if name=='bash' else []
+            safe=self.gate_invocation(args.get('command','')) if name=='bash' else None
+            horch_args=core.literal_horch_command(name,args,self.worktree,self.bundle)
+            if name in ('read','grep','find','ls','write','edit'):
+                raw=args.get('path','.' if name in ('grep','find','ls') else None)
+                self.check('lead_literal_filesystem_path',isinstance(raw,str) and bool(raw) and '~' not in raw
+                           and '\x00' not in raw and '..' not in raw.split('/'))
+                target=(self.worktree/raw).resolve()
+            elif words and words[0] in ('cat','sha256sum') and len(words)==2:
+                target=(self.worktree/words[1]).resolve()
+            if name=='bash':
+                self.check('no_raw_gate_access_or_horch_poll',safe is not None or str(self.gate_home) not in args.get('command',''))
+                self.check('horch_only_run_before_safe_gate',not horch_args or horch_args[0]=='run')
+                if safe is None and not horch_args and target is None:
+                    self.check('no_task_paths_hidden_in_other_shell_operands',not any(
+                        task['task_id'] in args.get('command','') or task['task_dir'] in args.get('command','') for task in tasks))
+            if target is not None:
+                private={self.task_root.resolve(),self.gate_home,self.directory/'native-sessions'}
+                self.check('no_raw_audit_or_task_parent_inspection',not any(target==root or root in target.parents
+                    or target in root.parents for root in private)
+                    or any(Path(task['task_dir']).resolve() in target.parents for task in tasks))
+                stage_roots={self.directory/name for name in ('baseline','sensitivity-small','sensitivity-target',
+                    'baseline-measurement','sensitivity-measurement','final','final-measurement')}
+                stage_roots|={self.directory/(prefix+str(i)+suffix) for i in range(1,self.args.max_attempts+1)
+                              for prefix,suffix in (('attempt-',''),('attempt-','-measurement'))}
+                roots={self.worktree,self.reader,self.bundle,self.artifacts,self.args.fixture_repo,*stage_roots}
+                exact={self.probe,self.engine,Path(__file__).resolve(),self.directory/'controller-brief.md',
+                    self.directory/'config/herdr-orchestrator/workers.toml',self.directory/'baseline.json',
+                    self.directory/'sensitivity.json',self.directory/'final.json',self.directory/'review/manifest.json'}
+                output=any(str(target) in facts['outputs'] for facts in gates.values())
+                self.check('lead_only_known_stage_or_gated_output_roots',target in exact or output
+                           or any(target==root or root in target.parents for root in roots))
+                self.check('no_native_transcript_or_snapshot_copies',target.suffix!='.jsonl'
+                    and not target.name.endswith(('worker-native.jsonl','native-session-capture.json')))
+                for task in tasks:
+                    root=Path(task['task_dir']).resolve()
+                    if target==root or root in target.parents:
+                        self.check('task_output_read_only_after_accepted_gate',str(target) in gates[task['task_id']]['outputs']
+                            and event['call_row']>deliveries[task['task_id']]['result_row']
+                            and name not in ('write','edit'))
+                        if words[:1]==['sha256sum']:
+                            self.check('gated_task_hash_is_actual_single_file',event['output'].strip()==
+                                       core.sha(target)+'  '+str(target))
+            # The writer's live integration source is also withheld until its PASS gate.
+            for task in tasks:
+                role=gates[task['task_id']]['role']
+                if role!='hillclimb' or not (launches[task['task_id']]['call_row']<event['call_row']
+                                            <=deliveries[task['task_id']]['result_row']):
+                    continue
+                if target is not None:
+                    self.check('no_candidate_source_inspection_before_gate',not (target==self.worktree
+                        or self.worktree in target.parents or target in self.worktree.parents))
+                if words and words[0]=='git':
+                    self.check('no_candidate_git_content_before_gate',words[3:4] not in
+                               (['diff'],['show'],['log'],['blame'],['diff-tree'],['rev-list']))
+                if name=='bash':
+                    self.check('no_candidate_measurement_before_gate',self.lever_invocation(args.get('command','')) is None)
+        return launches,deliveries
+
     def verify(self):
         rows = self.scan()
         self.verify_tasks(rows)
@@ -1110,7 +1695,7 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
             for e in all_events if e['name'] in ('write','edit')))
         self.check('all_native_shell_operations_guarded_including_failures',all(
             self.controller_command_allowed(e['args'].get('command','')) for e in all_events if e['name']=='bash'))
-        launches, deliveries = core.workflow_launches(events,tasks,self.worktree,self.bundle)
+        launches, deliveries = self.gated_deliveries(tasks,events,all_events)
         self.check('every_task_literal_launch_done_delivery',set(launches)==set(deliveries)=={t['task_id'] for t in tasks})
         by_brief = {}
         for task in tasks:
@@ -1124,8 +1709,7 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
         self.check('one_fresh_comment_assignment', comment_path in by_brief)
         self.comment_task = by_brief[comment_path]
         self.native = core.audit_pi(sessions[0],self.session,self.worktree,self.wall_started,self.spec,
-                                   [self.bundle/'skills'/name for name in READS],[],tasks,self.bundle,
-                                   allowed_artifact_hashes=(Path(self.comment_task['task_dir']).resolve()/'report.md',))
+                                   [self.bundle/'skills'/name for name in READS],[],[],self.bundle)
         self.check('controller_actual_model_effort_guidance_delivery',all(r['ok'] for r in self.native['checks']))
         how_path = self.artifacts/'hillclimb/how-brief.md'
         trail_path = self.artifacts/'hillclimb/trail-brief.md'
@@ -1319,7 +1903,8 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
                 'after':medians['after']['median_ms'] if medians else None,
                 'delta':medians['after']['median_ms']-medians['before']['median_ms'] if medians else None,
                 'tests':'green' if evaluation['tests']['valid'] else 'failed','verdict':observed_verdict,'note':why}
-            self.check('ledger_decision_exact_real_numbers_'+str(number),chosen==decision==record['decision']==expected)
+            self.check('ledger_decision_exact_real_numbers_'+str(number),
+                       evaluation.get('expected_delta')==expected['delta'] and chosen==decision==record['decision']==expected)
             between=[e for e in all_commit_events if chosen_events[-1]['result_row']<e['call_row']
                      and e['result_row']<recorded['call_row']]
             reverts=[e for e in events if e['name']=='bash' and forge_helpers.literal(e['args'].get('command',''))==
@@ -1701,6 +2286,37 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
 
     verify_remote = perf.Run.verify_remote
 
+    def discovered_lifecycle(self):
+        """Fixed metadata only; discovering a task never claims its final audit passed."""
+        facts=[]
+        states=horch.SETTLED_STATES|{'starting','running','long_running','unknown'}
+        for task in self.tasks.values():
+            try:
+                state=core.read_json(Path(task['task_dir'])/'state.json')
+                retained=Path(task['brief_path']).read_text()
+                suffix='\n\n'+horch.WORKER_RULES.format(result_path=Path(task['task_dir'])/'result.json',
+                    task_id=task['task_id'],nonce=task['nonce'])
+                assignment=retained[:-len(suffix)] if retained.endswith(suffix) else ''
+                match=re.match(r'\A\s*Role: ([^\r\n]+)(?:\r?\n|\Z)',assignment)
+                role=match[1] if match and match[1] in self.role_workers else 'unknown'
+                spec=self.config.get('workers',{}).get(task.get('worker'),{})
+                path=self.gate_home/'gates'/(task['task_id']+'.json')
+                gate=core.read_json(path).get('verdict') if path.is_file() else 'not_evaluated'
+                gate=gate if gate in ('pass','fail') else 'not_evaluated'
+                observed=state.get('state')
+                facts.append({'task_id_sha256':hashlib.sha256(task['task_id'].encode()).hexdigest(),
+                    'worker_id_sha256':hashlib.sha256(task.get('worker','').encode()).hexdigest(),
+                    'role':role,'configured_model':spec.get('model'),'configured_effort':spec.get('effort'),
+                    'state':observed if observed in states else 'unknown',
+                    'closed':state.get('closed') if type(state.get('closed')) is bool else None,
+                    'gate_verdict':gate,'gate_category':{'pass':'accepted','fail':'worker_scope_or_lifecycle_rejected',
+                                                       'not_evaluated':'not_evaluated'}[gate]})
+            except Exception:
+                facts.append({'task_id_sha256':hashlib.sha256(str(task.get('task_id','')).encode()).hexdigest(),
+                              'state':'unknown','closed':None,'gate_verdict':'not_evaluated',
+                              'gate_category':'lifecycle_metadata_unavailable'})
+        return facts
+
     def finish(self):
         cleanup_ok = True
         # Stop the lead before the final task scan so cleanup cannot race dispatch.
@@ -1757,6 +2373,8 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
                 integrity = integrity and core.sha(self.probe) == self.probe_hash
             if self.engine.exists():
                 integrity = integrity and core.sha(self.engine) == self.engine_hash
+            if self.gate_hash:
+                integrity = integrity and core.sha(self.gate_policy)==self.gate_hash
             for label,path in (('agent',self.agent_dir/'settings.json'),
                                ('fixture',self.args.fixture_repo/'.pi/settings.json')):
                 integrity = integrity and label in self.session_settings_hashes and (
@@ -1791,6 +2409,7 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
             'controller': {k: self.spec.get(k) for k in ('harness', 'provider', 'model', 'effort')},
             'native_transcript': self.native, 'native_stages': self.stage_proof,
             'tasks': getattr(self, 'task_facts', []), 'checks': self.checks,
+            'discovered_worker_lifecycle': self.discovered_lifecycle(),
             'attended': True, 'unattended_wake_verdict': 'not_run', 'cloud_execution_verdict': 'not_run',
             'attempt_floor': self.args.attempt_floor, 'target_reduction_percent': self.args.target_reduction,
             'iterations': self.iterations, 'trail_review': getattr(self, 'trail_review', {}),
@@ -1817,6 +2436,16 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
 
 
 def main():
+    if sys.argv[1:2]==['--wait-audit']:
+        try:
+            if len(sys.argv)!=5:
+                raise ValueError('invalid_gate_arguments')
+            value=hill_wait_audit(Path(sys.argv[2]),sys.argv[3],int(sys.argv[4]))
+        except Exception:
+            value={'schema':'hillclimb/safe-delivery/v1','verdict':'fail','state':'quarantined',
+                   'category':'worker_scope_or_lifecycle_rejected'}
+        print(json.dumps(value,sort_keys=True))
+        return 0
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--trail-reviewer', help='existing configured Pi worker of a different model family; bounded audit, no new role')
     parser.add_argument('--target-reduction', type=float, default=50.0, help='declared full-CLI reduction percentage before any measurement')

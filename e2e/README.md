@@ -132,6 +132,16 @@ and their input/stdout/stderr files. The [fresh replay receipt](evidence/playboo
 records all 12 flows with both source hashes. This replays
 fixture behavior; it does not reproduce the retained alternating timings or
 complete the model-driven playbook.
+The current Hillclimb driver now uses a private same-file delivery gate for
+How, each implementation, trail review and Comment. It binds actual WORKING
+sessions and done/closed state, audits every attempted tool and declared input,
+replays source/output writes, and checks lead consumption and dependency order.
+The trail role has only four exact owned-directory listing forms and bounded
+file statistics; other roles keep their separate grammars. Exact recorder
+deltas are supplied directly, with unchanged comparison and thresholds.
+Negative receipts retain safe lifecycle metadata separately from completed
+audit claims. Static review and compilation passed; this new gate still needs
+a fresh live Hillclimb receipt. These checks remain post-execution validation.
 The [first Babysit Check receipt](evidence/playbook-babysit-grammar.json) stopped
 in preparation before any watcher or PR snapshot. Its
 [independent audit](evidence/playbook-babysit-grammar-audit.json) identifies an

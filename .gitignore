@@ -75,5 +75,7 @@ e2e/evidence/*
 !e2e/evidence/playbook-forge-auth.json
 !e2e/evidence/playbook-forge-scope.json
 !e2e/evidence/playbook-forge-scope-audit.json
+!e2e/evidence/playbook-runtime-env.json
+!e2e/evidence/playbook-runtime-reanalysis.json
 !e2e/evidence/playbook-investigation-concat.json
 !e2e/evidence/playbook-investigation-concat-reanalysis.json

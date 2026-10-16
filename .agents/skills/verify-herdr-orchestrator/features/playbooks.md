@@ -56,6 +56,11 @@ are not yet measured. Authoring additionally needs existing creator guidance
 and its validator dependencies; Runtime uses `runtime_loop.py` with Node
 Inspector and built-in WebSocket support. Preserve failed receipts and disclose
 unsupported native capture or forge paths.
+The first Runtime receipt remains failed because of checker grammar; a separate
+native/artifact audit supports its five observed stages. The corrected driver
+accepts the required literal `uptime`/`nproc`, binds the initial checklist and
+declared completion edits separately, and resolves retained artifact links and
+the prompted source-symbol-line citation. A fresh automated run is still needed.
 The first Bug fix investigation was manually stopped after a worker queried
 outside the assigned repository. Its failed receipt and redacted scope audit
 remain published. Do not repeat that profile with broad forge access; a new

@@ -27,6 +27,7 @@ import subprocess
 import sys
 import time
 import traceback
+from urllib.parse import unquote, urlsplit
 
 import playbook_loop as core
 import forge_loop as forge
@@ -383,7 +384,7 @@ class Run(core.Run):
         return f'''Read {skills / 'poteto-mode/SKILL.md'} fully, then execute its ORIGINAL Runtime forensics playbook and Herdr mapping. Diagnose why the live invoice reconciliation service consumes CPU with no HTTP traffic. Deliver a cited diagnosis only. The already-running owned target is scoped for benign live instrumentation; no fixes, reloads, restarts, PRs, external services, configuration changes, trust answers, retries or substitutions.
 Use ONLY direct native read, bash, write, edit, grep, find, ls. No codemode, tool wrappers, inline scripts, arbitrary eval, shell redirection, pipelines, compound commands, or delegation. This captured artifact is bounded: reduce it using the maintained immutable helper and keep its small reduced finding locally; if it actually requires a subagent, stop and report the unsupported stage. Never invent delegation evidence.
 Every required source document must have a separate full read with no offset/limit, or literal cat of that one file, whose complete contents appear in the result. Read all: {json.dumps([str(skills / name) for name in READS])}.
-Before target inspection or any forensic work, use a native write to {notes / 'checklist.md'} containing the full original FIVE numbered Runtime forensics instructions (including continuation text). Record completion separately. Read {self.probe} fully; this maintained control-cli harness accepts fixed operations and instruments only a selected existing source function. All notes may be written ONLY to checklist.md, decision.json, diagnosis.json, reply.md under {notes}; source, probe, descriptor, captures and evaluator are immutable. Failed write attempts are audited too.
+Before target inspection or any forensic work, use exactly one native write to {notes / 'checklist.md'} containing the full original FIVE numbered Runtime forensics instructions (including continuation text). Preserve that complete original-instruction prefix unchanged. After capture, record completion in a separate section in checklist.md only through native edit calls, using nonempty, uniquely matching oldText and nonempty newText; an initial separate pending section may be replaced. Do not rewrite checklist.md with a later native write. Read {self.probe} fully; this maintained control-cli harness accepts fixed operations and instruments only a selected existing source function. All notes may be written ONLY to checklist.md, decision.json, diagnosis.json, reply.md under {notes}; source, probe, descriptor, captures and evaluator are immutable. Failed write attempts are audited too.
 1. Capture the real live CPU signal via control-cli using this exact literal command:
 {command('capture')}
 Read {self.directory / 'capture.json'} fully. There are zero HTTP requests; the existing target remains alive.
@@ -483,7 +484,7 @@ Keep this directory private; do not commit native sessions or raw captures.
         self.check('all_bash_attempts_literal_read_or_fixed_probe', all(
             (argv := forge.literal(e['args'].get('command', ''))) in commands
             or (len(argv) == 2 and argv[0] in ('cat', 'sha256sum') and Path(argv[1]).is_absolute())
-            or argv == ['pwd'] for e in all_events if e['name'] == 'bash'))
+            or argv in (['pwd'], ['uptime'], ['nproc']) for e in all_events if e['name'] == 'bash'))
         capture, cap = self.operation(events, 'capture')
         reduction, red = self.operation(events, 'reduce')
         instrument, ins = self.operation(events, 'instrument', symbol)
@@ -492,12 +493,37 @@ Keep this directory private; do not commit native sessions or raw captures.
         ordered = [cap, red, decision_events[0], ins, obs, source]
         self.check('native_original_sequence', all(a['result_row'] < b['call_row'] for a, b in zip(ordered, ordered[1:])))
         steps = re.findall(r'^\d+\. (.+)$', (self.bundle / 'skills/poteto-mode/playbooks/runtime-forensics.md').read_text(), re.M)
-        checklist, checklist_events = self.artifact(events, 'checklist.md', before=cap['call_row'])
+        checklist_path = self.artifacts / 'checklist.md'
+        checklist_events = core.workflow_writes(events, self.worktree, checklist_path, before=cap['call_row'])
+        self.check('native_initial_checklist_write', len(checklist_events) == 1
+                   and len(core.workflow_writes(events, self.worktree, checklist_path)) == 1)
+        checklist = checklist_events[0]['args']['content']
         self.check('exact_five_stage_checklist', len(steps) == 5 and re.findall(r'^\d+\. (.+)$', checklist, re.M) == steps)
         # Step 2 has a continuation paragraph; compare the entire original stage block.
         original = (self.bundle / 'skills/poteto-mode/playbooks/runtime-forensics.md').read_text()
         block = original[original.index('1. Capture'):original.index('\n\n**Reply:**')]
-        self.check('full_original_checklist_continuation', block in checklist)
+        self.check('full_original_checklist_continuation', checklist.count(block) == 1)
+        preserved = checklist[:checklist.index(block) + len(block)]
+        completion_edits = [e for e in events if e['name'] == 'edit'
+                            and isinstance(e['args'].get('path'), str)
+                            and (self.worktree / e['args']['path']).resolve() == checklist_path]
+        updated, previous = checklist, checklist_events[0]['result_row']
+        for event in completion_edits:
+            self.check('checklist_completion_edit_order', max(previous, cap['result_row']) < event['call_row'])
+            edits = event['args'].get('edits', [event['args']])
+            self.check('checklist_completion_edits_supported', isinstance(edits, list) and bool(edits))
+            for edit in edits:
+                self.check('checklist_completion_edit_unambiguous', isinstance(edit, dict)
+                           and isinstance(edit.get('oldText'), str) and bool(edit['oldText'])
+                           and isinstance(edit.get('newText'), str) and updated.count(edit['oldText']) == 1)
+                updated = updated.replace(edit['oldText'], edit['newText'], 1)
+                self.check('checklist_original_instructions_preserved', updated.startswith(preserved)
+                           and updated.count(block) == 1)
+            previous = event['result_row']
+        self.check('native_final_checklist_completion_bound', bool(completion_edits)
+                   and updated == checklist_path.read_text()
+                   and bool(updated[len(preserved):].strip())
+                   and updated[len(preserved):] != checklist[len(preserved):])
         early = self.full_read(events, self.probe, after=checklist_events[0]['result_row'], before=cap['call_row'])
         for name in READS:
             self.full_read(events, self.bundle / 'skills' / name, before=cap['call_row'])
@@ -557,11 +583,28 @@ Keep this directory private; do not commit native sessions or raw captures.
         self.check('diagnosis_exact_observations', all(diagnosis.get(key) == value for key, value in expected.items())
                    and bool(diagnosis.get('mechanism')) and bool(diagnosis.get('limitations')))
         reply, reply_events = self.artifact(events, 'reply.md', after=diagnosis_events[0]['result_row'])
+        reply_path = self.artifacts / 'reply.md'
+        linked_targets = set()
+        for match in re.finditer(r'(?<!!)\[[^\]\n]+\]\(\s*(?:<([^<>\n]+)>|([^\s)]+))(?:\s+["\'][^\n]*["\'])?\s*\)', reply):
+            try:
+                destination = urlsplit(match[1] or match[2])
+            except ValueError:
+                continue
+            if not destination.scheme and not destination.netloc and not destination.query and destination.path:
+                target = (reply_path.parent / unquote(destination.path)).resolve()
+                if target.is_file():
+                    linked_targets.add(target)
+        citation_end = r'(?=$|[\s`<>()\[\],;"\']|\.(?=$|\s))'
+        artifacts_cited = all(path.resolve() in linked_targets or re.search(
+            r'(?<![\w/.-])' + re.escape(str(path)) + citation_end, reply)
+            for path in (self.directory / 'cpu.cpuprofile', self.directory / 'reduced-frames.json',
+                         self.directory / 'observe.json'))
+        source_cited = re.search(r'(?<![\w/.-])' + re.escape(str(self.worktree / 'target.mjs'))
+                                 + r':(?:' + re.escape(symbol) + r':)?' + str(source_line) + citation_end, reply)
         self.check('cited_final_diagnosis_checkpoint', reply.splitlines().count(CHECKPOINT) == 1
-                   and all(text in reply for text in (str(self.directory / 'cpu.cpuprofile'),
-                       str(self.directory / 'reduced-frames.json'), str(self.directory / 'observe.json'),
-                       str(self.worktree / 'target.mjs') + ':' + str(source_line), symbol,
-                       'scheduledReconciliation', str(after['count']), str(timer_line))))
+                   and artifacts_cited and bool(source_cited)
+                   and all(text in reply for text in (symbol, 'scheduledReconciliation',
+                                                      str(after['count']), str(timer_line))))
         self.verify_protocol()
         self.stage('runtime_1_capture_live_signal', early + [cap])
         self.stage('runtime_2_reduce_then_select', [red] + decision_events)

@@ -32,6 +32,8 @@ WORKER_KEYS = {"harness", "model", "provider", "effort", "args", "description"}
 WORKER_NAME_RE = re.compile(r"[a-z][a-z0-9-]{0,15}")
 TASK_ID_RE = re.compile(r"t-[0-9a-f]{6}")
 MISSING_PANE_CODES = {"pane_not_found", "tab_not_found", "workspace_not_found"}
+# Session IDs a controller harness exports to its tool commands.
+CONTROLLER_SESSION_ENV = {"codex": "CODEX_THREAD_ID", "claude": "CLAUDE_CODE_SESSION_ID"}
 
 SETTLED_STATES = {
     "done",
@@ -608,15 +610,58 @@ def resolve_cwd(raw):
     return cwd
 
 
-def require_caller_context():
-    pane_id = os.environ.get("HERDR_PANE_ID")
-    guidance = ("Verify this controller's live pane and its HERDR_PANE_ID. "
-                "A harness shell snapshot may contain stale IDs; do not infer them from UI focus.")
+def process_ancestors():
+    """Return the pids from this process up to init, or an empty set if ps is unusable."""
+    try:
+        listing = subprocess.run(["ps", "-A", "-o", "pid=,ppid="], capture_output=True,
+                                 text=True, timeout=10, check=True).stdout
+    except (OSError, subprocess.SubprocessError):
+        return set()
+    parents = {}
+    for line in listing.splitlines():
+        fields = line.split()
+        if len(fields) == 2 and fields[0].isdigit() and fields[1].isdigit():
+            parents[int(fields[0])] = int(fields[1])
+    chain, pid = set(), os.getpid()
+    while pid > 1 and pid in parents and pid not in chain:
+        chain.add(pid)
+        pid = parents[pid]
+    return chain
+
+
+def pane_process_info(pane_id):
+    return herdr_path(herdr("pane", "process-info", "--pane", pane_id, timeout=30.0),
+                      "result", "process_info")
+
+
+def pane_owning_process(ancestors):
+    """Return the pane whose shell is an ancestor of this process, if any."""
+    for pane in herdr_path(herdr("pane", "list", timeout=30.0), "result", "panes"):
+        try:
+            if pane_process_info(pane["pane_id"]).get("shell_pid") in ancestors:
+                return pane["pane_id"]
+        except HerdrError:
+            continue  # a pane closed during the scan cannot own this process
+    return None
+
+
+def require_caller_context(claimed=None):
+    """Return the controller's live pane after proving that it hosts this process.
+
+    HERDR_PANE_ID alone is not proof: a shell snapshot or a shared agent daemon
+    can carry another live pane's ID. The pane's shell must be an ancestor of
+    horch. Without any pane ancestor, only an explicit --caller-pane is accepted,
+    and its foreground must run the controller's harness.
+    """
+    source = "--caller-pane" if claimed is not None else "HERDR_PANE_ID"
+    pane_id = claimed if claimed is not None else os.environ.get("HERDR_PANE_ID")
+    guidance = ("Confirm the controller's pane from its own process or session, never from UI focus, "
+                "and see caller context in references/setup.md.")
     # Herdr can fall back to UI focus when the caller pane ID is blank.
     if not pane_id or not pane_id.strip():
         fail("caller_context_invalid", f"Controller pane ID is missing. {guidance}")
     try:
-        pane = herdr_path(herdr("pane", "current", "--current", timeout=30.0), "result", "pane")
+        pane = herdr_path(herdr("pane", "current", "--pane", pane_id, timeout=30.0), "result", "pane")
     except HerdrError as exc:
         if herdr_error_code(exc) not in MISSING_PANE_CODES:
             raise
@@ -626,12 +671,42 @@ def require_caller_context():
         for key in ("pane_id", "tab_id", "workspace_id")
     ):
         fail("caller_context_invalid", f"Controller context is missing live Herdr IDs. {guidance}")
+
+    info = pane_process_info(pane["pane_id"])
+    ancestors = process_ancestors()
+    if info.get("shell_pid") in ancestors:
+        return pane
+    owner = pane_owning_process(ancestors)
+    if owner is not None:
+        fail("caller_context_invalid",
+             f"{source} names pane {pane_id!r}, but horch runs inside pane {owner!r}. "
+             f"Rerun with HERDR_PANE_ID={owner} if that pane is this controller. {guidance}")
+    if claimed is None:
+        fail("caller_context_invalid",
+             f"horch is not running inside any Herdr pane's process tree, so HERDR_PANE_ID={pane_id!r} "
+             "cannot be trusted; a shared agent daemon may have inherited another pane's ID. "
+             f"Confirm the controller's pane and pass --caller-pane <pane-id>. {guidance}")
+
+    controllers = [h for h in ("codex", "claude") if os.environ.get(CONTROLLER_SESSION_ENV[h])]
+    expected = controllers or list(HARNESSES)
+    names = {p.get("name") for p in info.get("foreground_processes") or [] if isinstance(p, dict)}
+    if not names.intersection(expected):
+        fail("caller_context_invalid",
+             f"--caller-pane {pane_id!r} is not running {' or '.join(expected)} in its foreground "
+             f"(found: {', '.join(sorted(n for n in names if n)) or 'nothing'}). {guidance}")
+    session = pane.get("agent_session") if isinstance(pane.get("agent_session"), dict) else {}
+    for harness in controllers:
+        own = os.environ[CONTROLLER_SESSION_ENV[harness]]
+        if session.get("agent") == harness and session.get("value") and session["value"] != own:
+            fail("caller_context_invalid",
+                 f"--caller-pane {pane_id!r} reports {harness} session {session['value']!r}, "
+                 f"not this controller's {own!r}. {guidance}")
     return pane
 
 
 def cmd_run(args):
     require_herdr_env()
-    require_caller_context()
+    require_caller_context(args.caller_pane)
     config = load_config()
     brief_source = Path(args.brief).expanduser()
     try:
@@ -644,13 +719,13 @@ def cmd_run(args):
     worker = config["workers"].get(args.worker)
     if worker is not None and worker["harness"] == "pi":
         require_pi_integration()
-    emit(start_task(config, args.worker, brief_text, resolve_cwd(args.cwd)))
+    emit(start_task(config, args.worker, brief_text, resolve_cwd(args.cwd), caller_pane=args.caller_pane))
 
 
-def start_task(config, worker_name, brief_text, cwd, *, skip_if_full=False):
+def start_task(config, worker_name, brief_text, cwd, *, skip_if_full=False, caller_pane=None):
     # Startup includes placement, publication, and acknowledgement, never completion.
     with task_store_lock():
-        return _start_task_locked(config, worker_name, brief_text, cwd, skip_if_full)
+        return _start_task_locked(config, worker_name, brief_text, cwd, skip_if_full, caller_pane)
 
 
 def wait_for_pi_session(agent, deadline):
@@ -674,9 +749,9 @@ def wait_for_pi_session(agent, deadline):
                      "integration is installed with herdr integration install pi")
 
 
-def _start_task_locked(config, worker_name, brief_text, cwd, skip_if_full):
+def _start_task_locked(config, worker_name, brief_text, cwd, skip_if_full, caller_pane):
     """Start one worker on one task and return the run object; fail() on contract errors."""
-    caller = require_caller_context()
+    caller = require_caller_context(caller_pane)
     worker = config["workers"].get(worker_name)
     if worker is None:
         fail("unknown_worker", f"no worker named {worker_name!r} in {config_path()}")
@@ -1404,7 +1479,7 @@ def cmd_detect(args):
 
 def cmd_check(args):
     require_herdr_env()
-    caller = require_caller_context()
+    caller = require_caller_context(args.caller_pane)
     config = load_config()
     names = list(dict.fromkeys(args.workers or list(config["workers"])))
     unknown = [name for name in names if name not in config["workers"]]
@@ -1423,7 +1498,7 @@ def cmd_check(args):
         while pending and time.monotonic() < deadline:
             name = pending[0]
             began = time.monotonic()
-            run = start_task(config, name, CHECK_BRIEF, cwd, skip_if_full=True)
+            run = start_task(config, name, CHECK_BRIEF, cwd, skip_if_full=True, caller_pane=args.caller_pane)
             if run is None:
                 _, invalid = task_capacity(caller["workspace_id"])
                 capacity_invalid.update(invalid)
@@ -1490,6 +1565,7 @@ def build_parser():
     p_run.add_argument("worker", help="worker name from workers.toml")
     p_run.add_argument("--brief", required=True, help="path of the brief file for the worker")
     p_run.add_argument("--cwd", help="working directory for the worker (default: the current directory)")
+    p_run.add_argument("--caller-pane", help="controller pane confirmed by the caller when horch runs outside every pane process tree")
     p_run.set_defaults(func=cmd_run)
 
     p_wait = sub.add_parser("wait", help="wait until at least one waited task changes state")
@@ -1517,6 +1593,7 @@ def build_parser():
     p_check.add_argument("workers", nargs="*", help="workers to check (default: all in workers.toml)")
     p_check.add_argument("--cwd", help="working directory for the check workers (default: the current directory)")
     p_check.add_argument("--max-seconds", type=int, default=300, help="stop waiting after this many seconds (default: 300)")
+    p_check.add_argument("--caller-pane", help="controller pane confirmed by the caller when horch runs outside every pane process tree")
     p_check.set_defaults(func=cmd_check)
 
     return parser

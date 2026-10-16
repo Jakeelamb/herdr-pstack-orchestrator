@@ -1,0 +1,444 @@
+{
+  "schema": "horch/caller-identity-fix/v1",
+  "date": "2026-10-16",
+  "incident": "A Codex 0.162 controller's tool commands ran in a shared app-server daemon (parent PID 1) that inherited HERDR_PANE_ID from another workspace's still-live shell pane; horch accepted it and placed workers in that workspace.",
+  "environment": {
+    "herdr": "0.9.5",
+    "os": "Linux",
+    "controller_harness": "claude"
+  },
+  "before": {
+    "schema": "horch/caller-identity-e2e/v1",
+    "verdict": "fail",
+    "scope": "live Herdr panes, real process trees, run/check preflight; no worker launch",
+    "controller_harness": "claude",
+    "source_hashes": {
+      "horch-main.py": "6c590dd7e1a5ce92b9480990926235aee5764e618ce0e79167af06e208e0cd30",
+      "caller_identity.py": "d0c348791d6eb04f08a1e2524e6a928578002ceb3d4cccaf6f0aaaee9e45cf9e"
+    },
+    "checks": [
+      {
+        "name": "valid-in-tree-run",
+        "ok": true
+      },
+      {
+        "name": "valid-in-tree-check",
+        "ok": true
+      },
+      {
+        "name": "stale-live-shell-run",
+        "ok": false
+      },
+      {
+        "name": "stale-live-shell-check",
+        "ok": false
+      },
+      {
+        "name": "claim-contradicts-tree-run",
+        "ok": false
+      },
+      {
+        "name": "claim-contradicts-tree-check",
+        "ok": false
+      },
+      {
+        "name": "detached-env-stale-run",
+        "ok": false
+      },
+      {
+        "name": "detached-env-stale-check",
+        "ok": false
+      },
+      {
+        "name": "detached-env-correct-run",
+        "ok": false
+      },
+      {
+        "name": "detached-env-correct-check",
+        "ok": false
+      },
+      {
+        "name": "detached-claim-shell-run",
+        "ok": false
+      },
+      {
+        "name": "detached-claim-shell-check",
+        "ok": false
+      },
+      {
+        "name": "detached-claim-controller-run",
+        "ok": false
+      },
+      {
+        "name": "detached-claim-controller-check",
+        "ok": false
+      },
+      {
+        "name": "detached-claim-other-session-run",
+        "ok": false
+      },
+      {
+        "name": "detached-claim-other-session-check",
+        "ok": false
+      },
+      {
+        "name": "moved-alias-run",
+        "ok": true
+      },
+      {
+        "name": "moved-alias-check",
+        "ok": true
+      }
+    ],
+    "observations": [
+      {
+        "case": "valid-in-tree",
+        "command": "run",
+        "expected_error": "config_invalid",
+        "actual_error": "config_invalid",
+        "names_required_pane": false
+      },
+      {
+        "case": "valid-in-tree",
+        "command": "check",
+        "expected_error": "config_invalid",
+        "actual_error": "config_invalid",
+        "names_required_pane": false
+      },
+      {
+        "case": "stale-live-shell",
+        "command": "run",
+        "expected_error": "caller_context_invalid",
+        "actual_error": "config_invalid",
+        "names_required_pane": false
+      },
+      {
+        "case": "stale-live-shell",
+        "command": "check",
+        "expected_error": "caller_context_invalid",
+        "actual_error": "config_invalid",
+        "names_required_pane": false
+      },
+      {
+        "case": "claim-contradicts-tree",
+        "command": "run",
+        "expected_error": "caller_context_invalid",
+        "actual_error": "exit_2",
+        "names_required_pane": false
+      },
+      {
+        "case": "claim-contradicts-tree",
+        "command": "check",
+        "expected_error": "caller_context_invalid",
+        "actual_error": "exit_2",
+        "names_required_pane": false
+      },
+      {
+        "case": "detached-env-stale",
+        "command": "run",
+        "expected_error": "caller_context_invalid",
+        "actual_error": "config_invalid",
+        "names_required_pane": false
+      },
+      {
+        "case": "detached-env-stale",
+        "command": "check",
+        "expected_error": "caller_context_invalid",
+        "actual_error": "config_invalid",
+        "names_required_pane": false
+      },
+      {
+        "case": "detached-env-correct",
+        "command": "run",
+        "expected_error": "caller_context_invalid",
+        "actual_error": "config_invalid",
+        "names_required_pane": false
+      },
+      {
+        "case": "detached-env-correct",
+        "command": "check",
+        "expected_error": "caller_context_invalid",
+        "actual_error": "config_invalid",
+        "names_required_pane": false
+      },
+      {
+        "case": "detached-claim-shell",
+        "command": "run",
+        "expected_error": "caller_context_invalid",
+        "actual_error": null,
+        "names_required_pane": false
+      },
+      {
+        "case": "detached-claim-shell",
+        "command": "check",
+        "expected_error": "caller_context_invalid",
+        "actual_error": null,
+        "names_required_pane": false
+      },
+      {
+        "case": "detached-claim-controller",
+        "command": "run",
+        "expected_error": "config_invalid",
+        "actual_error": null,
+        "names_required_pane": false
+      },
+      {
+        "case": "detached-claim-controller",
+        "command": "check",
+        "expected_error": "config_invalid",
+        "actual_error": null,
+        "names_required_pane": false
+      },
+      {
+        "case": "detached-claim-other-session",
+        "command": "run",
+        "expected_error": "caller_context_invalid",
+        "actual_error": null,
+        "names_required_pane": false
+      },
+      {
+        "case": "detached-claim-other-session",
+        "command": "check",
+        "expected_error": "caller_context_invalid",
+        "actual_error": null,
+        "names_required_pane": false
+      },
+      {
+        "case": "moved-alias",
+        "pane_id_changed": true
+      },
+      {
+        "case": "moved-alias",
+        "command": "run",
+        "expected_error": "config_invalid",
+        "actual_error": "config_invalid",
+        "names_required_pane": false
+      },
+      {
+        "case": "moved-alias",
+        "command": "check",
+        "expected_error": "config_invalid",
+        "actual_error": "config_invalid",
+        "names_required_pane": false
+      }
+    ],
+    "cleanup_ok": true
+  },
+  "after": {
+    "schema": "horch/caller-identity-e2e/v1",
+    "verdict": "pass",
+    "scope": "live Herdr panes, real process trees, run/check preflight; no worker launch",
+    "controller_harness": "claude",
+    "source_hashes": {
+      "horch.py": "578f322a172ac1fcb8dd6092fd6917cd798d263d0ae6f4ba774d9fc0af22e7b4",
+      "caller_identity.py": "d0c348791d6eb04f08a1e2524e6a928578002ceb3d4cccaf6f0aaaee9e45cf9e"
+    },
+    "checks": [
+      {
+        "name": "valid-in-tree-run",
+        "ok": true
+      },
+      {
+        "name": "valid-in-tree-check",
+        "ok": true
+      },
+      {
+        "name": "stale-live-shell-run",
+        "ok": true
+      },
+      {
+        "name": "stale-live-shell-check",
+        "ok": true
+      },
+      {
+        "name": "claim-contradicts-tree-run",
+        "ok": true
+      },
+      {
+        "name": "claim-contradicts-tree-check",
+        "ok": true
+      },
+      {
+        "name": "detached-env-stale-run",
+        "ok": true
+      },
+      {
+        "name": "detached-env-stale-check",
+        "ok": true
+      },
+      {
+        "name": "detached-env-correct-run",
+        "ok": true
+      },
+      {
+        "name": "detached-env-correct-check",
+        "ok": true
+      },
+      {
+        "name": "detached-claim-shell-run",
+        "ok": true
+      },
+      {
+        "name": "detached-claim-shell-check",
+        "ok": true
+      },
+      {
+        "name": "detached-claim-controller-run",
+        "ok": true
+      },
+      {
+        "name": "detached-claim-controller-check",
+        "ok": true
+      },
+      {
+        "name": "detached-claim-other-session-run",
+        "ok": true
+      },
+      {
+        "name": "detached-claim-other-session-check",
+        "ok": true
+      },
+      {
+        "name": "moved-alias-run",
+        "ok": true
+      },
+      {
+        "name": "moved-alias-check",
+        "ok": true
+      }
+    ],
+    "observations": [
+      {
+        "case": "valid-in-tree",
+        "command": "run",
+        "expected_error": "config_invalid",
+        "actual_error": "config_invalid",
+        "names_required_pane": false
+      },
+      {
+        "case": "valid-in-tree",
+        "command": "check",
+        "expected_error": "config_invalid",
+        "actual_error": "config_invalid",
+        "names_required_pane": false
+      },
+      {
+        "case": "stale-live-shell",
+        "command": "run",
+        "expected_error": "caller_context_invalid",
+        "actual_error": "caller_context_invalid",
+        "names_required_pane": true
+      },
+      {
+        "case": "stale-live-shell",
+        "command": "check",
+        "expected_error": "caller_context_invalid",
+        "actual_error": "caller_context_invalid",
+        "names_required_pane": true
+      },
+      {
+        "case": "claim-contradicts-tree",
+        "command": "run",
+        "expected_error": "caller_context_invalid",
+        "actual_error": "caller_context_invalid",
+        "names_required_pane": true
+      },
+      {
+        "case": "claim-contradicts-tree",
+        "command": "check",
+        "expected_error": "caller_context_invalid",
+        "actual_error": "caller_context_invalid",
+        "names_required_pane": true
+      },
+      {
+        "case": "detached-env-stale",
+        "command": "run",
+        "expected_error": "caller_context_invalid",
+        "actual_error": "caller_context_invalid",
+        "names_required_pane": false
+      },
+      {
+        "case": "detached-env-stale",
+        "command": "check",
+        "expected_error": "caller_context_invalid",
+        "actual_error": "caller_context_invalid",
+        "names_required_pane": false
+      },
+      {
+        "case": "detached-env-correct",
+        "command": "run",
+        "expected_error": "caller_context_invalid",
+        "actual_error": "caller_context_invalid",
+        "names_required_pane": false
+      },
+      {
+        "case": "detached-env-correct",
+        "command": "check",
+        "expected_error": "caller_context_invalid",
+        "actual_error": "caller_context_invalid",
+        "names_required_pane": false
+      },
+      {
+        "case": "detached-claim-shell",
+        "command": "run",
+        "expected_error": "caller_context_invalid",
+        "actual_error": "caller_context_invalid",
+        "names_required_pane": false
+      },
+      {
+        "case": "detached-claim-shell",
+        "command": "check",
+        "expected_error": "caller_context_invalid",
+        "actual_error": "caller_context_invalid",
+        "names_required_pane": false
+      },
+      {
+        "case": "detached-claim-controller",
+        "command": "run",
+        "expected_error": "config_invalid",
+        "actual_error": "config_invalid",
+        "names_required_pane": false
+      },
+      {
+        "case": "detached-claim-controller",
+        "command": "check",
+        "expected_error": "config_invalid",
+        "actual_error": "config_invalid",
+        "names_required_pane": false
+      },
+      {
+        "case": "detached-claim-other-session",
+        "command": "run",
+        "expected_error": "caller_context_invalid",
+        "actual_error": "caller_context_invalid",
+        "names_required_pane": false
+      },
+      {
+        "case": "detached-claim-other-session",
+        "command": "check",
+        "expected_error": "caller_context_invalid",
+        "actual_error": "caller_context_invalid",
+        "names_required_pane": false
+      },
+      {
+        "case": "moved-alias",
+        "pane_id_changed": true
+      },
+      {
+        "case": "moved-alias",
+        "command": "run",
+        "expected_error": "config_invalid",
+        "actual_error": "config_invalid",
+        "names_required_pane": false
+      },
+      {
+        "case": "moved-alias",
+        "command": "check",
+        "expected_error": "config_invalid",
+        "actual_error": "config_invalid",
+        "names_required_pane": false
+      }
+    ],
+    "cleanup_ok": true
+  }
+}

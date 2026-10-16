@@ -12,9 +12,19 @@ After a real Codex shell snapshot supplied another workspace's old IDs, a worker
 python3 e2e/caller_context.py --controller-pane <verified-pane-id> --output /tmp/horch-context
 ```
 
-The driver uses real Herdr reads and invokes both `run` and `check`. Unavailable or missing/blank caller pane IDs must fail; a verified pane with stale workspace/tab variables must resolve through Herdr and reach configuration loading. Caller cases use an empty isolated configuration; configuration cases use a missing brief or an unknown worker as a second stopping condition. No workers launch, including before the fix. It retains `evidence.json` and command output outside the checkout. The [native-context receipt](evidence/native-caller-context.json) records the context correction; the [worker-description receipt](evidence/worker-description.json) covers the current driver, legacy configurations, optional description validation, and single-worker role metadata. This checks preflight only: it does not move a pane, exercise a moved-pane alias or worker startup, test controller role selection, or prove ownership when a snapshot names another live pane. The earlier caller-context receipt documents the original stricter check, not the current contract.
+The driver uses real Herdr reads and invokes both `run` and `check`. Unavailable or missing/blank caller pane IDs must fail; a verified pane with stale workspace/tab variables must resolve through Herdr and reach configuration loading. Caller cases use an empty isolated configuration; configuration cases use a missing brief or an unknown worker as a second stopping condition. No workers launch, including before the fix. It retains `evidence.json` and command output outside the checkout. The [native-context receipt](evidence/native-caller-context.json) records the context correction; the [worker-description receipt](evidence/worker-description.json) covers the current driver, legacy configurations, optional description validation, and single-worker role metadata. This checks preflight only: it does not move a pane, exercise a moved-pane alias or worker startup, or test controller role selection. Pane ownership is covered by the caller identity driver below. The earlier caller-context receipt documents the original stricter check, not the current contract.
 
 The original caller-context receipt also records a 30-minute, read-only observation of the previous release: nine tracked tasks delivered and closed, but the controller repeatedly used short wait caps and performed bulk implementation itself before user guidance. The new routing instructions have not received a model-driven workflow run. These receipts do not establish broader pstack playbook coverage.
+
+## Caller identity
+
+A Codex 0.162 controller's tools ran in a shared `codex app-server` daemon (parent PID 1) that had inherited another workspace's pane ID. That pane was still live as a plain shell, so the preflight above accepted it and workers opened in the wrong workspace. The [before/after receipt](evidence/caller-identity.json) records the fix:
+
+```bash
+python3 e2e/caller_identity.py --controller-pane <verified-pane-id> --output /tmp/horch-identity
+```
+
+Run it from the controller pane's own process tree. It creates a scratch tab and a scratch workspace, runs `run` and `check` against real process trees, and closes both. The cases are: a stale ID naming a live shell pane; `--caller-pane` contradicting the process tree; a detached process (via `setsid`, parent PID 1, like the daemon) with a stale or a correct `HERDR_PANE_ID`; `--caller-pane` naming a plain-shell pane or a pane with another session ID; plus three that must still pass: a correct in-tree controller, a confirmed `--caller-pane` from a detached process, and a pane moved to another workspace that uses its launch-time alias. Accepted cases stop at an empty isolated configuration, so no worker starts. Pass `--horch <file>` to run the same cases against another revision. The receipt was produced by a Claude Code controller on Linux; the real Codex daemon and macOS `ps` were not exercised.
 
 ## Worker setup checks
 
@@ -86,6 +96,7 @@ The driver uses Herdr's supported `PI_CODING_AGENT_DIR` override with an empty d
 
 ## Evidence and source attribution
 
+- [caller-identity.json](evidence/caller-identity.json): the unfixed horch passed 4/18 caller identity checks; it accepted a stale ID naming a live shell pane and any ID from a detached process. The fixed horch passed 18/18, including a moved pane's alias, and the driver closed its scratch tab and workspace.
 - [controller-e2e.json](evidence/controller-e2e.json): a fresh invocation of the final driver passed 47/47 in 736.836 seconds. The six-task scenario, original transcript audit, source/configuration integrity, and actual pane cleanup passed together. Six yielded waits resumed through 23 handle calls, with no short caps. This supersedes the earlier verification gap without changing the historical failed receipts.
 - [check-workers.json](evidence/check-workers.json): a fresh 44/44 worker-setup pass with real Pi workers, including the `horch stats` phase and a worker closed while running.
 - [workspace-limits.json](evidence/workspace-limits.json): a fresh 49/49 workspace-quota pass, five real Pi tasks across two workspaces sharing one task store.

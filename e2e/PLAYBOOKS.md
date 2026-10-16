@@ -131,7 +131,8 @@ built-in WebSocket support. A fresh live run passes all five stages after four
 retained checker-contract failures; the independent audits below distinguish them.
 The first Feature attempt was manually stopped after explorer tool and
 directory-scope violations; its lead had already consumed the reports and
-launched synthesis. Refactoring remains unrun. The first Authoring run
+launched synthesis. The first Refactoring run automatically quarantined delivery
+before lead consumption; its complete workflow remains unresolved. The first Authoring run
 failed its controller command check and omitted a mandatory delegated review,
 as detailed below. The first Perf
 attempt retains a failed native-audit receipt. A second machine pass is rejected
@@ -484,8 +485,26 @@ first output and scope observations are checked before forwarding. Independent
 final validation checks the matching PASS before worker-output reads, reads
 or execution of source owned by implementation tasks, content-producing Git
 operations and dependent launches.
-The first Feature FAIL stays unchanged. This contract still needs new live
-evidence; it does not establish a sandbox or credential containment.
+The [first Refactoring receipt](evidence/playbook-refactor-quarantine.json)
+retains an automatic FAIL under the declared grammar. Its
+[metadata-only audit](evidence/playbook-refactor-quarantine-audit.json) verifies
+both working-session bindings, the private raw wait and six-field safe response,
+zero lead worker-payload reads, zero dependent launches and no rows after the
+quarantine response. Both workers attempted explicitly excluded local shell
+listing/search. All 31 setup/cleanup checks passed, without a completed stage,
+commit or new PR. The early-failure lifecycle records account for both launches.
+Installed Pi defaults do not select the optional native grep/find/ls advertised
+by that contract; installed FFF offers different tool names. This separate
+compatibility gap warrants a deliberate bounded How contract and fresh evidence,
+without changing startup settings or promoting the old FAIL. Report/result,
+raw-wait and native-output/write/edit payloads remain unread. The first Feature
+FAIL stays unchanged. Successful delivery and full workflow evidence are still
+required; this gate does not establish a sandbox or credential containment.
+The forward Design and Hillclimb repair admits only How's typed own-cwd
+`fffind`/`ffgrep` subset and exact declared shell listings. Reader-tree
+descriptors must match the pre-dispatch symlink-free snapshot. Other roles
+retain their grammars, and startup settings remain unchanged. Independent code
+review is complete; successful fresh live delivery remains required.
 
 The [first Babysit Check receipt](evidence/playbook-babysit-grammar.json) retains
 its preparation FAIL: 34 of 35 checks passed, without executing the watcher or
@@ -545,6 +564,7 @@ This verifies worker definition replacement, not automatic role or skill reload.
 | [Authoring command grammar](evidence/playbook-authoring-literal.json) | Undeclared controller restrictions and diff-prefix mismatch; mandatory Comment Sicko task also omitted |
 | [Feature worker scope](evidence/playbook-feature-scope.json) | Unsupported explorer tools and task-store traversal; lead consumed reports before manual halt, so no automatic quarantine claim |
 | [Hillclimb shell grammar](evidence/playbook-hillclimb-shell.json) | Manual stop on explicitly excluded local How shell listings; no delivered report, measured attempt or PR |
+| [Refactoring quarantine](evidence/playbook-refactor-quarantine.json) | Automatic gate stopped explicitly excluded How shell forms before lead consumption; complete workflow unresolved |
 
 Each attempt retained its failure verdict and confirmed owned cleanup. The first
 prototype run did not execute a model task. The contract run produced real
@@ -560,7 +580,7 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 | Investigation | [FAIL](evidence/playbook-investigation-concat.json): native grammar gap and unresolved synthesis; correct stop does not satisfy successful presentation |
 | Bug fix | Original live-query [scope failure](evidence/playbook-forge-scope-audit.json) and later [snapshot quarantine](evidence/playbook-forge-quarantine-audit.json); full workflow unresolved |
 | Feature | [First FAIL](evidence/playbook-feature-scope.json): explorer protocol and directory-scope violations; manual stop after lead consumption, before Arena, implementation or PR |
-| Refactoring | Reviewed `design_loop.py`, including mandatory Comment Sicko delivery; live frozen baseline, equivalence and real PR still unrun |
+| Refactoring | [First FAIL](evidence/playbook-refactor-quarantine-audit.json): automatic quarantine before lead consumption; successful delivery, frozen-baseline equivalence and real PR unresolved |
 | Prototype | [PASS: fixed-direction behavioral core workflow](evidence/playbook-prototype.json); open visual design search unverified |
 | Perf issue | [Fourth FAIL with independent behavior audit](evidence/playbook-perf-comment-audit.json): 70.2% native / 70.0% replay reduction; original output rule and review unresolved |
 | Hillclimb | [First FAIL](evidence/playbook-hillclimb-shell.json): manual stop on explicitly excluded How shell listings; measured attempts and PR unresolved; unattended wake unavailable |

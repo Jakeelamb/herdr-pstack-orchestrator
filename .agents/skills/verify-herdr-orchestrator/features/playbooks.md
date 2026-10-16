@@ -163,8 +163,18 @@ The Design driver now owns a same-file private delivery gate. Its lead calls
 that gate instead of raw horch wait/list/stats, and reads declared outputs only
 after a PASS bound to done/closed state and a captured working native session.
 Every worker is audited before forwarding, with independent final lead
-consumption and dependency checks. This reviewed protocol still requires fresh
-live Feature/Refactoring evidence; it is not a security sandbox.
+consumption and dependency checks. The first Refactoring run automatically
+quarantined excluded How shell forms before payload consumption or dependent
+launches, with both working sessions bound and owned cleanup verified. Preserve
+its original FAIL and metadata-only audit; no quarantined payload may be read.
+Installed Pi defaults do not select the optional builtin discovery tools that
+the old contract advertised. A deliberate bounded How-only FFF/listing contract
+requires fresh live evidence under unchanged settings. Successful delivery and
+complete Feature/Refactoring remain unresolved; this is not a security sandbox.
+Design and Hillclimb now declare typed How-only own-cwd FFF search and exact
+shell listings, bound to stable symlink-free reader trees. Other roles receive
+no exception; preserve current startup settings. Code review is complete, but
+the revised contract still requires fresh live evidence.
 
 The third Check retains FAIL on lowercase-only cloud gap matching, despite
 correct exact footer lines and an independently verified real status flow.

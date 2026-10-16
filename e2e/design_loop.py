@@ -308,6 +308,50 @@ def comment_gate_contract(native, task, cwd, bundle, base, scenario, source_hash
             'bootstrap_before_first_text': True, 'actual_scope_and_observations_verified': True}
 
 
+def how_native_identity(native, session, cwd, started, captured, spec, guides):
+    """Bind actual How native rows without altering a transcript for core's tools."""
+    def require(value):
+        if not value:
+            raise Failure('how_native_identity_or_chain_rejected')
+    rows = [json.loads(line) for line in native.read_text().splitlines() if line.strip()]
+    header = rows[0] if rows else {}
+    require(header.get('type') == 'session' and header.get('version') == 3 and header.get('id')
+            and Path(header.get('cwd', '')).resolve() == cwd
+            and started <= core.stamp(header['timestamp']) <= captured <= time.time()
+            and session.get('agent') == 'pi' and session.get('source') == 'herdr:pi')
+    require(Path(session['value']).expanduser().resolve() == native.resolve() if session.get('kind') == 'path'
+            else session.get('value') == header['id'])
+    seen, call_ids, pending, last, models, efforts = {header['id']}, set(), {}, None, set(), set()
+    for row in rows[1:]:
+        require(row.get('id') and row['id'] not in seen and row.get('parentId') == last)
+        seen.add(row['id']); last = row['id']
+        if row.get('type') == 'model_change':
+            models.add((row.get('provider'), row.get('modelId')))
+        if row.get('type') == 'thinking_level_change':
+            efforts.add(row.get('thinkingLevel'))
+        message = row.get('message', {})
+        if message.get('role') == 'assistant':
+            if message.get('model'):
+                models.add((message.get('provider'), message['model']))
+            for block in message.get('content', []):
+                if block.get('type') != 'toolCall':
+                    continue
+                name, args, identity = block.get('name'), block.get('arguments'), block.get('id')
+                require(name in ('read', 'bash', 'write', 'edit', 'grep', 'find', 'ls', 'fffind', 'ffgrep')
+                        and isinstance(args, dict) and identity and identity not in call_ids)
+                call_ids.add(identity); pending[identity] = name
+        elif message.get('role') == 'toolResult':
+            identity = message.get('toolCallId')
+            require(identity in pending and pending.pop(identity) == message.get('toolName')
+                    and type(message.get('isError')) is bool)
+    require(not pending and bool(models) and all(model == spec['model']
+            and (not spec.get('provider') or provider == spec['provider']) for provider, model in models))
+    require(not spec.get('effort') or efforts == {spec['effort']})
+    events = support.Run.native_events(None, native)
+    for guide in guides:
+        require(bool(core.workflow_reads(events, cwd, guide)))
+
+
 def structure(path):
     """Compare sketch structure, ignoring renames and placeholder bodies."""
     tree = ast.parse(path.read_text())
@@ -331,9 +375,27 @@ def design_worker_protocol(slot, definition, bundle, probe, base, scenario):
     cwd = Path(definition['cwd'])
     writer = definition['phase'] == 'implementation'
     source = ('cli.py', 'storage.py') if scenario == 'feature' else ('storage.py',)
+    how = definition['phase'] in ('how-explore', 'how-explain')
+    how_forms = (f'''How-only exception for THIS phase: native fffind(pattern: string,
+path?: string, exclude?: string|string[], limit?: positive integer); ffgrep has
+the same fields plus caseSensitive?: boolean and context?: nonnegative integer.
+No cursor, extra fields or null numeric values. pattern is query text, including
+empty strings; exclude filters are not roots. path defaults to own cwd, or an
+owned absolute/relative path/glob such as **/*.py. No surrounding whitespace,
+BOM, home/tilde, .. components, backslash, control characters, braces, commas,
+!, or leading -. Resolve only within EXACT_OWN_CWD. No auxiliary/sibling roots.
+Use these actually available FFF tools or Git ls-files for discovery, rather
+than assuming optional native grep/find/ls exist. Bash grep/find stay forbidden.
+The ONLY Bash ls forms are: ls; ls -la; ls {cwd}; ls -la {cwd}.
+No other flags/operands/globs/recursion/wrappers. Own session cwd is fixed.
+Reader-tree descriptors must equal the immutable pre-dispatch snapshot after
+delivery and contain no symlinks; external concurrent mutation is assumed absent.
+This is a bounded evidence grammar, not universal FFF support or containment.'''
+                 if how else 'No FFF or Bash ls/grep/find exception applies to this phase.')
     return f'''BEGIN DESIGN WORKER EVIDENCE GRAMMAR
 Slot {slot}; exact owned cwd {cwd}; source writes {json.dumps(source if writer else [])}.
-Only native read/write/edit/bash/grep/find/ls; no FFF, codemode or wrappers.
+Only native read/write/edit/bash/grep/find/ls, except the How phase forms below;
+no codemode or wrappers. Do not assume optional native grep/find/ls are enabled.
 Read the complete actual own brief before other tool calls. Read/search only own
 cwd, own canonical task directory, individually declared Guide: FILE under
 {bundle / 'skills'} (plus required poteto-mode/poteto-agent), and
@@ -367,6 +429,7 @@ and writes only that owned scratch directory, never protected task metadata.
 Do not delegate, use native subagents, or run a whole playbook. All attempts,
 including errors, are audited; violations quarantine before forwarding. This is
 post-execution evidence checking, not sandbox or credential containment.
+{how_forms}
 END DESIGN WORKER EVIDENCE GRAMMAR'''
 
 
@@ -448,8 +511,12 @@ def design_scope_audit(policy_path, task_id):
         require(guide.is_absolute() and guide.resolve() == guide and guide.is_file()
                 and bundle / 'skills' in guide.parents)
         declared_guides.add(guide)
-    audit = core.audit_pi(native, session, cwd, core.stamp(task['created_at']), spec, guides, [], [], bundle)
-    require(all(item['ok'] for item in audit['checks']))
+    how = phase in ('how-explore', 'how-explain')
+    if how:
+        how_native_identity(native, session, cwd, core.stamp(task['created_at']), binding['captured_at'], spec, guides)
+    else:
+        audit = core.audit_pi(native, session, cwd, core.stamp(task['created_at']), spec, guides, [], [], bundle)
+        require(all(item['ok'] for item in audit['checks']))
     header = json.loads(native.read_text().splitlines()[0])
     require(header.get('id') == identity and core.stamp(header['timestamp']) <= binding['captured_at'])
     calls = support.Run.native_events(None, native, include_errors=True)
@@ -476,11 +543,18 @@ def design_scope_audit(policy_path, task_id):
     # Reader source is independently frozen; attempted writes are rejected below.
     if not writer:
         require({name: core.sha(cwd / name) for name in SOURCE_FILES} == before)
-    require(support.reader_tree(cwd)['symlink_count'] == 0 and binding['reader_tree']['symlink_count'] == 0)
+    tree_after = support.reader_tree(cwd)
+    require(tree_after['symlink_count'] == 0 and binding['reader_tree']['symlink_count'] == 0)
+    if how:
+        require(policy['how_reader_trees'][slot] == binding['reader_tree'] == tree_after
+                and policy['how_trees_captured_at'] <= core.stamp(task['created_at']))
     fields = {'read': {'path', 'offset', 'limit'}, 'write': {'path', 'content'},
               'edit': {'path', 'oldText', 'newText', 'edits'}, 'bash': {'command', 'timeout'},
               'grep': {'pattern', 'path', 'glob', 'ignoreCase', 'literal', 'context', 'limit'},
               'find': {'pattern', 'path', 'limit'}, 'ls': {'path', 'limit'}}
+    if how:
+        fields.update({'fffind': {'pattern', 'path', 'exclude', 'limit'},
+                       'ffgrep': {'pattern', 'path', 'exclude', 'limit', 'caseSensitive', 'context'}})
     for event in calls:
         name, args = event['name'], event['args']
         require(name in fields and set(args) <= fields[name])
@@ -493,7 +567,17 @@ def design_scope_audit(policy_path, task_id):
         for key in ('pattern', 'glob'):
             if key in args:
                 require(isinstance(args[key], str))
-        if name in ('read', 'grep', 'find', 'ls'):
+        if name in ('fffind', 'ffgrep'):
+            raw = args.get('path', '.')
+            require(isinstance(args.get('pattern'), str) and isinstance(raw, str) and bool(raw)
+                    and raw == raw.strip() and '\ufeff' not in raw
+                    and not any(char in raw for char in ('{', '}', ',', '!')) and not raw.startswith('-'))
+            target = canonical(raw)
+            require(inside(target, cwd))
+            require('exclude' not in args or isinstance(args['exclude'], str)
+                    or isinstance(args['exclude'], list) and all(isinstance(item, str) for item in args['exclude']))
+            require('caseSensitive' not in args or type(args['caseSensitive']) is bool)
+        elif name in ('read', 'grep', 'find', 'ls'):
             require('path' in args)
             readable(args['path'], name != 'read')
         elif name in ('write', 'edit'):
@@ -515,7 +599,7 @@ def design_scope_audit(policy_path, task_id):
             require(bool(argv))
             require(args.get('timeout') is None or type(args['timeout']) in (int, float)
                     and math.isfinite(args['timeout']) and args['timeout'] > 0)
-            allowed = argv == ['pwd']
+            allowed = argv == ['pwd'] or how and argv in (['ls'], ['ls', '-la'], ['ls', str(cwd)], ['ls', '-la', str(cwd)])
             if len(argv) == 2 and argv[0] in ('cat', 'sha256sum'):
                 readable(argv[1]); allowed = True
             if argv[0] == 'git':
@@ -557,6 +641,8 @@ def design_scope_audit(policy_path, task_id):
             'outputs': {**{str(directory / name): core.sha(directory / name) for name in [*expected, 'result.json']},
                         **({str(cwd / name): core.sha(cwd / name) for name in source_names} if writer else {})},
             'source_sha256': {name: core.sha(cwd / name) for name in SOURCE_FILES},
+            'how_reader_tree_before': policy['how_reader_trees'][slot] if how else None,
+            'how_reader_tree_after': tree_after if how else None,
             'comment_native_contract': comment_native}
 
 
@@ -743,6 +829,9 @@ class Run(core.Run):
         policy = {'task_root': str(self.task_root.resolve()), 'slots': self.slots, 'roles': self.role_workers,
                   'workers': self.config['workers'], 'bundle': str(self.bundle), 'probe': str(self.probe),
                   'base': self.base, 'scenario': self.args.scenario, 'agent_dir': str(self.agent_dir),
+                  'how_reader_trees': {slot: support.reader_tree(Path(definition['cwd'])) for slot, definition in self.slots.items()
+                                       if definition['phase'] in ('how-explore', 'how-explain')},
+                  'how_trees_captured_at': time.time(),
                   'workspace': self.caller['workspace_id'],
                   'integrity': {str(ROOT / name): digest for name, digest in self.hashes.items()}}
         policy['integrity'].update({str(self.probe): self.probe_hash,
@@ -886,8 +975,12 @@ Implement, Scrap] and arena [Frame, Fan out, Cross-judge, Pick, Graft, Verify],
 with each value a JSON string. Do not skip a mandatory phase or claim an absent
 capability. Default Architect Agree has no human checkpoint.
 
-Evaluation tool protocol, also in EVERY brief: use only direct native read,
-bash, write, edit, grep, find, ls; no codemode, wrappers or native subagents.
+Evaluation tool protocol: direct native read/bash/write/edit and any actually
+available optional native grep/find/ls; no codemode, wrappers or native subagents.
+Do not assume optional grep/find/ls are enabled by the unchanged Pi startup.
+Only phases how-explore/how-explain gain the exact fffind/ffgrep and own-cwd
+Bash ls forms in their generated protocol. The lead, reader-load, writers,
+judges and CommentSicko do NOT gain those exceptions. Bash grep/find stay banned.
 Nested tool results cannot be bound by this evaluator. Preserve configured
 models, effort, permission flags, Git hooks/signatures and original Mise roots.
 No trust answers, config/auth changes, model substitutions or failure retries.
@@ -2131,7 +2224,7 @@ nested delegation. Follow the original CommentSicko scope and report honestly.
                        'Architecture requiring Scrap/reframing remains unresolved; this bounded driver never invents a replacement design round.',
                        'Formal Interrogate runs the entire configured panel only when contested or explicitly used; unresolved review blocks shipping.',
                        'A fresh configured judgment and prose worker performs the mandatory CommentSicko review on the stable integration diff; any required revision, rejected report, rerun or deeper follow-up leaves this bounded run unresolved.',
-                       'All workers use the strict seven-tool declared grammar; no FFF or Bash ls/find exception is supported. Safe wait gates are post-execution pre-forwarding checks, not a sandbox or credential containment; external concurrent tree mutation is assumed absent.',
+                       'Only how-explore/how-explain admit the declared typed own-cwd fffind/ffgrep subset and four literal own-cwd ls forms, on trees identical to pre-dispatch symlink-free snapshots; all other roles retain their tool grammar. Safe wait gates are post-execution pre-forwarding checks, not containment, and assume no external concurrent tree mutation.',
                        'CLI equivalence normalizes traceback locations to their final exception line; raw complete stderr remains private.',
                        'Worktrees, owned branch, private artifacts and ready PR are retained; no merge or auto-merge is authorized.',
                    ]}

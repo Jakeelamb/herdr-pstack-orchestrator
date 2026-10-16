@@ -108,3 +108,5 @@ e2e/evidence/*
 !e2e/evidence/playbook-babysit-triage-audit.json
 !e2e/evidence/playbook-babysit-case.json
 !e2e/evidence/playbook-babysit-case-audit.json
+!e2e/evidence/playbook-refactor-quarantine.json
+!e2e/evidence/playbook-refactor-quarantine-audit.json

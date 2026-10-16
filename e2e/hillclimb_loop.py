@@ -357,6 +357,8 @@ class Run(core.Run):
         self.iterations, self.task_facts = [], []
         self.agent_dir = Path(self.env.get('PI_CODING_AGENT_DIR') or Path.home()/'.pi/agent').expanduser().resolve()
         self.session_settings_hashes = {}
+        self.how_tree_before = None
+        self.how_tree_captured_at = None
 
     def preflight(self):
         self.check('positive_deadline', self.args.max_seconds > 0)
@@ -446,6 +448,10 @@ class Run(core.Run):
         self.git('worktree', 'add', '-b', self.branch, self.worktree, self.base, repo=self.args.fixture_repo)
         self.reader = self.worktree.parent / 'how-reader'
         self.git('worktree', 'add', '--detach', self.reader, self.base, repo=self.args.fixture_repo)
+        self.how_tree_before = forge_helpers.reader_tree(self.reader)
+        self.how_tree_captured_at = time.time()
+        (self.directory/'how-tree-before.json').write_text(json.dumps({
+            'descriptor':self.how_tree_before,'captured_at':self.how_tree_captured_at},indent=2)+'\n')
         env = [item for key in ('XDG_CONFIG_HOME', 'XDG_STATE_HOME', 'MISE_CONFIG_DIR', 'MISE_STATE_DIR', 'GIT_CONFIG_GLOBAL', 'GH_CONFIG_DIR')
                for item in ('--env', key + '=' + self.env[key])]
         if self.env.get('PI_CODING_AGENT_DIR'):
@@ -508,11 +514,12 @@ class Run(core.Run):
         return f"""Read {b / 'poteto-mode/SKILL.md'} and follow original Hillclimb in one ATTENDED lead turn.
 Goal: sustained measured improvement of the real reconciliation CLI on the frozen 2,500-reference/6,000-payment workload. User target is at least {self.args.target_reduction}% lower end-to-end wall median and at least {self.args.attempt_floor} genuinely distinct measured attempts. Maximum {self.args.max_attempts} attempts is a resource bound, not an alternate successful predicate. If unmet, stop honestly unresolved; do not lower the floor/target. No unattended wake exists or is claimed.
 
-Use ONLY native read, bash, write, edit, grep, find, ls. No codemode, eval, shell pipelines/redirection/substitution, inline scripts/Python, or invented wrappers. Use literal direct CLI commands and absolute paths. Literal bash rejects newline, semicolon, pipe, ampersand, redirection, backtick, dollar or backslash even inside quotes; no home-expansion (~ or ~user) filesystem paths. Native ls uses path/limit fields, not shell flags. Controller bash grammar: exact lever commands below; bare uptime/nproc/pwd; command -v origin; literal bash original-log.sh assigned-trail-path plus five row fields; direct python/python3 bundled horch.py run/wait/list/stats/close/detect; cat FILE or sha256sum FILE for one absolute file; git -C exact_worktree readonly status/diff/show/log/rev-parse/rev-list/diff-tree/ls-files/ls-remote, branch --show-current, remote get-url origin, add only reconcile.py or PERFORMANCE.md, commit -m normal perf/docs scoped subject, exact restore --source=HEAD -- reconcile.py, push [-u/--set-upstream] origin owned_branch; selected gh/origin repo view, pr view/list or the exact assigned ready pr create. No other controller bash forms. All worker briefs must repeat this tool protocol, no nested workers and no trust/approval dialog answers. Worker bash is limited to readonly Git, cat/sha256sum/wc/pwd, direct frozen CLI/oracle invocations, or python -m py_compile/json.tool; source/report/result writes use native edit/write only, scoped to assigned function and owned task directory. Do not retune models/settings or retry failed model tasks.
+Except for the explicitly declared How-only installed FFF exception below, use ONLY native read, bash, write, edit, grep, find, ls. No codemode, eval, shell pipelines/redirection/substitution, inline scripts/Python, or invented wrappers. Use literal direct CLI commands and absolute paths. Literal bash rejects newline, semicolon, pipe, ampersand, redirection, backtick, dollar or backslash even inside quotes; no home-expansion (~ or ~user) filesystem paths. Native ls uses path/limit fields, not shell flags. Controller bash grammar: exact lever commands below; bare uptime/nproc/pwd; command -v origin; literal bash original-log.sh assigned-trail-path plus five row fields; direct python/python3 bundled horch.py run/wait/list/stats/close/detect; cat FILE or sha256sum FILE for one absolute file; git -C exact_worktree readonly status/diff/show/log/rev-parse/rev-list/diff-tree/ls-files/ls-remote, branch --show-current, remote get-url origin, add only reconcile.py or PERFORMANCE.md, commit -m normal perf/docs scoped subject, exact restore --source=HEAD -- reconcile.py, push [-u/--set-upstream] origin owned_branch; selected gh/origin repo view, pr view/list or the exact assigned ready pr create. No other controller bash forms. All worker briefs must repeat this tool protocol, no nested workers and no trust/approval dialog answers. Worker bash is limited to readonly Git, cat/sha256sum/wc/pwd, direct frozen CLI/oracle invocations, or python -m py_compile/json.tool; source/report/result writes use native edit/write only, scoped to assigned function and owned task directory. Do not retune models/settings or retry failed model tasks.
 Only fresh configured hillclimb workers may edit app source, ONLY body of reconcile_linear in {self.worktree / 'reconcile.py'}. No other app/workload/oracle/harness/config edits. You supervise/review; never author source. Only owned branch {self.branch} may be pushed. No merges/automerge/other PR mutations.
 Named controller-native-write artifacts only: checklist.md; hillclimb/workload.json, hillclimb/metric.json, hillclimb/vetting.json, hillclimb/freeze.json, hillclimb/how-brief.md, hillclimb/explanation.md, hillclimb/stop.json, hillclimb/trail-brief.md, hillclimb/attention.md, hillclimb/comment-brief.md, hillclimb/comment-scope.json, hillclimb/comment-diff.patch, hillclimb/comment-decision.json; hillclimb/hypothesis-N.json, hillclimb/brief-N.md, hillclimb/review-N.json, hillclimb/decision-N.json for integer N=1..{self.args.max_attempts}; pr-body.md, forge-resolution.json, reply.md; and sanitized PERFORMANCE.md in worktree. No direct writes/edits to either decision.tsv, probe state, snapshots, measurements, results or raw transcripts. Ledger writes happen only through the immutable lever; generic trail rows only through original log.sh.
 
 Read full required instructions: {json.dumps([str(b / resource) for resource in READS])}. Read original 8-stage Hillclimb; first native-write {a / 'checklist.md'} with exact original top-level numbered instructions before any task/work. Do How SIMPLE route first: one readonly explainer configured {self.role_workers['how explainer'][0]} on detached {self.reader}, with original explainer prompt, assignment in {a / 'hillclimb/how-brief.md'}. Literal horch run --brief that path. All task briefs first line Role: exact role (how explainer, hillclimb, bounded trail audit, or judgment and prose), selected worker and reason in the full controller-authored prefix before Horch's appended rules, 'Do not delegate', absolute {b / 'pstack-herdr/references/agents/poteto-agent.md'} and {b / 'poteto-mode/SKILL.md'}. Wait for actual done/closed, then read result JSON and FULL listed report. Preserve How explanation verbatim in {a / 'hillclimb/explanation.md'}.
+The actual How brief MUST explicitly declare this role-only installed-tool contract: native read/write/edit/bash plus exact fffind(pattern:string,path?:string,exclude?:string|string[],limit?:positive integer) and ffgrep with those fields plus caseSensitive?:boolean/context?:nonnegative integer. No cursor/unknown fields/null numeric FFF values; empty patterns allowed. FFF path defaults to owned cwd and accepts only owned absolute/relative paths/globs such as **; no surrounding whitespace/BOM, tilde, .. component, backslash, NUL, braces, comma, ! or leading -. exclude is only a filter. Use actual FFF native search or Git ls-files for search/enumeration, NOT unavailable native grep/find/ls. Bash grep/find are DISALLOWED. Bash allows only bare pwd, cat/sha256sum ONE readable owned file, exact {shlex.join(['ls',str(self.reader)])} or {shlex.join(['ls','-la',str(self.reader)])} (no other directories/flags/recursive forms/bare ls), and readonly LOCAL GIT with optional -C exact cwd: log/blame/show/diff/status/rev-parse/ls-files/rev-list/diff-tree; standard readonly flags as enumerated in the Comment grammar below, plus branch --show-current/diff --check/status --short --branch. Git show HEAD:OWNED_RELATIVE_PATH or HEAD~:OWNED_RELATIVE_PATH permits exactly one operand/no options; no absolute/home/traversal/empty/dot components/backslash/control characters/extra colon/leading -. No application/test/measurement/config/network commands, delegation or wrappers. Every Bash argument is literal with the same forbidden characters as above. Native reads are limited to this reader, its actual task directory and the bundle; no tilde/NUL/symlink escape. Write/edit only canonical task report.md/result.json, never reader source or task identity; full-read nonce-bound brief before Bash/FFF/write/edit. read offset/limit may be null, otherwise positive integer; bash timeout null/omitted or finite positive. Before/after symlink-free reader trees must remain identical; this is post-execution auditing under a stable-tree assumption, not containment. The controller, implementation, trail and Comment roles retain their existing grammars and gain NO FFF or Bash ls exception. Repeat these declarations in the actual How assignment.
 Write {a / 'hillclimb/workload.json'} with architecture_sha256 (actual explanation file sha via sha256sum), dimensions (data size/history/state/concurrency), complaint, target_case, simpler_case, relevance. Then choose metric in {a / 'hillclimb/metric.json'} with metric='full_cli_wall_median_ms', direction='lower', target_reduction={self.args.target_reduction}, attempt_floor={self.args.attempt_floor}, attended=true, workload_sha256 (actual frozen workload hash). Do not choose a source-count proxy.
 
 Read {self.probe} AND {self.engine} in full, uptime and nproc; read benchmark-checklist before running sensitivity. Native-write {a / 'hillclimb/vetting.json'} BEFORE measurements, keys claim, timed_surface, included_work, ignored_work, cache_state, production_config, limiter_plan, bounds, correctness, errors, repetitions. State startup+JSON+validation+complete reconciliation+output; private stdlib fixture, not an inferred production ceiling, warmed filesystem. Profiles separate from reported numbers; AB five per side with work/error/result checks.
@@ -763,12 +770,14 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
         self.check('task_native_owned_path_unambiguous', len(candidates) == 1
                    and (session.get('kind') != 'path' or candidates[0].resolve() == supplied))
         path = candidates[0]
-        audit = core.audit_pi(path, session, Path(task['cwd']).resolve(), core.stamp(task['created_at']),
-                              spec, [], [], [], self.bundle)
-        self.check('actual_task_native_model_effort_tools', all(row['ok'] for row in audit['checks']))
         assignment=self.controller_assignment(task)
         role_match = re.match(r'\A\s*Role: ([^\r\n]+)(?:\r?\n|\Z)', assignment)
         role = role_match[1] if role_match else None
+        if role == 'how explainer':
+            return path,self.audit_how_native(task,path,spec,assignment)
+        audit = core.audit_pi(path, session, Path(task['cwd']).resolve(), core.stamp(task['created_at']),
+                              spec, [], [], [], self.bundle)
+        self.check('actual_task_native_model_effort_tools', all(row['ok'] for row in audit['checks']))
         if role == 'judgment and prose':
             self.audit_comment_native(task, path)
             return path, audit
@@ -805,6 +814,138 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
                         or len(rest)>=2 and rest[0]=='-m' and rest[1] in ('py_compile','json.tool'))
             self.check('bounded_worker_no_native_delegation_or_wrappers',allowed)
         return path, audit
+
+    def audit_how_native(self, task, path, spec, assignment):
+        """Post-execution How-only FFF audit; no pre-execution containment claim."""
+        cwd, task_dir = Path(task['cwd']).resolve(),Path(task['task_dir']).resolve()
+        self.check('how_exact_configured_reader', cwd==self.reader
+                   and task['worker']==self.role_workers['how explainer'][0])
+        binding=core.read_json(task_dir/'native-session-capture.json')
+        saved=self.directory/'how-worker-native.jsonl'
+        shutil.copy2(path,saved)
+        rows=[json.loads(line) for line in saved.read_text().splitlines() if line.strip()]
+        header=rows[0] if rows else {}
+        self.check('how_live_native_binding', not path.is_symlink() and core.sha(path)==core.sha(saved)
+                   and header.get('type')=='session' and header.get('version')==3
+                   and header.get('id')==path.stem.rsplit('_',1)[-1]
+                   and Path(header.get('cwd','')).resolve()==cwd
+                   and binding.get('session')==self.task_sessions[task['task_id']]
+                   and binding.get('task_sha256')==core.sha(task_dir/'task.json')
+                   and binding.get('brief_sha256')==core.sha(Path(task['brief_path']))
+                   and core.stamp(task['created_at'])<=core.stamp(header['timestamp'])<=binding['captured_at'])
+        after=forge_helpers.reader_tree(cwd)
+        (self.directory/'how-tree-after.json').write_text(json.dumps({
+            'descriptor':after,'captured_at':time.time()},indent=2)+'\n')
+        self.check('how_reader_tree_symlink_free_and_stable', self.how_tree_before is not None
+                   and self.how_tree_before==after and after['symlink_count']==0
+                   and self.how_tree_captured_at<=core.stamp(task['created_at']))
+        self.check('how_exception_declared_in_actual_brief', all(word in assignment for word in (
+            'fffind','ffgrep','cursor','exclude','caseSensitive','context',str(cwd)))
+                   and shlex.join(['ls',str(cwd)]) in assignment)
+        def readable(raw):
+            if not isinstance(raw,str) or not raw or '~' in raw or '\x00' in raw:
+                return False
+            target=(cwd/raw).resolve()
+            return any(target==root or root in target.parents for root in (cwd,task_dir,self.bundle))
+        def git_read(argv):
+            if forge_helpers.local_git(argv,cwd,{self.base}) is not None:
+                return True
+            prefix=['git','-C',str(cwd)] if argv[:3]==['git','-C',str(cwd)] else ['git']
+            rest=argv[len(prefix):]
+            if rest in (['branch','--show-current'],['diff','--check'],['status','--short','--branch']):
+                return argv[:len(prefix)]==prefix
+            if len(rest)==2 and rest[0]=='show':
+                match=re.fullmatch(r'HEAD~?:(.+)',rest[1])
+                if match:
+                    raw=match[1]
+                    return (not raw.startswith(('/','-')) and not any(c in raw for c in ('~','\\',':'))
+                            and not any(ord(c)<32 or ord(c)==127 for c in raw)
+                            and all(part not in ('','.','..') for part in raw.split('/'))
+                            and (cwd/raw).resolve().is_relative_to(cwd))
+            return False
+        schemas={'read':{'path','offset','limit'},'write':{'path','content'},
+            'edit':{'path','oldText','newText','edits'},'bash':{'command','timeout'},
+            'fffind':{'pattern','path','exclude','limit'},
+            'ffgrep':{'pattern','path','exclude','limit','caseSensitive','context'}}
+        pending,ids,call_ids,last,models,efforts={},set(),set(),None,set(),set()
+        for index,row in enumerate(rows[1:],1):
+            identity=row.get('id')
+            self.check('how_native_unbranched_parent_chain', bool(identity) and identity not in ids
+                       and identity!=header['id'] and row.get('parentId')==last)
+            ids.add(identity);last=identity
+            if row.get('type')=='model_change':
+                models.add((row.get('provider'),row.get('modelId')))
+            if row.get('type')=='thinking_level_change':
+                efforts.add(row.get('thinkingLevel'))
+            message=row.get('message',{})
+            if message.get('role')=='assistant':
+                if message.get('model'):
+                    models.add((message.get('provider'),message['model']))
+                for block in message.get('content',[]):
+                    if block.get('type')!='toolCall':
+                        continue
+                    name,args,call_id=block.get('name'),block.get('arguments'),block.get('id')
+                    self.check('how_all_attempt_tool_schema', name in schemas and isinstance(args,dict)
+                               and set(args)<=schemas[name] and bool(call_id) and call_id not in call_ids)
+                    call_ids.add(call_id);pending[call_id]=name
+                    for key,minimum in (('offset',1),('limit',1),('context',0)):
+                        self.check('how_numeric_schema',key not in args or name=='read' and args[key] is None
+                                   or type(args[key]) is int and args[key]>=minimum)
+                    if name in ('fffind','ffgrep'):
+                        raw=args.get('path','.')
+                        self.check('how_fff_typed_owned_query', isinstance(args.get('pattern'),str)
+                                   and isinstance(raw,str) and bool(raw) and raw==raw.strip() and '\ufeff' not in raw
+                                   and not any(c in raw for c in ('\\','~','\x00','{','}',',','!'))
+                                   and '..' not in raw.split('/') and not raw.startswith('-')
+                                   and (cwd/raw).resolve().is_relative_to(cwd))
+                        self.check('how_fff_filter_schema', 'exclude' not in args or isinstance(args['exclude'],str)
+                                   or isinstance(args['exclude'],list) and all(isinstance(x,str) for x in args['exclude']))
+                        self.check('how_fff_case_schema','caseSensitive' not in args or type(args['caseSensitive']) is bool)
+                    elif name=='read':
+                        self.check('how_owned_native_read',readable(args.get('path')))
+                    elif name in ('write','edit'):
+                        raw=args.get('path')
+                        self.check('how_no_reader_tree_or_identity_write_attempt', isinstance(raw,str)
+                                   and '~' not in raw and '\x00' not in raw
+                                   and (cwd/raw).resolve() in {task_dir/'report.md',task_dir/'result.json'})
+                        if name=='write':
+                            self.check('how_native_write_schema',set(args)=={'path','content'} and isinstance(args['content'],str))
+                        else:
+                            edits=args.get('edits',[args])
+                            self.check('how_native_edit_schema',set(args)==({'path','edits'} if 'edits' in args
+                                       else {'path','oldText','newText'}) and isinstance(edits,list) and bool(edits)
+                                       and all(isinstance(edit,dict) and set(edit)==({'oldText','newText'} if 'edits' in args
+                                           else {'path','oldText','newText'}) and isinstance(edit.get('oldText'),str)
+                                           and bool(edit['oldText']) and isinstance(edit.get('newText'),str) for edit in edits))
+                    else:
+                        argv=forge_helpers.literal(args.get('command',''))
+                        allowed=(argv==['pwd'] or argv in (['ls',str(cwd)],['ls','-la',str(cwd)])
+                                 or len(argv)==2 and argv[0] in ('cat','sha256sum') and readable(argv[1])
+                                 or bool(argv) and argv[0]=='git' and git_read(argv))
+                        self.check('how_no_bash_search_execution_or_wrappers',allowed)
+                        timeout=args.get('timeout')
+                        self.check('how_timeout_schema',timeout is None or type(timeout) in (int,float)
+                                   and 0<timeout<float('inf'))
+            elif message.get('role')=='toolResult':
+                call_id=message.get('toolCallId')
+                self.check('how_native_result_bound',call_id in pending and message.get('toolName')==pending[call_id]
+                           and type(message.get('isError')) is bool)
+                del pending[call_id]
+        self.check('how_all_calls_resolved',not pending)
+        self.check('how_actual_configured_model_effort',bool(models) and all(model==spec['model']
+                   and (not spec.get('provider') or provider==spec['provider']) for provider,model in models)
+                   and (not spec.get('effort') or efforts=={spec['effort']}))
+        calls=self.native_events(saved,include_errors=True)
+        successful=self.native_events(saved)
+        brief_reads=core.workflow_reads(successful,cwd,Path(task['brief_path']))
+        self.check('how_nonce_brief_read_before_active_tools',bool(brief_reads)
+                   and task['nonce'] in Path(task['brief_path']).read_text()
+                   and all(any(read['result_row']<call['call_row'] for read in brief_reads)
+                           for call in calls if call['name'] in ('bash','fffind','ffgrep','write','edit')))
+        return {'checks':[{'name':'how_scoped_native_identity_tools_tree_model','ok':True}],
+                'sha256':core.sha(saved),'format':'pi-session-v3','harness':'pi','model':spec['model'],
+                'effort':spec.get('effort'),'tool_calls':len(calls),
+                'session_id_sha256':hashlib.sha256(header['id'].encode()).hexdigest()}
 
     def audit_comment_native(self, task, path):
         """Audit all attempts of the readonly nested phase; this is not a sandbox."""

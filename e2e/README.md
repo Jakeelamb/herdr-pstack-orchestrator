@@ -129,7 +129,21 @@ lead consumes a delivery.
 Final lead auditing independently binds each gate to actual consumption and
 dependent launches, including source reads, content-producing Git and oracle
 execution. Hidden rubrics are restricted to their judges. This is E2E evidence
-checking with pending live validation, not a sandbox or credential boundary.
+checking, not a sandbox or credential boundary.
+The [first Refactoring receipt](evidence/playbook-refactor-quarantine.json)
+records automatic quarantine under its explicitly declared tool grammar. The
+[separate metadata audit](evidence/playbook-refactor-quarantine-audit.json)
+verifies two working-session bindings and that the lead received only safe
+metadata, read no worker payload and launched no dependent task. All 31
+setup/cleanup checks passed, with no completed workflow stage, commit or PR.
+Installed Pi defaults do not select the optional native grep/find/ls tools
+advertised as alternatives; installed FFF search is a separate compatibility
+gap. A bounded new How contract requires fresh evidence. The original FAIL
+and all quarantined payloads remain untouched.
+The reviewed Design and Hillclimb contracts now admit How-only typed
+`fffind`/`ffgrep` requests and exact owned-cwd shell listings, with identical
+symlink-free before/after reader trees. Other roles gain no exception. Startup
+settings stay unchanged; static review does not prove successful live delivery.
 Named-agent briefs now require tool-only loading of the original agent and
 required skill before any assistant text. The original instructions and exact
 output rules remain unchanged; this forward repair needs fresh live evidence.

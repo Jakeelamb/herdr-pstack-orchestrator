@@ -127,6 +127,22 @@ events. The forward repair replays real write/edit mutations with exact bytes,
 same-file ordering and result-last checks. It needs a fresh meaningful native
 edit witness; static repair cannot promote this failed run.
 
+The [fourth Feature receipt](evidence/playbook-feature-capacity.json) stops
+before any worker dispatch. Its [separate capacity audit](evidence/playbook-feature-capacity-audit.json)
+identifies an actual controller-input defect: the generated brief is 90,050
+bytes, with all slot protocols on one 55,799-byte JSON line. Native read cannot
+return that line under its 50 KB limit, and literal cat also truncates the file.
+The controller stops because a complete read is required and slicing wrappers
+are prohibited. The diagnostic is a successful tool result, not a native tool
+or provider error. Only 31 of 32 preparation/integrity/cleanup checks pass;
+the task-completion check fails with zero tasks. The 11-observation/13-check
+baseline characterization passes, but no repaired artifact replay, candidate,
+design, review, commit or PR is exercised. Original source, configuration,
+oracle, fixture HEAD/status and owned-pane cleanup witnesses remain intact.
+The next run must supply readable, immutable per-slot protocol files and bind
+their complete native reads before worker-brief writes. This failure remains
+unchanged and does not complete Feature.
+
 The contradiction also led to an actual two-flow baseline characterization:
 [complete synthetic inputs and expected observations](evidence/playbook-feature-post-replace-case.json)
 and [retained before-only receipt](evidence/playbook-feature-post-replace-before.json).

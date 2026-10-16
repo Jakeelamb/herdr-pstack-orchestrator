@@ -615,6 +615,10 @@ def design_scope_audit(policy_path, task_id):
             and task['model'] == spec['model'] and task['workspace_id'] == policy['workspace'])
     cwd, bundle = Path(task['cwd']).resolve(), Path(policy['bundle'])
     assignment = authored_assignment(task)
+    protocol = policy['protocols'][slot]
+    require(Path(protocol['path']).read_text() == design_worker_protocol(
+        slot, definition, bundle, Path(policy['probe']), policy['base'], policy['scenario'])
+        and core.sha(Path(protocol['path'])) == protocol['sha256'])
     require(design_worker_protocol(slot, definition, bundle, Path(policy['probe']), policy['base'], policy['scenario']) in assignment)
     names = re.findall(r'^Output: ([A-Za-z0-9_.-]+)$', assignment, re.M)
     expected = ['report.md']
@@ -868,6 +872,9 @@ class Run(core.Run):
         self.gate_policy = self.gate_home / 'policy.json'
         self.gate_hash = None
         self.worker_gates = {}
+        self.protocols = {}
+        self.comment_template = self.directory / 'protocols/comment-assignment.md'
+        self.comment_template_hash = None
 
     def preflight(self):
         self.check('positive_duration', self.args.max_seconds > 0)
@@ -968,12 +975,15 @@ class Run(core.Run):
                 self.git('worktree', 'add', '--detach', cwd, self.base, repo=self.args.fixture_repo)
             self.slots[slot] = {'role': role, 'phase': phase, 'cwd': str(cwd)}
         (self.directory / 'slots.json').write_text(json.dumps(self.slots, indent=2) + '\n')
+        self.prepare_protocols()
         self.gate_home.mkdir()
         for name in ('bindings', 'gates', 'waits'):
             (self.gate_home / name).mkdir()
         policy = {'task_root': str(self.task_root.resolve()), 'slots': self.slots, 'roles': self.role_workers,
                   'workers': self.config['workers'], 'bundle': str(self.bundle), 'probe': str(self.probe),
                   'base': self.base, 'scenario': self.args.scenario, 'agent_dir': str(self.agent_dir),
+                  'protocols': self.protocols,
+                  'comment_template': {'path': str(self.comment_template), 'sha256': self.comment_template_hash},
                   'how_reader_trees': {slot: support.reader_tree(Path(definition['cwd'])) for slot, definition in self.slots.items()
                                        if definition['phase'] in ('how-explore', 'how-explain')},
                   'how_trees_captured_at': time.time(),
@@ -982,6 +992,8 @@ class Run(core.Run):
         policy['integrity'].update({str(self.probe): self.probe_hash,
                                    str(destination): self.config_hash, str(self.config_path): self.config_hash})
         policy['integrity'].update({str(self.bundle / name): digest for name, digest in self.hashes.items() if name.startswith('skills/')})
+        policy['integrity'].update({item['path']: item['sha256'] for item in self.protocols.values()})
+        policy['integrity'][str(self.comment_template)] = self.comment_template_hash
         self.gate_policy.write_text(json.dumps(policy, indent=2) + '\n')
         self.gate_policy.chmod(0o444)
         self.gate_hash = core.sha(self.gate_policy)
@@ -1013,11 +1025,47 @@ class Run(core.Run):
         self.check('controller_prompted', self.herdr('agent', 'prompt', self.agent, f'Read {brief} in full and execute it.',
                    '--wait', '--until', 'working', '--timeout', '30000').get('type') == 'agent_prompted')
 
+    def prepare_protocols(self):
+        """Retain exact generated instruction data outside the bounded lead brief."""
+        self.comment_template.parent.mkdir()
+        for slot, definition in self.slots.items():
+            path = self.comment_template.parent / (slot + '.md')
+            path.write_text(design_worker_protocol(slot, definition, self.bundle, self.probe, self.base, self.args.scenario))
+            path.chmod(0o444)
+            self.protocols[slot] = {'path': str(path), 'sha256': core.sha(path)}
+        self.comment_template.write_text(self.comment_brief())
+        self.comment_template.chmod(0o444)
+        self.comment_template_hash = core.sha(self.comment_template)
+
+    def protocol_before_brief(self, events, task, launch):
+        """Bind real complete protocol reads to the complete native brief write."""
+        argv = core.literal_horch_command(launch['name'], launch['args'], self.worktree, self.bundle)
+        self.check('protocol_brief_operand_unique', bool(argv) and argv.count('--brief') == 1
+                   and argv.index('--brief') + 1 < len(argv))
+        source = Path(argv[argv.index('--brief') + 1])
+        self.check('protocol_brief_source_canonical', source.is_absolute() and source.resolve() == source
+                   and source.parent == self.artifacts and source.suffix == '.md')
+        writes = core.workflow_writes(events, self.worktree, source, before=launch['call_row'], final=True)
+        self.check('protocol_complete_brief_native_write', len(writes) == 1)
+        slot = role_header(task)[2]
+        items = [self.protocols[slot]]
+        if slot == 'comment-review':
+            items.append({'path': str(self.comment_template), 'sha256': self.comment_template_hash})
+        for item in items:
+            path = Path(item['path'])
+            self.check('immutable_instruction_data_hash', path.resolve() == path and core.sha(path) == item['sha256'])
+            self.check('full_native_instruction_data_read_before_brief_' + path.stem, bool(core.workflow_reads(
+                [event for event in events if event['name'] == 'read'], self.worktree, path,
+                before=writes[0]['call_row'])))
+
     def scan(self):
         rows = super().scan()
         if self.gate_hash:
             if core.sha(self.gate_policy) != self.gate_hash:
                 raise Failure('immutable_worker_gate_policy_changed')
+            if (any(core.sha(Path(item['path'])) != item['sha256'] for item in self.protocols.values())
+                    or core.sha(self.comment_template) != self.comment_template_hash):
+                raise Failure('immutable_instruction_data_changed')
         for task, _ in rows:
             gate_path = self.gate_home / 'gates' / (task['task_id'] + '.json')
             if gate_path.is_file() and core.read_json(gate_path).get('verdict') != 'pass':
@@ -1058,6 +1106,7 @@ class Run(core.Run):
             # defer capture, never record an IDLE or guessed-session fallback.
             raise Failure('working_launch_receipt_not_yet_available')
         launch = starts[0]
+        self.protocol_before_brief(events, task, launch)
         result = []
         fixed = {'grounding.md', 'architect-task.md', 'architect-rubric.json', 'rationale.md',
                  'implementation-task.md', 'implementation-rubric.json', 'interrogate-task.md'}
@@ -1180,9 +1229,14 @@ Slot: <exact slot key>
 Then worker, concrete selection reason, scope, absolute mode and poteto-agent
 references, and: Do not delegate, use native subagents, or run a whole playbook.
 Complete this assignment yourself. Workers cannot commit or write forge state.
-EVERY brief MUST contain its exact generated protocol block from this slot map:
-{json.dumps({slot: design_worker_protocol(slot, definition, self.bundle, self.probe, self.base, self.args.scenario) for slot, definition in self.slots.items()})}
-Copy the complete applicable block verbatim, not just its title. Explicitly
+Immutable generated protocol FILES (slot, exact path and SHA-256):
+{json.dumps(self.protocols, indent=2)}
+Before native-writing each full worker brief, FULL-read its own slot's protocol
+FILE with native read (no offset/limit). EVERY brief
+MUST contain that exact complete generated block verbatim, not just its title.
+These data files are lead-only immutable inputs: never write/edit them or grant
+workers access to them. Workers receive the complete copied block in their own
+brief; they must not read these external protocol files. Explicitly
 declare each needed bundled guide FILE as Guide: ABSOLUTE_PATH; no blanket bundle
 directory search permission. Required poteto-mode/poteto-agent remain explicit.
 Explicitly
@@ -1240,11 +1294,14 @@ After winner integration and the successful final behavior oracle (and any
 reader-load/formal review), BEFORE final diff review, ANY commit or PR, run the
 mandatory no-comments child review. Read original no-comments and CommentSicko
 guides yourself. The supplied bootstrap is required execution-boundary disclosure,
-not copied agent content; write exactly this body to {self.artifacts / 'comment-brief.md'}
+not copied agent content. FULL-read the immutable exact Comment assignment FILE
+{self.comment_template} (SHA-256 {self.comment_template_hash}) with native read,
+as well as comment-review's protocol FILE above, BEFORE native-writing exactly
+the complete assignment body to {self.artifacts / 'comment-brief.md'}.
 then launch slot comment-review once on its integration cwd, configured worker
 {self.role_workers['judgment and prose'][0]}. No other replacement or retry.
---- BEGIN EXACT COMMENT BRIEF ---
-{self.comment_brief()}--- END EXACT COMMENT BRIEF ---
+The template is lead-only data, never a worker-readable guide/input and never
+passed directly as --brief; preserve the unique complete native-write witness.
 Wait for actual done/closed, then full-read result.json, report.md and review.json.
 Run literal sha256sum on ONLY this task's absolute canonical report.md path to
 obtain report_sha256; no hash before its actual native done/closed delivery.
@@ -1582,6 +1639,7 @@ nested delegation. Follow the original CommentSicko scope and report honestly.
                                                        'task_id_sha256': digest_text(task_id)}
             launch = launches.get(task_id)
             self.check('one_actual_owned_launch', launch is not None)
+            self.protocol_before_brief(events, task, launch)
             argv = core.literal_horch_command(launch['name'], launch['args'], self.worktree, self.bundle)
             self.check('unique_owned_brief_operand', argv.count('--brief') == 1 and argv.index('--brief') + 1 < len(argv))
             source = Path(argv[argv.index('--brief') + 1])
@@ -1686,7 +1744,8 @@ nested delegation. Follow the original CommentSicko scope and report honestly.
                          *(Path(definition['cwd']) for definition in self.slots.values()),
                          self.directory / 'native-before', self.directory / 'native-after'}
                 exact = {self.probe, self.directory / 'controller-brief.md',
-                         self.directory / 'config/herdr-orchestrator/workers.toml'}
+                         self.directory / 'config/herdr-orchestrator/workers.toml', self.comment_template,
+                         *(Path(item['path']) for item in self.protocols.values())}
                 task_output = any(str(target) in core.read_json(self.gate_home / 'gates' / (task['task_id'] + '.json'))['outputs'] for task in tasks)
                 self.check('lead_inspection_owned_roots_only', target in exact or task_output
                            or any(target == root or root in target.parents for root in roots))
@@ -2364,6 +2423,8 @@ nested delegation. Follow the original CommentSicko scope and report honestly.
                 integrity = integrity and core.sha(self.probe) == self.probe_hash
             if self.gate_hash:
                 integrity = integrity and core.sha(self.gate_policy) == self.gate_hash
+                integrity = integrity and all(core.sha(Path(item['path'])) == item['sha256'] for item in self.protocols.values())
+                integrity = integrity and core.sha(self.comment_template) == self.comment_template_hash
             integrity = integrity and all((core.sha(path) if path.is_file() else None) == digest
                                           for path, digest in self.comment_settings.items())
             if self.original_fixture is not None:

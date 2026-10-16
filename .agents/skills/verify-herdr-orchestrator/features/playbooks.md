@@ -223,6 +223,16 @@ to the existing oracle, preserving all earlier cases. Characterization expects
 11 observations/13 checks; Feature 20/23, with all 11 normal records preserved
 for every candidate and final integration. No old FAIL becomes a pass.
 
+The fourth Feature run stops before delegation because its generated protocol
+map occupies one 55,799-byte line in a 90,050-byte controller brief. Native read
+cannot return the line under its 50 KB limit, and literal cat truncates too.
+This is an input-capacity defect; the tool diagnostic is not a tool/provider
+error. Preserve its FAIL, separate audit and passing 11-observation before pin.
+The next immutable run needs individual protocol files within native read
+limits, exact unchanged worker blocks, complete lead reads before brief writes
+and hash binding through delivery and final integrity. No native mutation
+replay or complete Feature is verified by this stopped run.
+
 The second Hillclimb run separately verified How, three scoped source changes,
 both original logs and retained final full-CLI timings (71.3% reduction).
 The simplification attempt was 0.7% slower within its declared allowance.

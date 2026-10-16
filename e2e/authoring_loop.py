@@ -398,7 +398,8 @@ are fully read, perform no-comments' mandatory fresh CommentSicko review BEFORE
 commit or PR. This is the third and final task, using the unchanged single
 configured judgment and prose worker {self.comment_worker}, cwd {self.worktree}.
 Write the exact following brief body to {self.artifacts / 'comment-brief.md'} and
-pass that file to horch run (no extra hints or restated agent rules):
+pass that file to horch run (no extra hints or restated agent rules). The supplied
+bootstrap is required execution-boundary disclosure, not copied agent content:
 --- BEGIN EXACT COMMENT BRIEF ---
 {self.comment_brief()}--- END EXACT COMMENT BRIEF ---
 Read both no-comments and CommentSicko guidance yourself before dispatch.
@@ -658,7 +659,13 @@ Reason: configured judgment and prose role fits this bounded comment/prose audit
 Runtime bootstrap: BEFORE ANY nonempty assistant natural-language text, use
 native tools to FULL-read the original no-comments skill and CommentSicko agent
 below. No preamble or acknowledgment before both reads finish. Then follow the
-original agent's first-output rule. Do not copy, paraphrase or replace its rules.
+original agent's first-output rule: the ENTIRE first nonempty assistant
+natural-text block must contain ONLY the original agent's required greeting,
+with no prefix, suffix or explanation. Make the next action a separate native
+read tool call of an assigned required source/input; wait for that tool result
+before any further assistant prose. This supplied bootstrap declares a native
+serialization boundary, not replacement agent rules. Do not copy, paraphrase
+or replace the original agent rules.
 Read the complete bundled instructions:
 {self.bundle / 'skills/no-comments/SKILL.md'}
 {self.bundle / 'skills/pstack-herdr/references/agents/comment-sicko.md'}

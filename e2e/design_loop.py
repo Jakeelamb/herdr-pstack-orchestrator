@@ -1090,7 +1090,8 @@ Native reads/searches handle inspection. No Git signing/hook bypass flags.
 After winner integration and the successful final behavior oracle (and any
 reader-load/formal review), BEFORE final diff review, ANY commit or PR, run the
 mandatory no-comments child review. Read original no-comments and CommentSicko
-guides yourself; write exactly this body to {self.artifacts / 'comment-brief.md'}
+guides yourself. The supplied bootstrap is required execution-boundary disclosure,
+not copied agent content; write exactly this body to {self.artifacts / 'comment-brief.md'}
 then launch slot comment-review once on its integration cwd, configured worker
 {self.role_workers['judgment and prose'][0]}. No other replacement or retry.
 --- BEGIN EXACT COMMENT BRIEF ---
@@ -1243,7 +1244,13 @@ assignment yourself. No config/model/trust changes, retries, commits or forge.
 Runtime bootstrap: BEFORE ANY nonempty assistant natural-language text, use
 native tools to FULL-read the original no-comments skill and CommentSicko agent
 below. No preamble or acknowledgment before both reads finish. Then follow the
-original agent's first-output rule. Do not copy, paraphrase or replace its rules.
+original agent's first-output rule: the ENTIRE first nonempty assistant
+natural-text block must contain ONLY the original agent's required greeting,
+with no prefix, suffix or explanation. Make the next action a separate native
+read tool call of an assigned required source/input; wait for that tool result
+before any further assistant prose. This supplied bootstrap declares a native
+serialization boundary, not replacement agent rules. Do not copy, paraphrase
+or replace the original agent rules.
 Full-read original bundled guides:
 {self.bundle / 'skills/no-comments/SKILL.md'}
 {self.bundle / 'skills/pstack-herdr/references/agents/comment-sicko.md'}

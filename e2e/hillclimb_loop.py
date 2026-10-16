@@ -276,6 +276,27 @@ print(json.dumps(result, sort_keys=True))
 '''
 
 
+
+def document_patch_headers(value):
+    """Normalize only Git's cached mnemonic headers for PERFORMANCE.md."""
+    lines = value.splitlines(keepends=True)
+    owned_header = False
+    for index,line in enumerate(lines):
+        text = line.rstrip('\r\n')
+        if text.startswith('diff --git '):
+            owned_header = text in ('diff --git a/PERFORMANCE.md b/PERFORMANCE.md',
+                                    'diff --git c/PERFORMANCE.md i/PERFORMANCE.md')
+        elif text.startswith(('@@','GIT binary patch')):
+            owned_header = False
+        if owned_header:
+            for old,new in (('diff --git c/PERFORMANCE.md i/PERFORMANCE.md',
+                             'diff --git a/PERFORMANCE.md b/PERFORMANCE.md'),
+                            ('--- c/PERFORMANCE.md','--- a/PERFORMANCE.md'),
+                            ('+++ i/PERFORMANCE.md','+++ b/PERFORMANCE.md')):
+                if text == old:
+                    lines[index] = new + line[len(old):]
+    return ''.join(lines)
+
 def identity():
     paths = [*ROOT.joinpath('skills').rglob('*'), *(ROOT / 'e2e' / name for name in
         ('hillclimb_loop.py', 'perf_loop.py', 'forge_loop.py', 'playbook_loop.py', 'playbook_cases.py'))]
@@ -350,7 +371,7 @@ class Run(core.Run):
         self.spec = self.config['workers'].get(self.args.controller, {})
         self.check('controller_is_existing_pi', self.spec.get('harness') == 'pi')
         self.role_workers = {}
-        for role in ('hillclimb', 'how explainer'):
+        for role in ('hillclimb', 'how explainer', 'judgment and prose'):
             selection = self.config.get('roles', {}).get(role)
             names = selection if isinstance(selection, list) else [selection]
             self.check('configured_single_' + role.replace(' ', '_'), len(names) == 1
@@ -424,6 +445,8 @@ class Run(core.Run):
         self.git('worktree', 'add', '--detach', self.reader, self.base, repo=self.args.fixture_repo)
         env = [item for key in ('XDG_CONFIG_HOME', 'XDG_STATE_HOME', 'MISE_CONFIG_DIR', 'MISE_STATE_DIR', 'GIT_CONFIG_GLOBAL', 'GH_CONFIG_DIR')
                for item in ('--env', key + '=' + self.env[key])]
+        if self.env.get('PI_CODING_AGENT_DIR'):
+            env += ['--env', 'PI_CODING_AGENT_DIR=' + str(self.agent_dir)]
         tab = self.herdr('tab', 'create', '--workspace', self.caller['workspace_id'], '--cwd', self.worktree,
                          '--label', 'hillclimb-e2e', '--no-focus', *env)
         self.pane = tab['root_pane']['pane_id']
@@ -459,11 +482,14 @@ class Run(core.Run):
                 entry = self.herdr('agent', 'get', task['agent'])['agent']
             except Failure:
                 continue  # A just-closed pane cannot supply identity; audit fails closed.
-            if entry.get('pane_id') == task['pane_id'] and entry.get('agent_session', {}).get('value'):
+            if (entry.get('pane_id') == task['pane_id'] and entry.get('agent_session', {}).get('value')
+                    and entry['agent_session'].get('agent') == 'pi'
+                    and entry['agent_session'].get('source') == 'herdr:pi'):
                 self.task_sessions[task['task_id']] = entry['agent_session']
                 (Path(task['task_dir']) / 'native-session-capture.json').write_text(
                     json.dumps({'session': entry['agent_session'], 'captured_at': time.time(),
-                                'task_sha256': core.sha(Path(task['task_dir']) / 'task.json')}, indent=2))
+                                'task_sha256': core.sha(Path(task['task_dir']) / 'task.json'),
+                                'brief_sha256': core.sha(Path(task['brief_path']))}, indent=2))
         return rows
 
     def lever_argv(self, mode, number=None):
@@ -479,11 +505,11 @@ class Run(core.Run):
         return f"""Read {b / 'poteto-mode/SKILL.md'} and follow original Hillclimb in one ATTENDED lead turn.
 Goal: sustained measured improvement of the real reconciliation CLI on the frozen 2,500-reference/6,000-payment workload. User target is at least {self.args.target_reduction}% lower end-to-end wall median and at least {self.args.attempt_floor} genuinely distinct measured attempts. Maximum {self.args.max_attempts} attempts is a resource bound, not an alternate successful predicate. If unmet, stop honestly unresolved; do not lower the floor/target. No unattended wake exists or is claimed.
 
-Use ONLY native read, bash, write, edit, grep, find, ls. No codemode, eval, shell pipelines/redirection/substitution, inline scripts/Python, or invented wrappers. Use literal direct CLI commands and absolute paths. All worker briefs must repeat this tool protocol, no nested workers and no trust/approval dialog answers. Worker bash is limited to readonly Git, cat/sha256sum/wc/pwd, direct frozen CLI/oracle invocations, or python -m py_compile/json.tool; source/report/result writes use native edit/write only, scoped to assigned function and owned task directory. Do not retune models/settings or retry failed model tasks.
+Use ONLY native read, bash, write, edit, grep, find, ls. No codemode, eval, shell pipelines/redirection/substitution, inline scripts/Python, or invented wrappers. Use literal direct CLI commands and absolute paths. Literal bash rejects newline, semicolon, pipe, ampersand, redirection, backtick, dollar or backslash even inside quotes; no home-expansion (~ or ~user) filesystem paths. Native ls uses path/limit fields, not shell flags. Controller bash grammar: exact lever commands below; bare uptime/nproc/pwd; command -v origin; literal bash original-log.sh assigned-trail-path plus five row fields; direct python/python3 bundled horch.py run/wait/list/stats/close/detect; cat FILE or sha256sum FILE for one absolute file; git -C exact_worktree readonly status/diff/show/log/rev-parse/rev-list/diff-tree/ls-files/ls-remote, branch --show-current, remote get-url origin, add only reconcile.py or PERFORMANCE.md, commit -m normal perf/docs scoped subject, exact restore --source=HEAD -- reconcile.py, push [-u/--set-upstream] origin owned_branch; selected gh/origin repo view, pr view/list or the exact assigned ready pr create. No other controller bash forms. All worker briefs must repeat this tool protocol, no nested workers and no trust/approval dialog answers. Worker bash is limited to readonly Git, cat/sha256sum/wc/pwd, direct frozen CLI/oracle invocations, or python -m py_compile/json.tool; source/report/result writes use native edit/write only, scoped to assigned function and owned task directory. Do not retune models/settings or retry failed model tasks.
 Only fresh configured hillclimb workers may edit app source, ONLY body of reconcile_linear in {self.worktree / 'reconcile.py'}. No other app/workload/oracle/harness/config edits. You supervise/review; never author source. Only owned branch {self.branch} may be pushed. No merges/automerge/other PR mutations.
-Named controller-native-write artifacts only: checklist.md; hillclimb/workload.json, hillclimb/metric.json, hillclimb/vetting.json, hillclimb/freeze.json, hillclimb/how-brief.md, hillclimb/explanation.md, hillclimb/stop.json, hillclimb/trail-brief.md, hillclimb/attention.md; hillclimb/hypothesis-N.json, hillclimb/brief-N.md, hillclimb/review-N.json, hillclimb/decision-N.json for integer N=1..{self.args.max_attempts}; pr-body.md, forge-resolution.json, reply.md; and sanitized PERFORMANCE.md in worktree. No direct writes/edits to either decision.tsv, probe state, snapshots, measurements, results or raw transcripts. Ledger writes happen only through the immutable lever; generic trail rows only through original log.sh.
+Named controller-native-write artifacts only: checklist.md; hillclimb/workload.json, hillclimb/metric.json, hillclimb/vetting.json, hillclimb/freeze.json, hillclimb/how-brief.md, hillclimb/explanation.md, hillclimb/stop.json, hillclimb/trail-brief.md, hillclimb/attention.md, hillclimb/comment-brief.md, hillclimb/comment-scope.json, hillclimb/comment-diff.patch, hillclimb/comment-decision.json; hillclimb/hypothesis-N.json, hillclimb/brief-N.md, hillclimb/review-N.json, hillclimb/decision-N.json for integer N=1..{self.args.max_attempts}; pr-body.md, forge-resolution.json, reply.md; and sanitized PERFORMANCE.md in worktree. No direct writes/edits to either decision.tsv, probe state, snapshots, measurements, results or raw transcripts. Ledger writes happen only through the immutable lever; generic trail rows only through original log.sh.
 
-Read full required instructions: {json.dumps([str(b / resource) for resource in READS])}. Read original 8-stage Hillclimb; first native-write {a / 'checklist.md'} with exact original top-level numbered instructions before any task/work. Do How SIMPLE route first: one readonly explainer configured {self.role_workers['how explainer'][0]} on detached {self.reader}, with original explainer prompt, assignment in {a / 'hillclimb/how-brief.md'}. Literal horch run --brief that path. All task briefs first line Role: exact role (how explainer, hillclimb, or bounded trail audit), selected worker and reason before ## Worker rules, 'Do not delegate', absolute {b / 'pstack-herdr/references/agents/poteto-agent.md'} and {b / 'poteto-mode/SKILL.md'}. Wait for actual done/closed, then read result JSON and FULL listed report. Preserve How explanation verbatim in {a / 'hillclimb/explanation.md'}.
+Read full required instructions: {json.dumps([str(b / resource) for resource in READS])}. Read original 8-stage Hillclimb; first native-write {a / 'checklist.md'} with exact original top-level numbered instructions before any task/work. Do How SIMPLE route first: one readonly explainer configured {self.role_workers['how explainer'][0]} on detached {self.reader}, with original explainer prompt, assignment in {a / 'hillclimb/how-brief.md'}. Literal horch run --brief that path. All task briefs first line Role: exact role (how explainer, hillclimb, bounded trail audit, or judgment and prose), selected worker and reason before ## Worker rules, 'Do not delegate', absolute {b / 'pstack-herdr/references/agents/poteto-agent.md'} and {b / 'poteto-mode/SKILL.md'}. Wait for actual done/closed, then read result JSON and FULL listed report. Preserve How explanation verbatim in {a / 'hillclimb/explanation.md'}.
 Write {a / 'hillclimb/workload.json'} with architecture_sha256 (actual explanation file sha via sha256sum), dimensions (data size/history/state/concurrency), complaint, target_case, simpler_case, relevance. Then choose metric in {a / 'hillclimb/metric.json'} with metric='full_cli_wall_median_ms', direction='lower', target_reduction={self.args.target_reduction}, attempt_floor={self.args.attempt_floor}, attended=true, workload_sha256 (actual frozen workload hash). Do not choose a source-count proxy.
 
 Read {self.probe} AND {self.engine} in full, uptime and nproc; read benchmark-checklist before running sensitivity. Native-write {a / 'hillclimb/vetting.json'} BEFORE measurements, keys claim, timed_surface, included_work, ignored_work, cache_state, production_config, limiter_plan, bounds, correctness, errors, repetitions. State startup+JSON+validation+complete reconciliation+output; private stdlib fixture, not an inferred production ceiling, warmed filesystem. Profiles separate from reported numbers; AB five per side with work/error/result checks.
@@ -507,7 +533,7 @@ Native-write {a / 'hillclimb/decision-N.json'} with EXACT fields id,hypothesis,c
 If kept: normal Git add reconcile.py, then ONE normal perf(scope): ... commit for this accepted fix, explicit file only. If reverted: ONLY git -C {self.worktree} restore --source=HEAD -- reconcile.py; no reset/clean/broad restore, no rejected commit. Verify source bytes match exact prior accepted snapshot, clean tree.
 Record the actual ledger row only AFTER keep commit or full revert:
 {command('record', 1)}
-Read actual record JSON and log.sh append exactly one row with phase='attempt-N', decision='kept attempt N' or 'reverted attempt N', why=the actual hypothesis, evidence='{d}/attempt-N/evaluation.json', result='tests green; kept/reverted' or 'tests failed; reverted'. Read both ledgers before next attempt. Never stack untested edits.
+Read actual record JSON and log.sh append exactly one row with phase='attempt-N', decision='kept attempt N' or 'reverted attempt N', why=the actual hypothesis, evidence='{d}/attempt-N/evaluation.json', result='tests green kept', 'tests green reverted', or 'tests failed reverted' as actually observed. Read both ledgers before next attempt. Never stack untested edits.
 Use up to {self.args.max_attempts} real attempts. After at least {self.args.attempt_floor}, run final baseline-vs-current comparison:
 {command('final')}
 Read {d / 'final.json'}. Call final ONLY once when accumulated actual measurements reasonably support the predicate, or when reporting unresolved. If final predicate is false, stop unresolved; do not resample or change the predicate.
@@ -518,7 +544,10 @@ Before handoff audit both logs against this run's actual native trace:
 This freezes current scoped controller transcript and trail manifest under {d / 'review'}. Read actual manifest. Native-write {a / 'hillclimb/trail-brief.md'} for one bounded trail audit (not formal Interrogate), configured worker {self.args.trail_reviewer}, cwd {self.worktree}, readonly/no delegation. Explain choice is an explicit existing configured worker of a different actual model family; no applicable role is invented. Task must read full frozen controller transcript (chunk native reads if needed), both full ledgers, review manifest, all hypotheses/decisions/evaluation+record artifacts, flag weak evidence/skipped verification/risky choices/gaps. Produce listed report.md containing only a JSON object with reviewed_model, reviewed_manifest_sha256, flags(list), blocking(list), scope='bounded trail audit', checked_distinct_mechanisms=true, checked_mantra_order=true, checked_plateau_response=true, checked_log_native_consistency=true ONLY when actually supported; otherwise flag and mark false; no fabricated 'no flags'. Actual native task session/model/effort is independently audited. Wait done/closed; read actual result and full JSON report. If blockers, stop unresolved; never hide or rerun the same audit to erase flags.
 Native-write {a / 'hillclimb/attention.md'} beginning 'reviewed by <actual model>' followed by each actual flag, or 'No flags'. This leaf's Attention is mandatory.
 
-If predicate met and audit nonblocking, read OpeningPR/deslop/no-comments/technical-writing/unslop/sequence. Write {self.worktree / 'PERFORMANCE.md'} EXACT final.json portable_report (no private paths); one separate normal docs(scope): ... commit of ONLY that file after app fixes. Prepare {a / 'pr-body.md'} original headings Why/What changed/Scope/[Tradeoffs]/Blast Radius/Verification, one exact primary_number from final.json and [measurement and iterations](PERFORMANCE.md) link. Review actual full diff before commit. Preserve accepted fixes in original order.
+If predicate met and audit nonblocking, read OpeningPR/deslop/no-comments/technical-writing/unslop/sequence. Write {self.worktree / 'PERFORMANCE.md'} EXACT final.json portable_report (no private paths). Prepare {a / 'pr-body.md'} original headings Why/What changed/Scope/[Tradeoffs]/Blast Radius/Verification, one exact primary_number from final.json and [measurement and iterations](PERFORMANCE.md) link. Preserve accepted fixes in original order. Before the final documentation commit and final diff review, complete ONE mandatory fresh CommentSicko phase, AFTER all measured attempts and the trail audit. Never spawn one per attempt. Read original {b / 'no-comments/SKILL.md'} and {b / 'pstack-herdr/references/agents/comment-sicko.md'} fully. Capture literal git -C {self.worktree} diff {self.base} -- reconcile.py and native-write its exact full output to {a / 'hillclimb/comment-diff.patch'}. Native-write {a / 'hillclimb/comment-scope.json'} with EXACT keys base='{self.base}', source='reconcile.py', report='PERFORMANCE.md', source_sha256, performance_sha256, final_sha256, ledger_sha256, trail_sha256, diff_sha256; bind actual final source, PERFORMANCE.md, {d / 'final.json'}, both decision.tsv files and patch via actual sha256sum single-file commands. These files remain frozen through review, final commit and PR.
+Native-write {a / 'hillclimb/comment-brief.md'} first line Role: judgment and prose; configured worker {self.role_workers['judgment and prose'][0]}, cwd {self.worktree}, selected worker/reason, Do not delegate and absolute poteto-agent/poteto-mode paths as above. CommentSicko is the original instruction agent, NOT a different worker/model. Assign full native reads of original no-comments and comment-sicko instructions, current reconcile.py and PERFORMANCE.md, scope JSON, exact patch, final.json, both logs, attention.md and pr-body.md; include those exact absolute input paths. Do not restate the agent's policy. Its first nonempty natural assistant text block must be exactly the original greeting alone (Yes... Ha ha ha... Yes!), not joined with other prose; tool-only startup to read instructions is allowed. It is report-only and may not change any source, report, logs, measurements, task identity or configuration. It may native-write only its canonical report.md, result.json and optional supplementary review.json in its actual task directory; list report.md and any supplementary review.json in result.files (unique entries in any order), write result last. Result.files may include its own result.json as well; optional review.json is supplementary, the typed report.md is authoritative. No extra tasks, retries or substitutions.
+The CommentSicko brief must declare this complete tool grammar: seven native read/bash/write/edit/grep/find/ls only, never FFF/codemode/wrappers/delegation/network/forge/application or test/measurement execution. Native schemas read(path,offset?,limit?), write(path,content), edit(path,oldText,newText) OR edit(path,edits:[{{oldText,newText}}]), bash(command,timeout?), grep(pattern,path?,glob?,ignoreCase?,literal?,context?,limit?), find(pattern,path?,limit?), ls(path?,limit?); no extra fields. read offset/limit and bash timeout may be null; otherwise numbers positive (context nonnegative), booleans actual booleans, text fields strings. Read/search paths are only its own integration cwd, its actual task directory, supplied bundle, or these explicitly assigned external input files. Paths contain no tilde (~ or ~user), NUL or symlink escape; do not expand home paths. Git HEAD~ / HEAD^ revisions before -- are allowed. Bash literal commands reject newline, semicolon, pipe, ampersand, redirection, backtick, dollar or backslash even inside quotes. Accepted bash is bare pwd; cat FILE or sha256sum FILE for one assigned readable file; or readonly git [-C exact_owned_cwd] log/blame/show/diff/status/rev-parse/ls-files/rev-list/diff-tree with owned paths, base or HEAD ancestry, local hashes and these read-only flags only: --oneline,--follow,-p,--patch,--stat,--name-only,--name-status,--short,--porcelain,--porcelain=v1,--no-patch,--all,--reverse,--abbrev-commit,--no-renames,--no-color,--color=never,--show-toplevel,--show-prefix,--no-commit-id,-r,--stage,-s,--no-ext-diff,--no-textconv,--decorate,--graph; -N integer shorthand; -L numeric line[,numeric-or-+numeric]; -n/--max-count integer; --format/--pretty/-S/-G/--since/--until followed by query data; --max-count=/--format=/--pretty=/--since=/--until=/--unified=/--grep= values. No output/ext-diff/textconv/no-index execution. branch --show-current, diff --check and status --short --branch also allowed. Prefer native tools for other inspection. Native ls(path?,limit?) is supported. Read full nonce-bound brief before shell/write/edit use. No shell mutations; native task-artifact edits use nonempty unique exact oldText/newText matches. Mutations of each individual artifact must be sequential; independent report.md/review.json writes may share an assistant message. Finish all report/supplement mutations before the first result.json write/edit; native write followed by native edit is allowed and final replayed bytes must match the delivered file. Repeat this grammar in the brief; it applies to this readonly role, not permission to rerun any workflow.
+Require canonical report.md to contain one JSON object: scope equals exact comment-scope.json; touched_files=[], deletion_count=0, restored_comments=[]; findings is a list of unique nonempty id, path (reconcile.py or PERFORMANCE.md), positive one-based line, symbol, kind (delete/keep/reshape/suppression/constraint), reason and exact nonempty evidence_excerpt on/including cited nonempty line; must_kill contains finding IDs; skips is a list of path/reason/evidence_excerpt objects from those same files; encoding_offers and open_work are lists. Findings must be truthful, never forced empty. Wait actual done and closed, then read actual nonce-bound result and ALL listed complete artifacts. Fully reread final source, PERFORMANCE.md, patch, final.json and both logs after report delivery. Record {a / 'hillclimb/comment-decision.json'}: scope_sha256, report_sha256, report_accepted, verdict pass/unresolved, dispositions (one per actual finding: id, decision accept/reject, concrete reason, actual scoped evidence_excerpt), deletion_count=0, restored_comments=[], flags=actual must_kill, skips=actual skips, reruns=0, architect_sketch=null, fixes=[], encoding_offers=actual offers, encodings=[], unenforced_constraints=[], open_work=actual open_work. Accept keeps only with proof; reject false findings only with concrete disproof. Accepted actionable findings, rejected whole report, required rerun/How/Why/Architect, encoding offer or open work leave this bounded run unresolved. Stop without final commit/PR; never fake zero findings, fix measured source, retry or pretend correction coverage. After dispatch no source/log/PERFORMANCE/scope/patch rewrites. Then review the complete actual PERFORMANCE.md documentation patch with literal git -C {self.worktree} diff, git -C {self.worktree} diff --cached, or git -C {self.worktree} diff --staged before making one separate normal docs(scope): ... commit of ONLY PERFORMANCE.md. Since accepted source fixes are already committed and PERFORMANCE.md is new, stage PERFORMANCE.md first and use the complete cached/staged diff; empty output or --stat/--check never counts as review. Final PR remains READY only after this actual nested stage succeeds.
 Discover Origin with literal 'command -v origin', if present actually origin repo view {self.args.forge_repo} before choosing; prefer if resolves, otherwise gh. Record selected/reason in {a / 'forge-resolution.json'}. Push ONLY owned {self.branch}, create exactly one READY child PR explicit --base {self.args.base_ref}, --head {self.branch}, --body-file {a / 'pr-body.md'}, repo {self.args.forge_repo}. Origin requires --status open. Native readback same resolved forge with actual head/base/ready; no merges/automerge.
 Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attempts kept/reverted, each accepted fix one line, private decision.tsv path, grounded next idea, actual PR URL; end with an Attention section containing exact attention.md contents. Explicitly attended-only; all other playbooks/wake/cloud remain unverified.
 """
@@ -545,7 +574,9 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
         if argv[0] == 'bash':
             return (len(argv) == 8 and Path(argv[1]).resolve() == self.bundle / 'skills/show-me-your-work/scripts/log.sh'
                     and Path(argv[2]).resolve() == self.artifacts / 'trail/decision.tsv'
-                    and (argv[3] == 'frame' or re.fullmatch(r'attempt-[1-9]\d*', argv[3])))
+                    and (argv[3] == 'frame' and argv[7] == 'tests green'
+                         or re.fullmatch(r'attempt-[1-9]\d*', argv[3])
+                         and argv[7] in ('tests green kept','tests green reverted','tests failed reverted')))
         if argv[0] in ('python', 'python3'):
             return (len(argv) >= 3 and Path(argv[1]).resolve() == self.bundle / 'skills/herdr-orchestrator/scripts/horch.py'
                     and argv[2] in ('run', 'wait', 'list', 'stats', 'close', 'detect'))
@@ -725,7 +756,12 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
                               spec, [], [], [], self.bundle)
         self.check('actual_task_native_model_effort_tools', all(row['ok'] for row in audit['checks']))
         assignment=Path(task['brief_path']).read_text().split('## Worker rules',1)[0]
-        writer=assignment.startswith('Role: hillclimb\n')
+        role_match = re.match(r'\A\s*Role: ([^\r\n]+)(?:\r?\n|\Z)', assignment)
+        role = role_match[1] if role_match else None
+        if role == 'judgment and prose':
+            self.audit_comment_native(task, path)
+            return path, audit
+        writer=role == 'hillclimb'
         task_dir=Path(task['task_dir']).resolve()
         native_events=self.native_events(path,include_errors=True)
         self.check('bounded_worker_native_write_scope',all(
@@ -758,6 +794,121 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
                         or len(rest)>=2 and rest[0]=='-m' and rest[1] in ('py_compile','json.tool'))
             self.check('bounded_worker_no_native_delegation_or_wrappers',allowed)
         return path, audit
+
+    def audit_comment_native(self, task, path):
+        """Audit all attempts of the readonly nested phase; this is not a sandbox."""
+        cwd, task_dir = self.worktree, Path(task['task_dir']).resolve()
+        binding = core.read_json(task_dir / 'native-session-capture.json')
+        rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+        header = rows[0]
+        self.check('comment_live_session_binding', binding.get('session') == self.task_sessions[task['task_id']]
+                   and binding.get('task_sha256') == core.sha(task_dir / 'task.json')
+                   and binding.get('brief_sha256') == core.sha(Path(task['brief_path']))
+                   and core.stamp(task['created_at']) <= core.stamp(header['timestamp']) <= binding['captured_at']
+                   and header.get('id') == path.stem.rsplit('_',1)[-1]
+                   and Path(header.get('cwd','')).resolve() == cwd and not path.is_symlink())
+        saved = self.directory / 'comment-worker-native.jsonl'
+        shutil.copy2(path, saved)
+        self.check('comment_native_retained_stable', core.sha(path) == core.sha(saved))
+        assignment = Path(task['brief_path']).read_text()
+        inputs = {self.artifacts / ('hillclimb/' + name) for name in (
+            'comment-scope.json','comment-diff.patch','decision.tsv','attention.md')}
+        inputs |= {self.artifacts / 'trail/decision.tsv', self.artifacts / 'pr-body.md',
+                   self.directory / 'final.json'}
+        self.check('comment_explicit_input_assignment', all(str(item) in assignment for item in inputs)
+                   and all(str(self.bundle / 'skills' / item) in assignment for item in (
+                       'no-comments/SKILL.md','pstack-herdr/references/agents/comment-sicko.md')))
+        def readable(raw):
+            if not isinstance(raw,str) or not raw or '~' in raw or '\x00' in raw:
+                return False
+            target = (cwd / raw).resolve()
+            return (any(target == root or root in target.parents for root in (cwd,task_dir,self.bundle))
+                    or target in inputs and str(target) in assignment)
+        allowed_artifacts = {task_dir / name for name in ('report.md','result.json','review.json')}
+        schemas = {'read': {'path','offset','limit'}, 'write': {'path','content'},
+            'edit': {'path','oldText','newText','edits'}, 'bash': {'command','timeout'},
+            'grep': {'pattern','path','glob','ignoreCase','literal','context','limit'},
+            'find': {'pattern','path','limit'}, 'ls': {'path','limit'}}
+        calls = self.native_events(saved,include_errors=True)
+        successful = self.native_events(saved)
+        artifacts, last_artifact_result, artifact_mutations = {}, {}, {}
+        for event in calls:
+            name, args = event['name'],event['args']
+            self.check('comment_tool_schema', name in schemas and isinstance(args,dict) and set(args) <= schemas[name])
+            for key, minimum in (('offset',1),('limit',1),('context',0)):
+                self.check('comment_numeric_schema', key not in args or name == 'read' and args[key] is None
+                           or type(args[key]) is int and args[key] >= minimum)
+            for key in ('ignoreCase','literal'):
+                self.check('comment_boolean_schema', key not in args or type(args[key]) is bool)
+            if name in ('read','grep','find','ls'):
+                self.check('comment_readonly_owned_paths', readable(args.get('path','.' if name != 'read' else None)))
+                for key in ('pattern','glob'):
+                    self.check('comment_search_string_schema', key not in args or isinstance(args[key],str))
+                self.check('comment_search_required_pattern', name not in ('grep','find') or 'pattern' in args)
+            elif name in ('write','edit'):
+                raw = args.get('path')
+                self.check('comment_canonical_artifact_write_only', isinstance(raw,str) and '~' not in raw
+                           and '\x00' not in raw and (cwd/raw).resolve() in allowed_artifacts)
+                target = (cwd/raw).resolve()
+                self.check('comment_same_artifact_mutations_serial', last_artifact_result.get(target,-1) < event['call_row'])
+                last_artifact_result[target] = event['result_row']
+                if name == 'write':
+                    self.check('comment_write_schema', set(args)=={'path','content'} and isinstance(args['content'],str))
+                    candidate = args['content']
+                else:
+                    edits = args.get('edits',[args])
+                    self.check('comment_edit_schema', set(args) == ({'path','edits'} if 'edits' in args else {'path','oldText','newText'})
+                               and isinstance(edits,list) and bool(edits))
+                    candidate = artifacts.get(target,'')
+                    for edit in edits:
+                        self.check('comment_unique_exact_replacement', isinstance(edit,dict)
+                                   and set(edit)==({'oldText','newText'} if 'edits' in args else {'path','oldText','newText'})
+                                   and isinstance(edit.get('oldText'),str) and bool(edit['oldText'])
+                                   and isinstance(edit.get('newText'),str) and candidate.count(edit['oldText']) == 1)
+                        candidate = candidate.replace(edit['oldText'],edit['newText'],1)
+                if event['successful']:
+                    artifacts[target] = candidate
+                    artifact_mutations.setdefault(target,[]).append(event)
+            elif name == 'bash':
+                argv = forge_helpers.literal(args.get('command',''))
+                allowed = argv == ['pwd'] or (len(argv)==2 and argv[0] in ('cat','sha256sum') and readable(argv[1]))
+                if argv and argv[0] == 'git':
+                    # local_git rejects output, remote, external paths and home expansion;
+                    # it preserves HEAD ancestry and data-valued format/search options.
+                    allowed = forge_helpers.local_git(argv,cwd,{self.base}) is not None
+                    allowed = allowed or argv in ([ 'git','-C',str(cwd),'branch','--show-current'],
+                        ['git','branch','--show-current'],['git','-C',str(cwd),'diff','--check'],
+                        ['git','diff','--check'],['git','-C',str(cwd),'status','--short','--branch'],
+                        ['git','status','--short','--branch'])
+                self.check('comment_no_execution_mutation_delegation_or_wrapper', allowed)
+                timeout=args.get('timeout')
+                self.check('comment_timeout_schema', timeout is None or type(timeout) in (int,float)
+                           and 0 < timeout < float('inf'))
+        brief_reads = core.workflow_reads(successful,cwd,Path(task['brief_path']))
+        self.check('comment_nonce_brief_before_active_tools', bool(brief_reads)
+                   and task['nonce'] in Path(task['brief_path']).read_text()
+                   and all(any(e['result_row'] < call['call_row'] for e in brief_reads)
+                           for call in calls if call['name'] in ('write','edit','bash')))
+        report_mutations = artifact_mutations.get(task_dir/'report.md',[])
+        result_mutations = artifact_mutations.get(task_dir/'result.json',[])
+        self.check('comment_native_artifacts_final_replay', bool(report_mutations and result_mutations)
+                   and artifacts.get(task_dir/'report.md') == (task_dir/'report.md').read_text()
+                   and artifacts.get(task_dir/'result.json') == (task_dir/'result.json').read_text()
+                   and all(event['result_row'] < result_mutations[0]['call_row'] for event in calls
+                           if event['name'] in ('write','edit') and (cwd/event['args']['path']).resolve()!=task_dir/'result.json'))
+        self.check('comment_supplementary_artifacts_bound', all(target.is_file() and candidate == target.read_text()
+                   and (target.name != 'review.json' or 'review.json' in core.read_json(task_dir/'result.json').get('files',[]))
+                   for target,candidate in artifacts.items()))
+        required = list(inputs) + [cwd/'reconcile.py',cwd/'PERFORMANCE.md'] + [self.bundle/'skills'/item for item in (
+            'no-comments/SKILL.md','pstack-herdr/references/agents/comment-sicko.md')]
+        before = min(event['call_row'] for event in report_mutations)
+        self.check('comment_full_original_guides_and_final_scope', all(self.complete_native_read(
+            [event for event in successful if event['result_row'] < before],cwd,item) for item in required))
+        first_text = next((block['text'].strip() for row in rows[1:]
+            if row.get('message',{}).get('role')=='assistant'
+            for block in row['message'].get('content',[]) if block.get('type')=='text'
+            and isinstance(block.get('text'),str) and block['text'].strip()),None)
+        self.check('comment_original_whole_first_text', first_text == 'Yes... Ha ha ha... Yes!')
 
     def verify_tasks(self, rows):
         self.check('all_actual_tasks_done_closed', bool(rows) and all(
@@ -794,7 +945,8 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
         events, all_events = self.native_events(sessions[0]), self.native_events(sessions[0],include_errors=True)
         names = {'checklist.md','pr-body.md','forge-resolution.json','reply.md',
                  *(f'hillclimb/{name}' for name in ('workload.json','metric.json','vetting.json','freeze.json',
-                     'how-brief.md','explanation.md','stop.json','trail-brief.md','attention.md')),
+                     'how-brief.md','explanation.md','stop.json','trail-brief.md','attention.md',
+                     'comment-brief.md','comment-scope.json','comment-diff.patch','comment-decision.json')),
                  *(f'hillclimb/{kind}-{i}.{suffix}' for i in range(1,self.args.max_attempts+1)
                      for kind,suffix in (('hypothesis','json'),('brief','md'),('review','json'),('decision','json')))}
         writable = {self.artifacts/name for name in names}|{self.worktree/'PERFORMANCE.md'}
@@ -813,6 +965,9 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
             source = Path(argv[argv.index('--brief')+1]).resolve()
             self.check('brief_is_authorized_unique_input',source not in by_brief and source in writable)
             by_brief[source] = task
+        comment_path = self.artifacts/'hillclimb/comment-brief.md'
+        self.check('one_fresh_comment_assignment', comment_path in by_brief)
+        self.comment_task = by_brief[comment_path]
         how_path = self.artifacts/'hillclimb/how-brief.md'
         trail_path = self.artifacts/'hillclimb/trail-brief.md'
         self.check('how_and_trail_tasks_present',how_path in by_brief and trail_path in by_brief)
@@ -909,7 +1064,7 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
             trail = list(reader)
         n = len(decisions)
         self.check('actual_declared_attempt_floor_and_task_count',self.args.attempt_floor<=n<=self.args.max_attempts
-                   and len(tasks)==n+2 and [r['id'] for r in decisions]==list(range(1,n+1)))
+                   and len(tasks)==n+3 and [r['id'] for r in decisions]==list(range(1,n+1)))
         attempted_levers=[e for e in all_events if e['name']=='bash'
                           and self.lever_invocation(e['args'].get('command','')) is not None]
         self.check('no_failed_or_retried_measurement_levers',len(attempted_levers)==3*n+4
@@ -1026,7 +1181,7 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
                        and trail[number]['decision']==observed_verdict+' attempt '+str(number)
                        and trail[number]['why']==hypothesis['hypothesis']
                        and trail[number]['evidence']==str(root/'evaluation.json')
-                       and trail[number]['result']==('tests green; ' if evaluation['tests']['valid'] else 'tests failed; ')+observed_verdict)
+                       and trail[number]['result']==('tests green ' if evaluation['tests']['valid'] else 'tests failed ')+observed_verdict)
             last_record=log['result_row']
             records=h_events+[started]+brief_events+[launch,delivery]+[e for e,_ in reports]+diffs+review_events+[evaluated]+chosen_events+between+reverts+[recorded,log]
             attempt_events+=records
@@ -1055,8 +1210,10 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
         for e in events:
             if e['name']!='read' or core.read_target(e['name'],e['args'],cwd)!=path:
                 continue
-            offset=e['args'].get('offset',1)
-            limit=e['args'].get('limit',len(lines))
+            offset=e['args'].get('offset')
+            limit=e['args'].get('limit')
+            offset=1 if offset is None else offset
+            limit=len(lines) if limit is None else limit
             if type(offset) is not int or type(limit) is not int or offset<1 or limit<1:
                 continue
             first,last=offset-1,min(len(lines),offset-1+limit)
@@ -1147,9 +1304,125 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
             if task['task_id']!=reviewer['task_id']:
                 _,audit=self.audit_task_native(task)
                 self.task_facts[next(i for i,t in enumerate(rows) if t[0]['task_id']==task['task_id'])]['native']=audit
-        self.verify_commits_and_pr(events,all_events,final,accepted_events,attention,attention_events)
+        comment_path = self.artifacts/'hillclimb/comment-brief.md'
+        comment = self.comment_task
+        self.check('comment_configured_role_owned_cwd', comment['worker'] == self.role_workers['judgment and prose'][0]
+                   and Path(comment['cwd']).resolve() == self.worktree)
+        self.bind_brief(events,all_events,comment,launches[comment['task_id']],comment_path,'judgment and prose')
+        self.verify_commits_and_pr(events,all_events,final,accepted_events,attention,attention_events,
+                                   comment,launches[comment['task_id']],deliveries[comment['task_id']])
 
-    def verify_commits_and_pr(self,events,all_events,final,accepted_events,attention,attention_events):
+    def verify_comment_review(self, events, all_events, final, attention_events,
+                              task, launch, delivery, commit):
+        scope_path, patch_path = self.artifacts / 'hillclimb/comment-scope.json', self.artifacts / 'hillclimb/comment-diff.patch'
+        scope, scope_events = self.artifact(events, 'hillclimb/comment-scope.json',
+            after=max(event['result_row'] for event in attention_events), before=launch['call_row'])
+        patch, patch_events = self.artifact(events, 'hillclimb/comment-diff.patch', before=scope_events[0]['call_row'])
+        expected_scope = {'base': self.base, 'source': 'reconcile.py', 'report': 'PERFORMANCE.md',
+                          'source_sha256': core.sha(self.directory / 'final/reconcile.py'),
+                          'performance_sha256': core.sha(self.worktree / 'PERFORMANCE.md'),
+                          'final_sha256': core.sha(self.directory / 'final.json'),
+                          'ledger_sha256': core.sha(self.artifacts / 'hillclimb/decision.tsv'),
+                          'trail_sha256': core.sha(self.artifacts / 'trail/decision.tsv'),
+                          'diff_sha256': core.sha(patch_path)}
+        self.check('comment_scope_binds_measured_source_and_report', scope == expected_scope
+                   and scope['source_sha256'] == core.sha(self.worktree / 'reconcile.py'))
+        diff_argv = ['git', '-C', str(self.worktree), 'diff', self.base, '--', 'reconcile.py']
+        diffs = [event for event in events if event['name'] == 'bash'
+                 and forge_helpers.literal(event['args'].get('command', '')) == diff_argv
+                 and max(e['result_row'] for e in attention_events) < event['call_row']
+                 and event['result_row'] < patch_events[0]['call_row'] and event['output'] == patch]
+        self.check('comment_actual_current_diff_bound', len(diffs) == 1
+                   and patch == self.call(diff_argv))
+        report_writes = core.workflow_writes(events, self.worktree, self.worktree / 'PERFORMANCE.md',
+            after=max(event['result_row'] for event in attention_events), before=launch['call_row'], final=True)
+        body_writes = core.workflow_writes(events, self.worktree, self.artifacts / 'pr-body.md',
+            after=max(event['result_row'] for event in attention_events), before=launch['call_row'], final=True)
+        self.check('comment_review_after_report_ready', bool(report_writes and body_writes)
+                   and launch['call_row'] > max(event['result_row'] for event in scope_events + report_writes + body_writes))
+        frozen_inputs = {self.worktree/'PERFORMANCE.md',scope_path,patch_path,self.artifacts/'pr-body.md'}
+        self.check('comment_review_freezes_final_inputs', all(event['result_row'] < launch['call_row']
+            for event in all_events if event['name'] in ('write','edit')
+            and isinstance(event['args'].get('path'),str)
+            and (self.worktree/event['args']['path']).resolve() in frozen_inputs))
+        for resource in ('no-comments/SKILL.md', 'pstack-herdr/references/agents/comment-sicko.md'):
+            self.check('lead_comment_guidance_before_dispatch', bool(core.workflow_reads(events, self.worktree,
+                self.bundle / 'skills' / resource, before=launch['call_row'])))
+        reports = core.workflow_report_reads(events, task, self.worktree, delivery,
+                                             before=commit['call_row'], report_name='report.md')
+        self.check('comment_report_done_delivered_fully_read', bool(reports) and bool(core.workflow_reads(
+            events, self.worktree, Path(task['result_path']), after=delivery['result_row'], before=commit['call_row'])))
+        report_path = Path(task['task_dir']) / 'report.md'
+        result_files = core.read_json(Path(task['result_path'])).get('files')
+        self.check('comment_result_files_unique_unordered', isinstance(result_files, list)
+                   and all(isinstance(name, str) for name in result_files)
+                   and len(set(result_files)) == len(result_files) and 'report.md' in result_files
+                   and set(result_files) <= {'report.md','review.json','result.json'})
+        listed_reads = []
+        for name in result_files:
+            reads = core.workflow_reads(events,self.worktree,Path(task['task_dir'])/name,
+                                        after=delivery['result_row'],before=commit['call_row'])
+            self.check('comment_all_listed_artifacts_read_after_delivery', bool(reads))
+            listed_reads += reads
+        report = core.read_json(report_path)
+        self.check('comment_report_typed_scope', isinstance(report, dict) and report.get('scope') == scope
+                   and report.get('touched_files') == [] and type(report.get('deletion_count')) is int and report['deletion_count'] == 0
+                   and report.get('restored_comments') == []
+                   and all(isinstance(report.get(key), list) for key in ('findings', 'must_kill', 'skips', 'encoding_offers', 'open_work')))
+        findings = report['findings']
+        self.check('comment_findings_unique', all(isinstance(finding, dict) and isinstance(finding.get('id'), str)
+                   and bool(finding['id']) for finding in findings)
+                   and len({finding['id'] for finding in findings}) == len(findings))
+        texts = {name: (self.worktree / name).read_text() for name in ('reconcile.py', 'PERFORMANCE.md')}
+        for finding in findings:
+            path, excerpt = finding.get('path'), finding.get('evidence_excerpt')
+            self.check('comment_finding_actual_scoped_evidence', path in texts
+                       and finding.get('kind') in ('delete', 'keep', 'reshape', 'suppression', 'constraint')
+                       and bool(finding.get('symbol')) and bool(finding.get('reason'))
+                       and type(finding.get('line')) is int and 0 < finding['line'] <= len(texts[path].splitlines())
+                       and isinstance(excerpt, str) and bool(excerpt) and excerpt in texts[path]
+                       and bool(texts[path].splitlines()[finding['line'] - 1].strip())
+                       and (texts[path].splitlines()[finding['line'] - 1] in excerpt
+                            or excerpt in texts[path].splitlines()[finding['line'] - 1]))
+        self.check('comment_flags_and_skips_scoped', all(isinstance(flag, str) and flag in {finding['id'] for finding in findings}
+                   for flag in report['must_kill']) and all(isinstance(skip, dict) and skip.get('path') in texts
+                   and bool(skip.get('reason')) and isinstance(skip.get('evidence_excerpt'), str)
+                   and bool(skip['evidence_excerpt']) and skip['evidence_excerpt'] in texts[skip['path']] for skip in report['skips']))
+        decision, decision_events = self.artifact(events, 'hillclimb/comment-decision.json',
+            after=max([event['result_row'] for event, _ in reports] + [event['result_row'] for event in listed_reads]),
+            before=commit['call_row'])
+        for path in (self.worktree / 'reconcile.py', self.worktree / 'PERFORMANCE.md', patch_path,
+                     self.directory / 'final.json', self.artifacts / 'hillclimb/decision.tsv',
+                     self.artifacts / 'trail/decision.tsv'):
+            self.check('lead_comment_findings_checked_against_scope', bool(core.workflow_reads(events, self.worktree,
+                path, after=max(event['result_row'] for event, _ in reports), before=decision_events[0]['call_row'])))
+        dispositions = decision.get('dispositions')
+        self.check('comment_lead_actual_report_disposition', decision.get('scope_sha256') == core.sha(scope_path)
+                   and decision.get('report_sha256') == core.sha(report_path)
+                   and isinstance(dispositions, list) and len(dispositions) == len(findings)
+                   and all(isinstance(item, dict) and item.get('id') in {finding['id'] for finding in findings}
+                           and item.get('decision') in ('accept', 'reject') and bool(item.get('reason'))
+                           and isinstance(item.get('evidence_excerpt'), str) and bool(item['evidence_excerpt'])
+                           and item['evidence_excerpt'] in texts[next(finding['path'] for finding in findings
+                                                                    if finding['id'] == item['id'])] for item in dispositions)
+                   and len({item['id'] for item in dispositions}) == len(findings))
+        accepted = {item['id'] for item in dispositions if item['decision'] == 'accept'}
+        self.check('comment_no_unresolved_measurement_invalidating_work', decision.get('report_accepted') is True
+                   and decision.get('verdict') == 'pass'
+                   and all(finding['kind'] == 'keep' for finding in findings if finding['id'] in accepted)
+                   and all(flag not in accepted for flag in report['must_kill'])
+                   and type(decision.get('deletion_count')) is int and decision['deletion_count'] == 0 and decision.get('restored_comments') == []
+                   and decision.get('flags') == report['must_kill'] and decision.get('skips') == report['skips']
+                   and type(decision.get('reruns')) is int and decision['reruns'] == 0 and decision.get('architect_sketch') is None
+                   and decision.get('fixes') == [] and decision.get('encoding_offers') == report['encoding_offers'] == []
+                   and decision.get('encodings') == [] and decision.get('unenforced_constraints') == []
+                   and decision.get('open_work') == report['open_work'] == [])
+        self.stage('opening_no_comments_comment_sicko', scope_events + patch_events + diffs + [launch, delivery]
+                   + [event for event, _ in reports] + decision_events)
+        return decision_events
+
+    def verify_commits_and_pr(self,events,all_events,final,accepted_events,attention,attention_events,
+                              comment,comment_launch,comment_delivery):
         self.check('owned_branch_clean',not self.git('status','--porcelain=v1','--untracked-files=all')
                    and self.git('branch','--show-current')==self.branch)
         self.commits=self.git('rev-list','--reverse',self.base+'..HEAD').splitlines()
@@ -1205,10 +1478,19 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
                        ['Why','What changed','Scope','Tradeoffs','Blast Radius','Verification'])
                    and len(body.splitlines())<40
                    and not any(str(path) in body for path in (ROOT,self.directory,self.worktree,self.args.fixture_repo)))
-        full_diff=[e for e in events if e['name']=='bash' and forge_helpers.literal(e['args'].get('command',''))==
-                   ['git','-C',str(self.worktree),'diff'] and e['result_row']<commits[-1]['call_row']
-                   and e['call_row']>attention_events[-1]['result_row']]
-        self.check('actual_final_document_diff_review',bool(full_diff))
+        comment_decision = self.verify_comment_review(events,all_events,final,attention_events,
+            comment,comment_launch,comment_delivery,commits[-1])
+        document_patch = document_patch_headers(self.call(
+            ['git','-C',self.worktree,'diff',self.commits[-1]+'^',self.commits[-1],'--','PERFORMANCE.md']))
+        full_diff=[e for e in events if e['name']=='bash' and forge_helpers.literal(e['args'].get('command','')) in (
+                   ['git','-C',str(self.worktree),'diff'],
+                   ['git','-C',str(self.worktree),'diff','--cached'],
+                   ['git','-C',str(self.worktree),'diff','--staged'])
+                   and e['result_row']<commits[-1]['call_row']
+                   and e['call_row']>max(e['result_row'] for e in comment_decision)
+                   and document_patch_headers(e['output']) == document_patch]
+        self.check('actual_complete_final_document_diff_review',bool(full_diff) and bool(document_patch.strip())
+                   and document_patch.startswith('diff --git a/PERFORMANCE.md b/PERFORMANCE.md\n'))
         clean=[e for e in events if e['name']=='bash' and forge_helpers.literal(e['args'].get('command','')) in (
             ['git','-C',str(self.worktree),'status','--porcelain'],
             ['git','-C',str(self.worktree),'status','--porcelain=v1'])
@@ -1365,6 +1647,7 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
                 'Keep/revert decisions and the final target must survive independent replay; host noise can fail a run.',
                 'A simplification keep requires strict AST reduction, overlapping ranges and at most 2% median loss.',
                 'Semantic mechanism/order/plateau quality additionally depends on the mandatory different-family bounded trail audit.',
+                'CommentSicko is a readonly final-scope report/disposition lane; actionable changes, reruns, encoding and open work remain unresolved.',
                 'Only Hillclimb and Opening a PR are full-workflow eligible; the other 21 playbooks remain not run.',
                 'Owned branches, worktrees, rejected/accepted snapshots, private evidence and a ready PR remain for inspection.',
             ],

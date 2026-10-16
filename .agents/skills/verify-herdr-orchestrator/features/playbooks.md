@@ -62,11 +62,16 @@ unchanged and disclose this separate judgment; owned-path search does not prove
 pre-dispatch containment. Its earlier standalone Opening a PR eligibility is
 withdrawn: ready child/commit/body/ref facts are verified, but the mandatory
 Comment Sicko review was omitted. Reading no-comments is not applying it.
-The current Perf and Authoring drivers require an actual fresh configured
-Comment Sicko task and accepted delivered report before final review/commit;
+The current Perf, Authoring, Design and Hillclimb drivers require an actual fresh
+configured Comment Sicko task and accepted delivered report before final PR review;
 a bounded task-count rule cannot waive this child skill. Their independent
 code reviews do not replace fresh passing live receipts. Perf additionally
 requires live worker UUIDs and all-attempt native scope audits.
+The third Perf attempt was manually stopped on explicitly prohibited How Bash
+listing and Git `rev:path` calls. Its separate metadata audit confirms owned-local
+reads and complete brief disclosure; the original FAIL remains unchanged.
+The new contract admits only exact owned-cwd How listing and bounded
+`HEAD:path`/`HEAD~:path` reads. A fresh run must verify the expanded grammar.
 Authoring additionally needs existing creator guidance
 and its validator dependencies; Runtime uses `runtime_loop.py` with Node
 Inspector and built-in WebSocket support. Preserve failed receipts and disclose
@@ -116,6 +121,8 @@ declared repairs; the mandatory delegated comment review also needs execution.
 `hillclimb_loop.py` additionally requires an explicit configured different-family
 `--trail-reviewer` and the pristine reconciliation baseline. It retains all
 measured attempts and both original log formats; the run is attended.
+Its final Comment Sicko review follows the stable attempts and trail audit,
+before final PR review and the documentation commit.
 `babysit_loop.py` requires a real bottom-to-top `--stack-prs` base chain and
 existing Bun. It runs one original watcher Check with private locked dependencies
 and independent forge snapshots. Neither driver has live evidence yet. Check

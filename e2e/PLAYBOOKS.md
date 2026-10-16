@@ -87,11 +87,11 @@ Read the measured results and each fresh receipt before reporting coverage.
 |---|---|
 | `pause_pickup.py` | Two fresh Pi sessions, one local WIP commit, scoped prior trail and persisted importer verification; no remote writes |
 | `forge_loop.py` | Private invoice fixture; captured repository snapshot, audited How/Why delivery, two ordered test/fix commits and a ready child PR; original live-source Why remains unresolved |
-| `design_loop.py` | Feature or Refactoring, actual How/Architect/Arena stages, independent behavior/equivalence and a ready private child PR |
+| `design_loop.py` | Feature or Refactoring, actual How/Architect/Arena stages, independent behavior/equivalence, fresh Comment Sicko delivery and a ready private child PR |
 | `perf_loop.py` | Fresh profiles, separate unprofiled alternating CLI timings, one-function fix and a ready private child PR |
 | `authoring_loop.py` | Actual skill-authoring guidance, existing validator, two independently traced usage cases and a ready private child PR |
 | `runtime_loop.py` | Owned live Node Inspector process, CPU capture, benign instrumentation and source-attributed diagnosis; no fix or PR |
-| `hillclimb_loop.py` | Attended measured attempts, both original decision-log formats, different-family trail review and a ready private child PR |
+| `hillclimb_loop.py` | Attended measured attempts, both original decision-log formats, different-family trail review, fresh Comment Sicko delivery and a ready private child PR |
 | `babysit_loop.py` | One read-only Check pass over an explicit real private PR chain; no drive, background wake or merge |
 
 For continuity:
@@ -143,6 +143,9 @@ combines the improvement target with at least three distinct measured attempts.
 Every candidate is retained, and decisions are independently replayed; neither
 kept nor reverted counts are predetermined. Attended iteration does not prove
 durable wake or unattended execution.
+A fresh Comment Sicko review follows the stable measured attempts and trail
+audit, before final PR review and the documentation commit. Accepted attempt
+checkpoint commits precede that final review.
 
 Babysit requires `--stack-prs` as at least two real PR numbers in bottom-to-top
 base-chain order. It executes the original watcher once and binds its actual
@@ -451,11 +454,11 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 |---|---|
 | Investigation | [FAIL](evidence/playbook-investigation-concat.json): native grammar gap and unresolved synthesis; correct stop does not satisfy successful presentation |
 | Bug fix | Original live-query [scope failure](evidence/playbook-forge-scope-audit.json) and later [snapshot quarantine](evidence/playbook-forge-quarantine-audit.json); full workflow unresolved |
-| Feature | Reviewed `design_loop.py`; live design/implementation Arena, behavior gate and real PR still unrun |
-| Refactoring | Reviewed `design_loop.py`; live frozen baseline, equivalence and real PR still unrun |
+| Feature | Reviewed `design_loop.py`, including mandatory Comment Sicko delivery; live Arena, behavior gate and real PR still unrun |
+| Refactoring | Reviewed `design_loop.py`, including mandatory Comment Sicko delivery; live frozen baseline, equivalence and real PR still unrun |
 | Prototype | [PASS: fixed-direction behavioral core workflow](evidence/playbook-prototype.json); open visual design search unverified |
-| Perf issue | [Second machine PASS rejected by independent worker-tool audit](evidence/playbook-perf-worker-tools-audit.json); measured behavior and PR verified, full Perf protocol unresolved |
-| Hillclimb | Reviewed `hillclimb_loop.py`; live sensitivity, measured attempts, independent decisions and PR unrun; unattended wake unavailable |
+| Perf issue | [Second machine PASS rejected by worker-tool audit](evidence/playbook-perf-worker-tools-audit.json); [third attempt stopped on declared grammar violations](evidence/playbook-perf-worker-shell-audit.json); full Perf unresolved |
+| Hillclimb | Reviewed `hillclimb_loop.py`, including mandatory Comment Sicko delivery; live sensitivity, attempts, decisions and PR unrun; unattended wake unavailable |
 | Runtime forensics | [PASS: five-stage owned-process diagnosis](evidence/playbook-runtime.json); raw Inspector/profile/source independently checked; large-artifact delegation unverified |
 | Trace forensics | [PASS: bounded paired-capture core workflow](evidence/playbook-trace.json); large-capture delegation unverified |
 | Visual parity | Untouched screenshots, real migration, zero pixel diff, real PR |

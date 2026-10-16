@@ -68,6 +68,12 @@ The [first Authoring run](evidence/playbook-authoring-literal-reanalysis.json)
 has correct explicit skill usage and rollback observations, but no complete
 workflow pass: controller command/diff contracts failed and mandatory Comment
 Sicko delegation was omitted.
+The [third Perf attempt](evidence/playbook-perf-worker-shell-audit.json) was
+manually stopped after its How worker used explicitly prohibited Bash listing
+and Git `rev:path` forms. These were local reads of the owned repository, and
+the restrictions were present in its brief. Its original FAIL remains unchanged.
+The current evaluator permits only the observed bounded How forms under a new
+contract; independent code review does not establish a fresh workflow pass.
 
 For live replacement and removal of worker definitions, use the existing
 `check_workers.py --hot-swap-only` mode. It keeps two real reconciliation tasks

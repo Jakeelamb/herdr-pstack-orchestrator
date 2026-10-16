@@ -22,6 +22,7 @@ import subprocess
 import sys
 import time
 import traceback
+import uuid
 
 import forge_loop as support
 import playbook_loop as core
@@ -46,6 +47,7 @@ READS = (
     'principle-prove-it-works/SKILL.md', 'principle-migrate-callers-then-delete-legacy-apis/SKILL.md',
     'principle-separate-before-serializing-shared-state/SKILL.md',
     'principle-sequence-verifiable-units/SKILL.md', 'principle-exhaust-the-design-space/SKILL.md',
+    'pstack-herdr/references/agents/comment-sicko.md',
 )
 
 # An external immutable oracle witnesses real application failures as JSON data,
@@ -231,6 +233,9 @@ class Run(core.Run):
         self.baseline, self.snapshots = {}, {}
         self.role_workers = {}
         self.worker_sessions = {}
+        self.comment_native = {}
+        self.agent_dir = Path(self.env.get('PI_CODING_AGENT_DIR') or Path.home() / '.pi/agent').expanduser().resolve()
+        self.comment_settings = {}
 
     def preflight(self):
         self.check('positive_duration', self.args.max_seconds > 0)
@@ -247,7 +252,7 @@ class Run(core.Run):
         self.spec = self.config['workers'].get(self.args.controller, {})
         self.check('controller_is_pi', self.spec.get('harness') == 'pi')
         roles = ['how explorer', 'how explainer', 'architect runners', 'arena cross-judge pool',
-                 'feature, refactoring', 'interrogate reviewers']
+                 'feature, refactoring', 'interrogate reviewers', 'judgment and prose']
         if self.args.scenario == 'feature':
             roles.append('arena runners')
         for role in roles:
@@ -256,7 +261,19 @@ class Run(core.Run):
             self.check('role_' + role.replace(' ', '_'), bool(names) and all(name in self.config['workers']
                        and self.config['workers'][name].get('harness') == 'pi' for name in names))
             self.role_workers[role] = names
-        self.check('single_explorer_explainer_implementer', all(len(self.role_workers[r]) == 1 for r in ('how explorer', 'how explainer', 'feature, refactoring')))
+        self.check('single_explorer_explainer_implementer_comment', all(len(self.role_workers[r]) == 1 for r in (
+            'how explorer', 'how explainer', 'feature, refactoring', 'judgment and prose')))
+        comment_spec = self.config['workers'][self.role_workers['judgment and prose'][0]]
+        overrides = ('--session', '--session-dir', '--session-id', '--no-session', '--continue', '--resume', '-c', '-r')
+        self.check('comment_default_scoped_sessions', not any(arg == flag or arg.startswith(flag + '=')
+                   for arg in comment_spec.get('args', []) for flag in overrides))
+        self.check('comment_session_environment_supported', not self.env.get('PI_CODING_AGENT_SESSION_DIR')
+                   and (not self.env.get('PI_CODING_AGENT_DIR')
+                        or Path(self.env['PI_CODING_AGENT_DIR']).expanduser().is_absolute()))
+        for path in (self.agent_dir / 'settings.json', self.args.fixture_repo / '.pi/settings.json'):
+            self.comment_settings[path] = core.sha(path) if path.is_file() else None
+            self.check('comment_default_session_setting_' + str(len(self.comment_settings)),
+                       not path.is_file() or not core.read_json(path).get('sessionDir'))
         self.check('architect_panel_and_independent_judge', len(self.role_workers['architect runners']) >= 2
                    and bool(set(self.role_workers['arena cross-judge pool']) - set(self.role_workers['architect runners'])))
         if self.args.scenario == 'feature':
@@ -312,15 +329,18 @@ class Run(core.Run):
         else:
             definitions += [('implementation', 'feature, refactoring', 'implementation'), ('reader-load', 'how explainer', 'reader-load')]
         definitions += [(f'review-{i}', 'interrogate reviewers', 'interrogate') for i in range(len(self.role_workers['interrogate reviewers']))]
+        definitions += [('comment-review', 'judgment and prose', 'no-comments')]
         for slot, role, phase in definitions:
-            cwd = self.worktree if slot == 'implementation' else self.worktree.parent / slot
+            cwd = self.worktree if slot in ('implementation', 'comment-review') else self.worktree.parent / slot
             if cwd != self.worktree:
                 self.git('worktree', 'add', '--detach', cwd, self.base, repo=self.args.fixture_repo)
             self.slots[slot] = {'role': role, 'phase': phase, 'cwd': str(cwd)}
         (self.directory / 'slots.json').write_text(json.dumps(self.slots, indent=2) + '\n')
         tab = self.herdr('tab', 'create', '--workspace', self.caller['workspace_id'], '--cwd', self.worktree,
                          '--label', 'design-e2e', '--no-focus', *sum((['--env', key + '=' + self.env[key]] for key in
-                         ('XDG_CONFIG_HOME', 'XDG_STATE_HOME', 'MISE_CONFIG_DIR', 'MISE_STATE_DIR', 'GIT_CONFIG_GLOBAL', 'GH_CONFIG_DIR')), []))
+                         ('XDG_CONFIG_HOME', 'XDG_STATE_HOME', 'MISE_CONFIG_DIR', 'MISE_STATE_DIR', 'GIT_CONFIG_GLOBAL', 'GH_CONFIG_DIR')), []),
+                         *(['--env', 'PI_CODING_AGENT_DIR=' + self.env['PI_CODING_AGENT_DIR']]
+                           if self.env.get('PI_CODING_AGENT_DIR') else []))
         self.pane = tab['root_pane']['pane_id']
         brief = self.directory / 'controller-brief.md'
         brief.write_text(self.prompt())
@@ -351,7 +371,8 @@ class Run(core.Run):
                 try:
                     entry = self.herdr('agent', 'get', task['agent'])['agent']
                     session = entry.get('agent_session') or {}
-                    if session.get('agent') == 'pi' and session.get('source') == 'herdr:pi' and session.get('value'):
+                    if (session.get('agent') == 'pi' and session.get('source') == 'herdr:pi' and session.get('value')
+                            and (role_header(task)[2] != 'comment-review' or entry.get('agent_status') == 'working')):
                         self.worker_sessions[task['task_id']] = session
                         (self.directory / 'worker-sessions.json').write_text(json.dumps(self.worker_sessions, indent=2) + '\n')
                 except Failure:
@@ -388,6 +409,20 @@ bash, write, edit, grep, find, ls; no codemode, wrappers or native subagents.
 Nested tool results cannot be bound by this evaluator. Preserve configured
 models, effort, permission flags, Git hooks/signatures and original Mise roots.
 No trust answers, config/auth changes, model substitutions or failure retries.
+Controller Bash uses ONE literal command per call: no newline, ; | & > <,
+backtick, dollar sign or backslash anywhere, even quoted. No pipelines, shell
+expansion, printf/test/ls wrappers or inline interpreters. Use native read/ls/
+grep/find for inspection. Actual unchanged isolated worker config is
+{self.directory / 'config/herdr-orchestrator/workers.toml'}; do not expand XDG.
+Accepted controller forms: python/python3 PROBE --repo PATH --output PATH --mode
+MODE; python/python3 BUNDLED_HORCH run|wait|list|close|stats|detect ARGS (no -B);
+git (optional -C EXACT_INTEGRATION_CWD) status/diff/show/log/blame/rev-parse/
+rev-list/diff-tree/ls-files/ls-remote with no --output; git add [--] cli.py and/or
+storage.py; git commit without -n or hook/signature bypass; git push [-u or
+--set-upstream] origin {self.branch}; git branch --show-current; git remote get-url
+origin; gh/origin repo view, pr list/view/create (create exact base/head/repo,
+ready); cat ONE_FILE without flags; pwd; command -v origin; which origin.
+No other command is accepted. Use native-written --body-file for multiline PRs.
 Use only bundled {self.bundle / 'skills/herdr-orchestrator/scripts/horch.py'} for
 delegation; run includes --caller-pane {self.pane}. Literal standalone horch wait
 must report done before reading each result.json and ALL its listed artifacts.
@@ -403,6 +438,8 @@ Complete this assignment yourself. Workers cannot commit or write forge state.
 Configured roles: {json.dumps(self.role_workers)}.
 Allocated independent worktrees: {json.dumps(self.slots)}. Use each slot once;
 no replacements/retries. All non-implementation worktrees remain source-frozen.
+The mandatory comment-review slot is the one exception to baseline reader cwds:
+it reads the stable actual integration worktree, with NO source writes.
 Only cli.py/storage.py may change for Feature; only storage.py for Refactoring.
 Never change money.py, e2e_import.py or other tracked files. No generated files
 or private artifacts in Git. Keep notes under {self.artifacts} and worker outputs
@@ -425,6 +462,28 @@ After create, actual PR view JSON includes headRefOid,headRefName,baseRefName,is
 Use literal standalone git, forge, horch and external-oracle commands. Git add
 names files explicitly. No inline interpreters, shell chaining or source scripts.
 Native reads/searches handle inspection. No Git signing/hook bypass flags.
+
+After winner integration and the successful final behavior oracle (and any
+reader-load/formal review), BEFORE final diff review, ANY commit or PR, run the
+mandatory no-comments child review. Read original no-comments and CommentSicko
+guides yourself; write exactly this body to {self.artifacts / 'comment-brief.md'}
+then launch slot comment-review once on its integration cwd, configured worker
+{self.role_workers['judgment and prose'][0]}. No other replacement or retry.
+--- BEGIN EXACT COMMENT BRIEF ---
+{self.comment_brief()}--- END EXACT COMMENT BRIEF ---
+Wait for actual done/closed, then full-read result.json, report.md and review.json.
+Write {self.artifacts / 'comment-disposition.json'} with actual task_id,
+report_sha256, decision ('accept' or 'unresolved'), summary, findings_assessment,
+deletion_count, restored_comments, reruns, architect_sketch, fixes, encoding_offers,
+encodings, unenforced_constraints, skips, open_work. All are arrays except the
+first four strings and deletion_count integer. Assess real findings against the
+original rules, not invented zero findings. A source revision, rejected report,
+rerun, deeper How/Why/Architect, encoding approval or unresolved constraint means
+STOP unresolved BEFORE commit/PR; retain evidence, no retries or source changes.
+The bounded pass path requires no findings needing revision, flags or open work;
+then findings_assessment/reruns/architect_sketch/fixes/encodings are empty arrays.
+Freeze the inspected source through commit. Preserve complete disposition JSON
+verbatim under a No-comments heading in final reply, including all summary fields.
 
 Behavior oracle is immutable {self.probe}; invoke it with standalone python3
 --repo PATH --output NEW_EXTERNAL_DIRECTORY --mode characterize|feature. It
@@ -529,6 +588,178 @@ retained artifacts and real PR URL. No broader inventory/Interrogate/Scrap claim
 beyond what actually ran. Preserve failures; never report a missing stage passed.
 '''
 
+    def comment_scope(self):
+        return ('cli.py', 'storage.py') if self.args.scenario == 'feature' else ('storage.py',)
+
+    def comment_diff_argv(self):
+        return ['git', '-C', str(self.worktree), 'diff', '--src-prefix=a/', '--dst-prefix=b/',
+                self.base, '--', *self.comment_scope()]
+
+    def comment_brief(self):
+        return f'''Role: judgment and prose
+Phase: no-comments
+Slot: comment-review
+Worker: {self.role_workers['judgment and prose'][0]}
+Reason: configured judgment and prose role fits this bounded CommentSicko audit.
+Use only direct native read/bash/write/edit/grep/find/ls, no codemode or wrappers.
+Do not delegate, use native subagents, or run a whole playbook. Complete this
+assignment yourself. No config/model/trust changes, retries, commits or forge.
+Full-read original bundled guides, without restating or replacing their rules:
+{self.bundle / 'skills/no-comments/SKILL.md'}
+{self.bundle / 'skills/pstack-herdr/references/agents/comment-sicko.md'}
+{self.bundle / 'skills/pstack-herdr/references/agents/poteto-agent.md'}
+{self.bundle / 'skills/poteto-mode/SKILL.md'}
+Your first nonempty assistant text block must be EXACTLY the original agent's
+greeting, with no extra prose: Yes... Ha ha ha... Yes!
+Scope: actual integration files {json.dumps(self.comment_scope())}, cwd
+{self.worktree}, base {self.base}; NOT a detached baseline. Full-read each scoped
+file and inspect the complete real diff with exactly this standalone command:
+{' '.join(self.comment_diff_argv())}
+Bind actual source with exactly this standalone command:
+sha256sum {' '.join(str(self.worktree / name) for name in SOURCE_FILES)}
+Bash accepts ONLY those two exact commands or literal cat ONE_DECLARED_FILE.
+No newline, ; | & > < backtick, dollar sign or backslash anywhere, even quoted;
+no shell expansion, pipelines, wrappers, extra flags, CLI execution or Git writes.
+Native read/grep/find/ls may inspect only scoped files, the four declared guides
+or your own task directory. All source is read-only; write/edit ONLY report.md,
+review.json and result.json in your actual own horch task directory. Never edit
+brief.md, task.json, state.json, application/source/skill or evaluator artifacts.
+Return normal actual nonce, question null; result.files lists exactly report.md
+and review.json, in either order. Report actual findings, no invented zero flags.
+report.md contains scoped touched files, deletion count, MUST KILL flags and skips.
+review.json contains inspections (one object per scoped relative path, with path,
+excerpt verbatim at least 20 characters and conclusion grounded in that file),
+source_sha256 (all four actual source digests), findings (actual path/excerpt/
+reason/action objects), deletion_count (nonnegative integer), restored_comments,
+must_kill, skips, encoding_offers, unenforced_constraints, open_work (arrays).
+This is report-only: recommended changes, rejected/ambiguous findings or any need
+for a deeper How/Why/Architect/encoding/approval go into open_work, never edits or
+nested delegation. Follow the original CommentSicko scope and report honestly.
+'''
+
+    def comment_session(self, task):
+        session = self.worker_sessions.get(task['task_id'], {})
+        cwd = Path(task['cwd']).resolve()
+        encoded = '--' + re.sub(r'[/\\:]', '-', str(cwd).lstrip('/\\')) + '--'
+        directory = self.agent_dir / 'sessions' / encoded
+        value = session.get('value', '')
+        if session.get('kind') == 'path':
+            path = Path(value).expanduser().resolve()
+            self.check('comment_session_exact_owned_directory', path.parent == directory)
+            identity = path.stem.rsplit('_', 1)[-1]
+        else:
+            identity = value
+        try:
+            canonical = str(uuid.UUID(identity))
+        except (ValueError, AttributeError):
+            raise Failure('comment_native_uuid_unavailable') from None
+        self.check('comment_canonical_session_uuid', canonical == identity)
+        # Only this captured UUID in this exact cwd; no unrelated session scan.
+        paths = list(directory.glob('*_' + canonical + '.jsonl'))
+        self.check('comment_one_owned_native_session', len(paths) == 1 and (
+            session.get('kind') != 'path' or paths[0].resolve() == Path(value).resolve()))
+        return paths[0]
+
+    def verify_comment(self, record, events, all_events, final_sources):
+        task, launch = record['task'], record['launch']
+        self.check('comment_after_stable_verified_implementation', launch['call_row'] > self.review_complete_row)
+        for resource in ('no-comments/SKILL.md', 'pstack-herdr/references/agents/comment-sicko.md'):
+            self.check('comment_lead_guidance_' + resource, bool(core.workflow_reads(events, self.worktree,
+                       self.bundle / 'skills' / resource, before=launch['call_row'])))
+        worker = self.config['workers'][task['worker']]
+        source = self.comment_session(task)
+        saved = self.directory / 'comment-native.jsonl'
+        shutil.copy2(source, saved)
+        guides = [self.bundle / 'skills' / name for name in ('no-comments/SKILL.md',
+                  'pstack-herdr/references/agents/comment-sicko.md',
+                  'pstack-herdr/references/agents/poteto-agent.md', 'poteto-mode/SKILL.md')]
+        audit = core.audit_pi(source, self.worker_sessions[task['task_id']], self.worktree,
+                              core.stamp(task['created_at']), worker, guides, [], [], self.bundle)
+        self.check('comment_native_identity_model_effort_guides', all(item['ok'] for item in audit['checks'])
+                   and core.sha(saved) == audit['sha256'])
+        rows = [json.loads(line) for line in saved.read_text().splitlines() if line.strip()]
+        texts = [block.get('text', '') for row in rows if row.get('message', {}).get('role') == 'assistant'
+                 for block in row['message'].get('content', []) if block.get('type') == 'text'
+                 and block.get('text', '').strip()]
+        self.check('comment_original_exact_first_output', bool(texts) and texts[0].strip() == 'Yes... Ha ha ha... Yes!')
+        calls = self.native_events(saved, include_errors=True)
+        successful = [event for event in calls if event['successful']]
+        directory = record['directory'].resolve()
+        scoped = {self.worktree / name for name in self.comment_scope()}
+        outputs = {directory / name for name in ('report.md', 'review.json', 'result.json')}
+        readable = {*guides, *scoped, *outputs, directory / 'brief.md', directory / 'task.json'}
+        sha_argv = ['sha256sum', *(str(self.worktree / name) for name in SOURCE_FILES)]
+        diff_output = self.call(['git', '-C', self.worktree, 'diff', '--src-prefix=a/', '--dst-prefix=b/',
+                                 self.base, 'HEAD', '--', *self.comment_scope()])
+        diffs, hashes = [], []
+        for event in calls:
+            args = event['args']
+            if event['name'] in ('write', 'edit'):
+                self.check('comment_all_attempt_writes_owned_reports', isinstance(args.get('path'), str)
+                           and (self.worktree / args['path']).resolve() in outputs)
+            elif event['name'] in ('read', 'grep', 'find', 'ls'):
+                raw = args.get('path', '.')
+                self.check('comment_read_argument_known', isinstance(raw, str))
+                target = (self.worktree / raw).resolve()
+                self.check('comment_all_attempt_reads_scoped', target in readable or target == directory or directory in target.parents)
+            elif event['name'] == 'bash':
+                argv = support.literal(args.get('command', ''))
+                self.check('comment_all_attempt_literal_commands', argv in (self.comment_diff_argv(), sha_argv)
+                           or len(argv) == 2 and argv[0] == 'cat' and (self.worktree / argv[1]).resolve() in readable)
+                if event['successful'] and argv == self.comment_diff_argv():
+                    self.check('comment_full_diff_bound_to_final_commit', event['output'].rstrip('\n') == diff_output.rstrip('\n'))
+                    diffs.append(event)
+                if event['successful'] and argv == sha_argv:
+                    expected = '\n'.join(final_sources[name] + '  ' + str(self.worktree / name) for name in SOURCE_FILES)
+                    self.check('comment_source_hashes_bound_to_final_commit', event['output'].rstrip('\n') == expected)
+                    hashes.append(event)
+        self.check('comment_actual_diff_and_hash_observations', bool(diffs) and bool(hashes))
+        writes = []
+        for name in ('report.md', 'review.json'):
+            native = core.workflow_writes(successful, self.worktree, directory / name, final=True)
+            self.check('comment_complete_native_report_' + name, len(native) == 1
+                       and native[0]['args']['content'] == (directory / name).read_text())
+            writes.append(native[0])
+        start = min(event['call_row'] for event in writes)
+        for path in [*guides, *scoped]:
+            self.check('comment_complete_native_scope_read_' + path.name, bool(core.workflow_reads(
+                successful, self.worktree, path, before=start)))
+        self.check('comment_observations_before_report', max(diffs[0]['result_row'], hashes[0]['result_row']) < start)
+        facts = core.read_json(directory / 'review.json')
+        inspections = facts.get('inspections', [])
+        self.check('comment_real_scope_evidence', isinstance(inspections, list) and len(inspections) == len(scoped)
+                   and {item.get('path') for item in inspections if isinstance(item, dict)} == set(self.comment_scope())
+                   and all(isinstance(item.get('excerpt'), str) and len(item['excerpt']) >= 20
+                           and item['excerpt'] in (self.worktree / item['path']).read_text()
+                           and isinstance(item.get('conclusion'), str) and bool(item['conclusion'].strip()) for item in inspections)
+                   and facts.get('source_sha256') == final_sources)
+        self.check('comment_typed_actual_findings', type(facts.get('deletion_count')) is int
+                   and facts['deletion_count'] >= 0 and all(isinstance(facts.get(key), list) for key in (
+                       'findings', 'restored_comments', 'must_kill', 'skips', 'encoding_offers', 'unenforced_constraints', 'open_work')))
+        self.check('comment_no_revision_or_unresolved_work', facts['deletion_count'] == 0
+                   and all(not facts[key] for key in ('findings', 'restored_comments', 'must_kill',
+                                                     'encoding_offers', 'unenforced_constraints', 'open_work')))
+        report = (directory / 'report.md').read_text()
+        self.check('comment_original_report_fields', all(name in report for name in self.comment_scope())
+                   and all(word in report.lower() for word in ('deletion', 'must kill', 'skip')))
+        disposition = self.written(events, 'comment-disposition.json', after=self.read_before(record))
+        resolved = json.loads(disposition['args']['content'])
+        self.check('comment_evidence_bound_lead_disposition', resolved.get('task_id') == task['task_id']
+                   and resolved.get('report_sha256') == core.sha(directory / 'report.md') and resolved.get('decision') == 'accept'
+                   and isinstance(resolved.get('summary'), str) and bool(resolved['summary'].strip())
+                   and all(resolved.get(key) == facts[key] for key in ('deletion_count', 'restored_comments', 'skips',
+                       'encoding_offers', 'unenforced_constraints', 'open_work'))
+                   and all(resolved.get(key) == [] for key in ('findings_assessment', 'reruns', 'architect_sketch', 'fixes', 'encodings')))
+        source_targets = {self.worktree / name for name in SOURCE_FILES}
+        self.check('comment_source_frozen_after_launch', not any(event['name'] in ('write', 'edit')
+                   and isinstance(event['args'].get('path'), str) and (self.worktree / event['args']['path']).resolve() in source_targets
+                   and event['call_row'] > launch['call_row'] for event in all_events))
+        self.comment_native = dict(audit, source_sha256=final_sources, diff_sha256=digest_text(diff_output),
+                                   report_sha256=core.sha(directory / 'report.md'), audit_completed=True)
+        self.comment_disposition = disposition['args']['content']
+        self.review_complete_row = max(self.review_complete_row, disposition['result_row'])
+        self.stage('no_comments_fresh_review', [launch, record['delivery'], *record['reads'], disposition])
+
     def task_records(self, tasks, events):
         launches, deliveries = core.workflow_launches(events, tasks, self.worktree, self.bundle)
         self.check('native_launch_and_delivery_binding', set(launches) == set(deliveries) == {t['task_id'] for t in tasks})
@@ -551,6 +782,13 @@ beyond what actually ran. Preserve failures; never report a missing stage passed
             self.check('worker_bounded_protocol', all(word in brief for word in ('Do not delegate', 'codemode', task['worker'],
                        str(self.bundle / 'skills/poteto-mode/SKILL.md'),
                        str(self.bundle / 'skills/pstack-herdr/references/agents/poteto-agent.md'))) and bool(re.search(r'reason|because', brief, re.I)))
+            if slot == 'comment-review':
+                expected = self.comment_brief().rstrip('\n') + '\n\n' + horch.WORKER_RULES.format(
+                    result_path=Path(task['result_path']), task_id=task['task_id'], nonce=task['nonce'])
+                self.check('comment_exact_bounded_brief', brief == expected)
+                self.check('comment_exact_unique_report_files', isinstance(result.get('files'), list)
+                           and len(result['files']) == 2 and all(isinstance(name, str) for name in result['files'])
+                           and set(result['files']) == {'report.md', 'review.json'} and result.get('question') is None)
             reads = []
             for path in [result_path, *(Path(task['task_dir']) / name for name in result.get('files', []))]:
                 self.check('result_artifact_scope', path.resolve() == result_path.resolve() or Path(task['task_dir']).resolve() in path.resolve().parents)
@@ -868,6 +1106,7 @@ beyond what actually ran. Preserve failures; never report a missing stage passed
             raise Failure('architecture_scrap_required_unresolved')
         self.stage('architect_agree_implement_scrap', [selection, rationale, throughput, after, scrap])
         self.verify_interrogate(records, events, bool(design['contested'] or implementation['contested']), after)
+        self.verify_comment(records['comment-review'], events, all_events, final_sources)
         self.verify_commits(events, commits, final_sources, after, mode)
         self.verify_opening(events, all_events, commits[-1], after)
         self.check('oracle_and_baseline_integrity', core.sha(self.probe) == self.probe_hash)
@@ -876,6 +1115,7 @@ beyond what actually ran. Preserve failures; never report a missing stage passed
         for slot, record in records.items():
             cwd = Path(record['task']['cwd'])
             if cwd == self.worktree:
+                self.check('integration_slot_scope_' + slot, slot in ('implementation', 'comment-review'))
                 continue
             mutable = self.args.scenario == 'feature' and slot.startswith('implementation-') and slot != 'implementation-judge'
             changed = set(self.git('diff', '--name-only', self.base, repo=cwd).splitlines())
@@ -988,8 +1228,16 @@ beyond what actually ran. Preserve failures; never report a missing stage passed
         review = self.written(events, 'review.json', before=commit_events[0]['call_row'], after=self.review_complete_row)
         self.check('actual_diff_review', bool(json.loads(review['args']['content']).get('decision')))
         expected = self.git('diff', self.base, 'HEAD')
-        diffs = [e for e in events if e['name'] == 'bash' and support.literal(e['args'].get('command', ''))[:2] == ['git', 'diff']
-                 and e['output'].strip() == expected.strip() and e['result_row'] < review['call_row']]
+        diffs = []
+        for event in events:
+            if event['name'] != 'bash':
+                continue
+            argv = support.literal(event['args'].get('command', ''))
+            if len(argv) > 3 and argv[:2] == ['git', '-C'] and argv[2] == str(self.worktree):
+                argv = ['git', *argv[3:]]
+            if (argv[:2] == ['git', 'diff'] and event['output'].strip() == expected.strip()
+                    and event['result_row'] < review['call_row']):
+                diffs.append(event)
         self.check('native_full_diff_reviewed', bool(diffs))
         for resource in ('deslop/SKILL.md', 'no-comments/SKILL.md', 'technical-writing/SKILL.md',
                          'unslop/SKILL.md', 'principle-sequence-verifiable-units/SKILL.md'):
@@ -1054,6 +1302,8 @@ beyond what actually ran. Preserve failures; never report a missing stage passed
         reply = self.written(events, 'reply.md', after=readback[-1]['result_row'])
         self.check('reply_bound_to_real_pr', self.pr['url'] in reply['args']['content']
                    and all(label in reply['args']['content'] for label in THROUGHPUT))
+        self.check('reply_preserves_no_comments_disposition', 'No-comments' in reply['args']['content']
+                   and self.comment_disposition in reply['args']['content'])
         self.stage('opening_a_pr', [choice, push, create, *readback, reply])
 
     def finish(self):
@@ -1071,6 +1321,11 @@ beyond what actually ran. Preserve failures; never report a missing stage passed
         except Exception:
             self.categories.append('task_snapshot_failed')
         for task in self.tasks.values():
+            if role_header(task)[2] == 'comment-review' and task['task_id'] in self.worker_sessions:
+                try:
+                    shutil.copy2(self.comment_session(task), self.directory / 'retained-comment-native.jsonl')
+                except Exception:
+                    self.categories.append('comment_native_snapshot_failed')
             try:
                 state = core.read_json(Path(task['task_dir']) / 'state.json')
                 if not state.get('closed'):
@@ -1104,6 +1359,8 @@ beyond what actually ran. Preserve failures; never report a missing stage passed
                 integrity = integrity and all(core.sha(self.bundle / path) == digest for path, digest in self.hashes.items() if path.startswith('skills/'))
             if self.probe.exists():
                 integrity = integrity and core.sha(self.probe) == self.probe_hash
+            integrity = integrity and all((core.sha(path) if path.is_file() else None) == digest
+                                          for path, digest in self.comment_settings.items())
             if self.original_fixture is not None:
                 fixture_integrity = (self.git('rev-parse', 'HEAD', repo=self.args.fixture_repo, cleanup=True),
                                      self.git('status', '--porcelain=v1', '--untracked-files=all', repo=self.args.fixture_repo, cleanup=True)) == self.original_fixture
@@ -1131,6 +1388,8 @@ beyond what actually ran. Preserve failures; never report a missing stage passed
                    'architect_package_sha256': getattr(self, 'design_package_hash', None),
                    'candidate_outcomes': getattr(self, 'candidate_outcomes', {}),
                    'native_transcript': self.native, 'native_stages': self.stage_proof, 'tasks': self.task_facts,
+                   'comment_native': self.comment_native,
+                   'mandatory_comment_review_verified': 'no_comments_fresh_review' in self.stage_proof,
                    'controller': {key: self.spec.get(key) for key in ('harness', 'provider', 'model', 'effort')},
                    'checks': self.checks, 'failure_categories': self.categories, 'last_phase': self.phase,
                    'commit_count': len(getattr(self, 'commits', [])), 'interrogate_used': getattr(self, 'interrogate_used', False),
@@ -1143,6 +1402,7 @@ beyond what actually ran. Preserve failures; never report a missing stage passed
                        'A necessary synthesis edit outside that conservative provenance protocol remains unresolved.',
                        'Architecture requiring Scrap/reframing remains unresolved; this bounded driver never invents a replacement design round.',
                        'Formal Interrogate runs the entire configured panel only when contested or explicitly used; unresolved review blocks shipping.',
+                       'A fresh configured judgment and prose worker performs the mandatory CommentSicko review on the stable integration diff; any required revision, rejected report, rerun or deeper follow-up leaves this bounded run unresolved.',
                        'CLI equivalence normalizes traceback locations to their final exception line; raw complete stderr remains private.',
                        'Worktrees, owned branch, private artifacts and ready PR are retained; no merge or auto-merge is authorized.',
                    ]}

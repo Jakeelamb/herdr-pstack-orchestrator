@@ -123,8 +123,9 @@ Skill authoring needs existing creator guidance and its validator's PyYAML
 dependency; it never installs that dependency. Explicit forward use does not
 prove automatic discovery. Runtime forensics needs Node with Inspector and
 built-in WebSocket support. Its live V8 frames and shutdown remain unverified.
-Bug fix, Feature, Refactoring, Perf issue, Authoring and live-runtime model
-workflows remain unrun.
+Feature, Refactoring, Perf issue, Authoring and live-runtime model workflows
+remain unrun. The first live Bug fix investigation was stopped for an actual
+repository-scope violation, described below; it produced no fix or PR.
 
 Hillclimb uses the pristine reconciliation baseline and an explicit configured
 `--trail-reviewer` from a different model family. Its declared stop condition
@@ -239,6 +240,20 @@ All six independent CLI replays agree. Session identities, source/config hashes,
 the inherited WIP, clean tree and owned cleanup match. This covers the bounded
 local continuation, not earlier Feature design or later PR/review stages.
 
+The [private-forge attempt](evidence/playbook-forge-scope.json) remains failed.
+An investigator assigned only the fixture repository made an owner-wide issue
+query and received records from another repository. Independent review caught
+this, and the operator manually stopped the run before synthesis, implementation
+or a new PR. The [separate scope audit](evidence/playbook-forge-scope-audit.json)
+records native hashes, counts and cleanup without publishing unrelated content.
+The lead had read a report containing the unrelated repository's identity, but
+no returned issue titles. This was manual intervention, not an automatic adapter
+denial. The unchanged failed receipt records `operator_interrupted`.
+
+Do not repeat that live-query profile with broad forge access. A subsequent
+snapshot/gateway investigation lane needs its own source attribution and live
+evidence. It would not prove credential containment or live worker-forge access.
+
 The [fresh live-replacement receipt](evidence/hot-swap.json) verifies two real
 Pi tasks using distinct configured models. Both were held working while the
 private alias was changed and removed. A dispatch after removal failed without
@@ -264,6 +279,7 @@ This verifies worker definition replacement, not automatic role or skill reload.
 | [Continuity routing](evidence/playbook-continuity-route.json) | Pause passed; Pickup selected a defensible Investigation route that the fixture had not allowed |
 | [Investigation composition](evidence/playbook-investigation-concat.json) | Unsupported inline file composition; separately, an erroneous synthesis correctly remained unresolved |
 | [Forge authentication visibility](evidence/playbook-forge-auth.json) | Isolated XDG hid existing GitHub CLI configuration; preflight stopped before any model or remote mutation |
+| [Forge repository scope](evidence/playbook-forge-scope.json) | Investigator queried outside the assigned repository; independent audit triggered manual halt before synthesis/fix/PR |
 
 Each attempt retained its failure verdict and confirmed owned cleanup. The first
 prototype run did not execute a model task. The contract run produced real
@@ -277,7 +293,7 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 | Playbook | Scenario or remaining requirement |
 |---|---|
 | Investigation | [FAIL](evidence/playbook-investigation-concat.json): native grammar gap and unresolved synthesis; correct stop does not satisfy successful presentation |
-| Bug fix | Reviewed `forge_loop.py`; live failing input, delegated fix and real PR still unrun |
+| Bug fix | [FAIL: investigation exceeded repository scope](evidence/playbook-forge-scope-audit.json); operator halted before synthesis or implementation |
 | Feature | Reviewed `design_loop.py`; live design/implementation Arena, behavior gate and real PR still unrun |
 | Refactoring | Reviewed `design_loop.py`; live frozen baseline, equivalence and real PR still unrun |
 | Prototype | [PASS: fixed-direction behavioral core workflow](evidence/playbook-prototype.json); open visual design search unverified |
@@ -289,7 +305,7 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 | Authoring a skill | Reviewed `authoring_loop.py`; live authored skill, structural usage cases and real PR unrun; automatic discovery separate |
 | Eval | Scoped Pi transcripts are accessible in principle; current global skill catalog violates strict blinding under unchanged settings |
 | Multi-phase plan | Validator exists; executable cloud lanes and configured swarm role are unavailable |
-| Opening a PR | Real forge branch and ready PR with ordered verified commits |
+| Opening a PR | Not reached in the failed Bug fix attempt; real ordered commits and ready child PR remain unverified |
 | Babysit | Reviewed `babysit_loop.py`; live bounded Check unrun; drive/background wake mechanism unavailable |
 | Shipping | Cloud verifier unavailable; no authorization to merge test PRs |
 | Autonomous run | Required wake mechanism unavailable |

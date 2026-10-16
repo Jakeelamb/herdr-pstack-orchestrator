@@ -216,7 +216,7 @@ All three controller harnesses read roles directly from `workers.toml`. Configur
 "interrogate reviewers" = ["glm", "haiku"]
 ```
 
-A single role names one worker; a panel lists one worker per task. Same-model reviews are separate processes, not cross-model validation, so disclose an unmet panel-size or model-diversity requirement. The [adapter instructions](skills/pstack-herdr/SKILL.md) define workflow coordination, role routing, and review. Read-only assignments rely on worker briefs and harness permissions; `horch` is not a sandbox.
+A single role names one worker; a panel lists one worker per task. Same-model reviews are separate processes, not cross-model validation, so disclose an unmet panel-size or model-diversity requirement. The [adapter instructions](skills/pstack-herdr/SKILL.md) define workflow coordination, role routing, and review. Read-only assignments rely on worker briefs and harness permissions; `horch` is not a sandbox. A [live forge attempt](e2e/evidence/playbook-forge-scope-audit.json) was manually stopped after an investigator queried outside its assigned repository; that workflow remains failed.
 
 Cursor modes, hooks, `/loop`, cloud execution, and unavailable MCP or app-driving tools are not supplied; a workflow requiring one stops at that step. For the pinned source, adaptations, exclusions, discovery behavior, and the maintainer sync procedure, see the [selection and compatibility notes](skills/pstack-herdr/references/compatibility.md).
 

@@ -56,6 +56,10 @@ are not yet measured. Authoring additionally needs existing creator guidance
 and its validator dependencies; Runtime uses `runtime_loop.py` with Node
 Inspector and built-in WebSocket support. Preserve failed receipts and disclose
 unsupported native capture or forge paths.
+The first Bug fix investigation was manually stopped after a worker queried
+outside the assigned repository. Its failed receipt and redacted scope audit
+remain published. Do not repeat that profile with broad forge access; a new
+snapshot/gateway lane must be separately reviewed and measured.
 
 `hillclimb_loop.py` additionally requires an explicit configured different-family
 `--trail-reviewer` and the pristine reconciliation baseline. It retains all

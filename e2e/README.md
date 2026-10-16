@@ -26,7 +26,9 @@ performance, Hillclimb, skill-authoring, bounded Babysit Check and live-runtime
 drivers. Portable invoice and
 reconciliation baselines passed their real CLI oracles. The new writable and
 runtime model workflows still require live receipts; implementation and syntax
-checks do not establish those passes.
+checks do not establish those passes. The live Bug fix investigation was
+[manually halted for a repository-scope violation](evidence/playbook-forge-scope-audit.json).
+No fix or new PR resulted, and unrelated query content remains private.
 
 For live replacement and removal of worker definitions, use the existing
 `check_workers.py --hot-swap-only` mode. It keeps two real reconciliation tasks

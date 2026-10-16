@@ -1,0 +1,239 @@
+{
+  "schema": "horch/independent-feature-grounding-gate-audit/v1",
+  "kind": "accepted-prefix and quarantined-terminal metadata audit; not a new passing run",
+  "original_receipt": "playbook-feature-gate.json",
+  "original_receipt_sha256": "0866f8c980e4c17a1c46bbb17d41236f54e9ae31f245757728709345c3e2b7b5",
+  "original_receipt_unchanged": true,
+  "original_workflow_verdict": "fail",
+  "source_revision": "5e238a52b73957bbf81b84ee7c8cc1f674ed92bb",
+  "driver_sha256": "3844443259ca1a2c35e82951d07c9c05e4aeddbd0939222ac605d5e38768e409",
+  "oracle_sha256": "f84be8dc16f8d5c94c72c8ba186ba02f9d81e000b87eb585c2b973076f8004dc",
+  "seconds": 1510.677,
+  "recorded_checks": {
+    "total": 38,
+    "passed": 38,
+    "scope": "prerequisites, runtime prefix, integrity and owned cleanup; final native stages did not complete"
+  },
+  "failure_categories": [
+    "worker_gate_quarantined_stop"
+  ],
+  "tasks": {
+    "actual_working_bindings": 3,
+    "done_and_closed_before_cleanup": 3,
+    "accepted_explorers": 2,
+    "quarantined_explainers": 1
+  },
+  "accepted_explorers": {
+    "configured_provider": "commandcode",
+    "configured_model": "deepseek/deepseek-v4.1-flash",
+    "configured_effort": "max",
+    "tool_attempts": 69,
+    "successful_tool_results": 66,
+    "tool_errors": 3,
+    "pending_tool_calls": 0,
+    "retained_errors": "Three permitted Git blame --no-color attempts returned exit129 for an ambiguous option; corrected blame calls succeeded.",
+    "identity_scope_and_native_delivery_independently_verified": true,
+    "reader_tree": {
+      "entries": 11,
+      "symlinks": 0,
+      "paths_sha256": "7ca4c80a51f9384d06ee4d927a8ad12d4589ff72649ae3e923d7022c566e24eb",
+      "before_equals_after": true
+    },
+    "source_files_unchanged": true,
+    "source_execution_by_explorers": false,
+    "native_outputs_replayed_and_result_last": true,
+    "deliveries": [
+      {
+        "slot": "how-a",
+        "native_rows": 63,
+        "tool_attempts": 43,
+        "native_sha256": "cb572263c249b9d67276377a473da07205246e13b1f052ad2d521b387ab70d28",
+        "report_sha256": "d46b13292f2b2d8c76fe7da59e18498f1c0e38e26d2e8c742a42828a2f05d2df",
+        "gate_sha256": "9a9eb1b4e6f3813fd6d89c719d6fdbba2094cd57f72e0da524650758adc0e059",
+        "lead_gate_call_and_result_rows": [
+          101,
+          102
+        ],
+        "lead_full_read_rows": [
+          103,
+          104,
+          105,
+          106
+        ]
+      },
+      {
+        "slot": "how-b",
+        "native_rows": 41,
+        "tool_attempts": 26,
+        "native_sha256": "21cd386b9e7b2582f47da4379f7b7b5fdba96ce041558ec169674ab2c27093c8",
+        "report_sha256": "1de555a9c1ebaeca10eb11d2c83af3fc1aea55da87a833039805648fb53ad61a",
+        "gate_sha256": "29357560610d8b42011dde4caac3f4892b562cf3692a7ac4f07873ff7eecbe2d",
+        "lead_gate_call_and_result_rows": [
+          95,
+          96
+        ],
+        "lead_full_read_rows": [
+          97,
+          98,
+          99,
+          100
+        ]
+      }
+    ],
+    "approved_lead_prefix_sha256": "f1042b455506a95f801df810822cb0f859bc580a225afa47f13417bb4ab870b6"
+  },
+  "accuracy_caveats": [
+    {
+      "kind": "material unresolved reconciliation",
+      "observation": "Explorer A places persisted missing-total failure before writing; explorer B correctly places it after replacement. The original storage source writes/replaces before computing its summary.",
+      "evidence": "A report lines155\u2013158; B lines232\u2013237; baseline storage.py lines25\u201327. The later independent CLI witness also reproduces post-replace failure.",
+      "synthesis_adjudicated": false,
+      "reason": "The explainer delivery was quarantined; its bodies remain unread."
+    },
+    {
+      "kind": "source-analysis overgeneralization",
+      "observation": "Both reports overgeneralize malformed non-list inputs; empty iterable shapes need not raise TypeError."
+    },
+    {
+      "kind": "unproven instruction-read attribution",
+      "observation": "Explorer B lists AGENTS.md without an explicit native read; startup delivery is unproven."
+    },
+    {
+      "kind": "overbroad fault language",
+      "observation": "Explorer B broadly describes failed-import pending preservation, but later correctly qualifies its post-replace summary-fault discussion."
+    },
+    {
+      "kind": "unnecessary clarification",
+      "observation": "Explorer A asks questions already answered by its assignment."
+    }
+  ],
+  "quarantined_explainer": {
+    "configured_provider": "zai",
+    "configured_model": "glm-5.3",
+    "configured_effort": "max",
+    "state": "done",
+    "closed": true,
+    "native_rows": 50,
+    "native_sha256": "f1e7a474f1005a8d464b2ab9afb5024aeeeef39d084f7ae8b63063c8890475a1",
+    "tool_attempts": 26,
+    "successful_tool_results": 26,
+    "tool_errors": 0,
+    "pending_tool_calls": 0,
+    "calls_by_tool": {
+      "read": 19,
+      "bash": 1,
+      "write": 4,
+      "edit": 2
+    },
+    "report_write_call_rows": [
+      25,
+      29,
+      33
+    ],
+    "report_edit_call_rows": [
+      37,
+      41
+    ],
+    "result_write_call_row": 47,
+    "exposed_bash": {
+      "call_row": 22,
+      "result_row": 24,
+      "command": "ls -la <owned task directory>",
+      "explicitly_permitted": true
+    },
+    "safe_gate_sha256": "b517dd55b0ae9c2503d722fbefe8d9bdae55b5ff6794394823c85d36dfc6a3ff",
+    "safe_gate_category": "worker_scope_or_lifecycle_rejected",
+    "exact_first_internal_exception": "unproven; earlier predicates and quarantined bodies were not replayed",
+    "worker_scope_violation_proven": false,
+    "payload_bodies_consumed_by_independent_reviewers": false
+  },
+  "static_contract_defect": {
+    "confirmed": true,
+    "actual_cause_of_this_failure": "unproven",
+    "declared_contract": "Native write plus exact native edit of declared outputs is permitted.",
+    "checker_behavior": "Final output validation searches only native write events equal to final file text; permitted later edits are not replayed.",
+    "locations_at_recorded_revision": {
+      "gate": "e2e/design_loop.py:622\u2013633",
+      "comment_gate": "e2e/design_loop.py:300",
+      "comment_final_audit": "e2e/design_loop.py:1375",
+      "write_only_helper": "e2e/playbook_loop.py:350"
+    },
+    "forward_repair": "Replay actual successful native write/edit mutations over declared worker artifacts, with exact final bytes, same-file serialization, original input identity and result-last ordering; use real first/last mutation events."
+  },
+  "lead": {
+    "native_rows": 139,
+    "native_sha256": "98cce3d30664fd259b132396efcb4fa1223bcbf1788535cad55562129e31c75f",
+    "tool_attempts": 67,
+    "successful_tool_results": 66,
+    "tool_errors": 1,
+    "pending_tool_calls": 0,
+    "calls_by_tool": {
+      "read": 41,
+      "bash": 18,
+      "write": 8
+    },
+    "retained_error": {
+      "call_row": 119,
+      "result_row": 120,
+      "command": "command -v origin",
+      "explicitly_permitted": true,
+      "error_reason": "unverified; result body not inspected"
+    },
+    "explainer_wait_audit_call_rows": [
+      115,
+      117,
+      127,
+      131,
+      133,
+      137
+    ],
+    "last_tool_call_row": 137,
+    "last_safe_gate_result_row": 138,
+    "quarantined_explainer_report_or_result_reads": 0,
+    "subsequent_tool_calls": 0,
+    "automatic_pre_forward_stop": true,
+    "forge_fallback_semantics": "not verified; metadata ordering and admitted command forms do not prove artifact contents"
+  },
+  "outcome": {
+    "complete_how_verified": false,
+    "architecture_tasks": 0,
+    "implementation_tasks": 0,
+    "comment_tasks": 0,
+    "commits": 0,
+    "pushes": 0,
+    "child_prs": 0,
+    "full_feature_verdict": "unresolved"
+  },
+  "encountered_cli_witness": {
+    "case": "playbook-feature-post-replace-case.json",
+    "case_sha256": "e2810b547a3c89dda614f87c5415e9835c7255da4d322976b23233d3e51c3b47",
+    "receipt": "playbook-feature-post-replace-before.json",
+    "receipt_sha256": "b16e053cf070c22712af0e0d24891d8f15073c46828a4cc50a790f5e98c681a2",
+    "kind": "two actual baseline CLI flows; not a candidate comparison or original workflow stage",
+    "import_exit_code": 1,
+    "summary_error": "KeyError: 'total_cents'",
+    "ledger_replaced_before_error": true,
+    "pending_consumed": true,
+    "complete_sorted_export_exit_code": 0,
+    "new_row_totals": [
+      51,
+      444,
+      401
+    ],
+    "after_candidate_compared": false
+  },
+  "integrity": {
+    "source_unchanged": true,
+    "config_unchanged": true,
+    "original_fixture_head_and_status_unchanged": true,
+    "owned_panes_absent": true
+  },
+  "limitations": [
+    "All quarantined explainer report/result/native-output/write/edit/raw-wait/natural-report payloads and lead copies remain unread.",
+    "No actual worker policy breach or exact first failed predicate is established by the safe metadata.",
+    "The independent static contract defect is a prospective repair, not a reanalysis PASS or proof that the worker completed How correctly.",
+    "Original accepted explorers retain their actual errors and unresolved contradiction.",
+    "The two-flow baseline CLI witness predates any candidate implementation; no new-feature equivalence is claimed.",
+    "Fresh integrated execution must verify any repaired mutation witness and enlarged oracle; package CI and static review are insufficient."
+  ]
+}

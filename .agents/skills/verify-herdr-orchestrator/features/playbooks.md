@@ -209,6 +209,20 @@ scopes reader-load to Refactoring and compares all nine normal observations,
 without replacing the eight new dry-run checks or altering the oracle. A fresh
 immutable execution must verify the repaired Feature contract.
 
+The next Feature run accepted two explorers, then automatically withheld the
+explainer. No metadata proves a tool breach, and no exact first internal throw
+is claimed: its report/result/native-output/write/edit and copied bodies remain
+unread. Static review instead confirms that permitted native output edits can
+fail write-only final checks. Forward repair must replay actual artifact
+mutations, preserve first/last event provenance and result-last ordering, and
+exercise a meaningful source-backed How-summary edit in a fresh Feature run.
+The explorers' unresolved fault-timing contradiction also has an independently
+verified baseline CLI case: persisted missing-total failure occurs after ledger
+replacement. Add only its two normal observations and separate dry counterpart
+to the existing oracle, preserving all earlier cases. Characterization expects
+11 observations/13 checks; Feature 20/23, with all 11 normal records preserved
+for every candidate and final integration. No old FAIL becomes a pass.
+
 The second Hillclimb run separately verified How, three scoped source changes,
 both original logs and retained final full-CLI timings (71.3% reduction).
 The simplification attempt was 0.7% slower within its declared allowance.

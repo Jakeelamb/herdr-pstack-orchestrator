@@ -1,0 +1,45 @@
+{
+  "schema": "horch/encountered-post-replace-cli/v1",
+  "verdict": "pass",
+  "kind": "before characterization only; not Feature verification",
+  "source_sha256": {
+    "money.py": "7fa0c12b3b374830ed93c7777570ffcb23416394ff6b60e47a4c436b600373ac",
+    "storage.py": "c32037b76d52e28908e2a46b40e77bf46be109fdb7fb25afd702070e7d74bfc2",
+    "cli.py": "4dedfc1da14792f2f28b7aa59db358cab589bd3a5985185466884861e750ae22",
+    "e2e_import.py": "5791d79542ebcb9468e421e9cdeb8bea3898e1d745876ff6898f69a1775da137"
+  },
+  "checks": {
+    "import_exit_1": true,
+    "import_empty_stdout": true,
+    "actual_key_error": true,
+    "write_before_failure": true,
+    "pending_replaced_and_absent": true,
+    "complete_sorted_export": true,
+    "source_unchanged": true
+  },
+  "observations": [
+    {
+      "command": "import",
+      "exit_code": 1,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "281e6aeff5b4ddcd2341753e2f71f5ab6dc9dc7e8c6501cb10f79ac6b8af149e",
+      "store_after_sha256": "f1c729c04ff2614e6d7dcaae88873ecabbf8eb241cf78ce23bcb51d72a22ae72",
+      "pending_after_exists": false
+    },
+    {
+      "command": "export",
+      "exit_code": 0,
+      "stdout_sha256": "07f52452260a14a1cfbc8cb362dcb926341fd4613f73aa15a1def01bbc165fca",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "new_row_totals": [
+    51,
+    444,
+    401
+  ],
+  "limitations": [
+    "The current Feature source has not been delivered or compared.",
+    "This actual baseline fault was encountered as a contradiction between accepted How reports; it is not covered by the existing nine normal records."
+  ]
+}

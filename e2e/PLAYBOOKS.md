@@ -618,7 +618,7 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 |---|---|
 | Investigation | [FAIL](evidence/playbook-investigation-concat.json): native grammar gap and unresolved synthesis; correct stop does not satisfy successful presentation |
 | Bug fix | Original live-query [scope failure](evidence/playbook-forge-scope-audit.json) and later [snapshot quarantine](evidence/playbook-forge-quarantine-audit.json); full workflow unresolved |
-| Feature | [Second FAIL/contract stop](evidence/playbook-feature-contract-audit.json): manual stop before worker dispatch on two evaluator defects; prospective phase scoping and normal-behavior preservation repair; earlier scope failure retained; full workflow unresolved |
+| Feature | [Third FAIL/audit](evidence/playbook-feature-gate-audit.json): two accepted explorers; explainer automatically withheld, exact cause unproven; permitted-edit/write-only validator defect identified. Source-grounded accuracy caveats and actual post-replace baseline fault retained; no design/implementation/PR |
 | Refactoring | [Third FAIL/audit](evidence/playbook-refactor-comment-audit.json): eight deliveries, exact How preservation, design selection, source-grounded reader review and actual before/after equivalence verified; Comment first-output breach automatically withheld; no commit/PR |
 | Prototype | [PASS: fixed-direction behavioral core workflow](evidence/playbook-prototype.json); open visual design search unverified |
 | Perf issue | [Fourth FAIL with independent behavior audit](evidence/playbook-perf-comment-audit.json): 70.2% native / 70.0% replay reduction; original output rule and review unresolved |

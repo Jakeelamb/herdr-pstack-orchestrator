@@ -110,6 +110,63 @@ repair scopes that phase explicitly and compares all nine original normal
 observations with the frozen before pin, retaining the eight new dry cases.
 Independent static review and compilation passed; a fresh immutable Feature
 receipt is still required.
+The [third Feature receipt](evidence/playbook-feature-gate.json) retains an
+automatic quarantine of the How explainer. Its [independent audit](evidence/playbook-feature-gate-audit.json)
+verifies two accepted explorers and their 69 attempts: 66 successful results,
+three permitted Git blame errors and no pending calls. Their actual accuracy
+caveats remain disclosed. The third task made three report writes and two native
+edits before result delivery. No exposed metadata proves a worker scope breach;
+the exact first internal exception remains unproven because its bodies were not
+replayed. All rejected explainer bodies stay unread, including any purported
+resolution of the explorers' contradictory fault-timing claims. No Architect,
+implementation, Comment, commit or PR followed.
+
+Independent source review confirms a distinct validator defect: declared native
+output edits are allowed, but final validation seeks only matching full write
+events. The forward repair replays real write/edit mutations with exact bytes,
+same-file ordering and result-last checks. It needs a fresh meaningful native
+edit witness; static repair cannot promote this failed run.
+
+The contradiction also led to an actual two-flow baseline characterization:
+[complete synthetic inputs and expected observations](evidence/playbook-feature-post-replace-case.json)
+and [retained before-only receipt](evidence/playbook-feature-post-replace-before.json).
+A stored row lacks `total_cents`; normal import replaces the complete ledger,
+then raises `KeyError`, consumes the pending file and leaves new rows exportable.
+This is baseline behavior, with no candidate comparison or Feature pass. To
+reproduce it, prepare the existing fixture and materialize the published inputs:
+
+```bash
+proof=$(mktemp -d "${TMPDIR:-/tmp}/feature-fault-XXXXXXXX")
+python3 e2e/forge_loop.py --prepare-fixture "$proof/fixture"
+python3 - "$proof" <<'PYINPUT'
+import json
+from pathlib import Path
+import sys
+area = Path(sys.argv[1])
+case = json.loads(Path('e2e/evidence/playbook-feature-post-replace-case.json').read_text())
+store = area / 'ledger.json'
+store.write_text(json.dumps(case['initial_rows'], sort_keys=True) + '\n')
+store.with_suffix('.pending').write_bytes(bytes.fromhex(case['pending_before_hex']))
+for index, batch in enumerate(case['batches']):
+    (area / f'batch-{index}.json').write_text(json.dumps(batch, sort_keys=True) + '\n')
+PYINPUT
+import_case_status=0
+python3 -B "$proof/fixture/cli.py" import "$proof/ledger.json" "$proof/batch-0.json" "$proof/batch-1.json" > "$proof/import.stdout" 2> "$proof/import.stderr" || import_case_status=$?
+test "$import_case_status" -eq 1
+python3 -B "$proof/fixture/cli.py" export "$proof/ledger.json" > "$proof/export.stdout" 2> "$proof/export.stderr"
+```
+
+The import intentionally exits 1; run the export afterward. Compare the retained
+ledger and export with the case's expected rows: all four rows persist, the old
+row still lacks its total, and `ledger.pending` is absent. Import stdout is empty;
+its traceback ends with the recorded KeyError. Export exits 0 with empty stderr.
+The enlarged existing oracle adds exactly these two normal observations and one
+dry observation on a separate copy of the same initial ledger/pending bytes.
+All original nine normal and eight dry cases remain. Expected totals become
+11 observations/13 checks for characterization and 20/23 for Feature. Every
+candidate and the final integration must preserve all 11 normal records. A new
+immutable live run must verify this stricter witness and mutation replay.
+
 The [second Hillclimb receipt](evidence/playbook-hillclimb-trail.json) also
 remains failed. Its [independent audit](evidence/playbook-hillclimb-trail-audit.json)
 verifies How, three distinct scoped changes, both logs and a retained 71.3%

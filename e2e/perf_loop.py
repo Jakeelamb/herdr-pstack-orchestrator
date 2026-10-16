@@ -1050,7 +1050,8 @@ Write {a / 'reply.md'} with baseline, post-fix, delta, unit, actual PR link, and
         path = sessions[0]
         self.native = core.audit_pi(path, self.session, self.worktree, self.wall_started, self.spec,
                                    [self.bundle / 'skills' / name for name in READS], [], tasks, self.bundle,
-                                   allowed_artifact_copies=((how_report, self.artifacts / 'how-explanation.md'),))
+                                   allowed_artifact_copies=((how_report, self.artifacts / 'how-explanation.md'),),
+                                   allowed_artifact_hashes=(Path(roles['judgment and prose']['task_dir']).resolve() / 'report.md',))
         self.check('native_model_effort_guidance_delivery', all(row['ok'] for row in self.native['checks']))
         events, all_events = self.native_events(path), self.native_events(path, include_errors=True)
         named = {'checklist.md', 'measurement-plan.json', 'baseline-vetting.json', 'how-route.json',

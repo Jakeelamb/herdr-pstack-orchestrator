@@ -674,7 +674,7 @@ def audit_trace(events, calls, cwd, tasks, bundle, requirements, workflow):
 
 def audit_pi(path, session, cwd, started, spec, required_reads, required_commands, tasks, bundle,
              required_invocations=(), required_order=(), workflow=None, implementation_workers=(), configured_roles=None,
-             allowed_artifact_copies=()):
+             allowed_artifact_copies=(), allowed_artifact_hashes=()):
     """Trust native successful calls/results, never a controller's self-report."""
     rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
     if not rows or rows[0].get('type') != 'session' or rows[0].get('version') != 3:
@@ -697,6 +697,37 @@ def audit_pi(path, session, cwd, started, spec, required_reads, required_command
     known_tasks = {task['task_id']: task for task in tasks}
     horch_script = (bundle / 'skills/herdr-orchestrator/scripts/horch.py').resolve()
     copy_pairs = {(str(source), str(destination)) for source, destination in allowed_artifact_copies}
+    hash_sources = {}
+    delivered_closed = set()
+    for source in allowed_artifact_hashes:
+        target = Path(source)
+        owners = [task for task in tasks if target.parent == Path(task['task_dir']).resolve()]
+        if (not target.is_absolute() or target.resolve() != target or not target.is_file()
+                or len(owners) != 1 or target.name in {'brief.md', 'task.json', 'state.json', 'result.json'}):
+            raise Failure('native_artifact_hash_source_invalid')
+        owner = owners[0]
+        if Path(owner['result_path']).resolve() != target.parent / 'result.json':
+            raise Failure('native_artifact_hash_source_invalid')
+        result = read_json(Path(owner['result_path']))
+        state = read_json(target.parent / 'state.json')
+        if (horch.validate_result(result, owner) != 'valid' or result.get('status') != 'completed'
+                or target.name not in result.get('files', [])
+                or state.get('state') != 'done' or state.get('closed') is not True):
+            raise Failure('native_artifact_hash_source_invalid')
+        hash_sources[str(target)] = owner['task_id']
+    def artifact_hash_target(name, args):
+        if name != 'bash' or not isinstance(args.get('command'), str):
+            return None
+        command = args['command']
+        if any(token in command for token in ('\n', ';', '|', '&', '>', '<', '`', '$', '\\')):
+            return None
+        try:
+            words = shlex.split(command)
+        except ValueError:
+            return None
+        if len(words) == 2 and words[0] == 'sha256sum' and words[1] in hash_sources:
+            return Path(words[1])
+        return None
     last = None
     ids = set()
     models = set()
@@ -727,6 +758,9 @@ def audit_pi(path, session, cwd, started, spec, required_reads, required_command
                 command = args.get('command', '')
                 if name == 'bash' and re.search(r'(?:^|[;&|\n]\s*)(?:codex|claude|pi)\b|\bherdr\s+agent\s+start\b', command):
                     raise Failure('native_delegation_forbidden')
+                hash_target = artifact_hash_target(name, args)
+                if hash_target is not None and hash_sources[str(hash_target)] not in delivered_closed:
+                    raise Failure('artifact_hash_before_proven_closed_delivery')
                 pending[block['id']] = (name, args, row_index)
                 calls.append({'name': name, 'args': args, 'call_row': row_index})
         elif message.get('role') == 'toolResult':
@@ -742,6 +776,12 @@ def audit_pi(path, session, cwd, started, spec, required_reads, required_command
                            'call_row': call_row, 'result_row': row_index})
             target = read_target(name, args, cwd)
             is_artifact_copy = False
+            hash_target = artifact_hash_target(name, args)
+            is_artifact_hash = hash_target is not None
+            if is_artifact_hash:
+                target = hash_target
+                if output.strip() != sha(target) + '  ' + str(target):
+                    raise Failure('native_artifact_hash_result_mismatch')
             if name == 'bash':
                 command = args.get('command', '')
                 if not any(token in command for token in ('\n', ';', '|', '&', '>', '<', '`', '$', '\\')):
@@ -798,6 +838,8 @@ def audit_pi(path, session, cwd, started, spec, required_reads, required_command
                                     or stamp(row['timestamp']) < Path(task['result_path']).stat().st_mtime):
                                 raise Failure('native_delivery_binding_failed')
                             delivered.add(task['task_id'])
+                            if event.get('closed') is True:
+                                delivered_closed.add(task['task_id'])
             if target:
                 for task in tasks:
                     directory = Path(task['task_dir']).resolve()
@@ -806,9 +848,9 @@ def audit_pi(path, session, cwd, started, spec, required_reads, required_command
                         if task['task_id'] not in delivered:
                             raise Failure('artifact_read_before_proven_delivery')
                         content = target.read_text().strip()
-                        if not is_artifact_copy and content and content in output:
+                        if not is_artifact_copy and not is_artifact_hash and content and content in output:
                             artifact_reads.add(task['task_id'])
-            if target in required_reads and not is_artifact_copy:
+            if target in required_reads and not is_artifact_copy and not is_artifact_hash:
                 # Native read offsets/truncation and partial sed ranges count only
                 # if the actual result contains the complete required document.
                 content = target.read_text().strip()

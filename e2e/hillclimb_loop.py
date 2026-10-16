@@ -939,9 +939,6 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
         tasks = [t for t,_ in rows]
         sessions = list((self.directory/'native-sessions').glob('*.jsonl'))
         self.check('one_bound_controller_session',len(sessions)==1)
-        self.native = core.audit_pi(sessions[0],self.session,self.worktree,self.wall_started,self.spec,
-                                   [self.bundle/'skills'/name for name in READS],[],tasks,self.bundle)
-        self.check('controller_actual_model_effort_guidance_delivery',all(r['ok'] for r in self.native['checks']))
         events, all_events = self.native_events(sessions[0]), self.native_events(sessions[0],include_errors=True)
         names = {'checklist.md','pr-body.md','forge-resolution.json','reply.md',
                  *(f'hillclimb/{name}' for name in ('workload.json','metric.json','vetting.json','freeze.json',
@@ -968,6 +965,10 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
         comment_path = self.artifacts/'hillclimb/comment-brief.md'
         self.check('one_fresh_comment_assignment', comment_path in by_brief)
         self.comment_task = by_brief[comment_path]
+        self.native = core.audit_pi(sessions[0],self.session,self.worktree,self.wall_started,self.spec,
+                                   [self.bundle/'skills'/name for name in READS],[],tasks,self.bundle,
+                                   allowed_artifact_hashes=(Path(self.comment_task['task_dir']).resolve()/'report.md',))
+        self.check('controller_actual_model_effort_guidance_delivery',all(r['ok'] for r in self.native['checks']))
         how_path = self.artifacts/'hillclimb/how-brief.md'
         trail_path = self.artifacts/'hillclimb/trail-brief.md'
         self.check('how_and_trail_tasks_present',how_path in by_brief and trail_path in by_brief)

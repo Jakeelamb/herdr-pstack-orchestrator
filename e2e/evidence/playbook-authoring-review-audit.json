@@ -1,0 +1,101 @@
+{
+  "schema": "horch/playbook-partial-audit/v1",
+  "kind": "independent post-run evidence review",
+  "scenario": "second Authoring a skill attempt",
+  "original_receipt": "playbook-authoring-review.json",
+  "original_receipt_unchanged": true,
+  "original_receipt_sha256": "b94c3bdc2524cf78ba9a746ce479bddf7c42e2d46ebad08eb15a89cb3762534b",
+  "source_revision": "5f720ae7f0d814461ddad881ac924b0f286369a1",
+  "original_workflow_verdict": "fail",
+  "recorded_checks": {
+    "passed": 171,
+    "total": 172
+  },
+  "first_failed_check": {
+    "name": "comment_complete_actual_diff",
+    "classification": "Evaluator compares a complete staged new-file patch to a later commit that does not exist.",
+    "actual": "Both authored files were staged before Comment dispatch. The native cached diff has complete 16-line and 36-line additions reconstructing the exact frozen files.",
+    "patch_sha256": "d5e994c309c1abb3667dc9a5c8aa32db5ca84d295a0b658ad72494f03d278391",
+    "expected_by_old_checker": "Empty base-to-HEAD patch, because the lead correctly stopped before committing.",
+    "not_established": "This mismatch does not establish missing staging, altered files or a mnemonic-prefix problem."
+  },
+  "actual_forward_usage": {
+    "creator_resources_verified": 9,
+    "ordering": "Full creator guide, lead-authored resources, actual validator success and portable source-link reads precede frozen hashes and both independent usage launches.",
+    "authored_skill_sha256": "6a9a993ac61d3eceff4948141d2848833dd88e123df92e811316c052576ec13c",
+    "authored_reference_sha256": "039a2d616e5edcf858e936eb74a22c9a529236684a772c7cc656351c8d2786ac",
+    "identity": "Both actual configured Pi worker chains, models/efforts, live UUID/cwd bindings, task identities and result-last ordering match.",
+    "successful_usage": {
+      "native_sha256": "b4fea02e0fa419d7d30d2a3886f8b385d4d1dd962f5f18fa2f63d397fd2076c5",
+      "native_tool_calls": 16,
+      "tool_counts": {
+        "read": 12,
+        "bash": 2,
+        "write": 2
+      },
+      "import_attempts": 1,
+      "exported_rows": 6,
+      "total_cents": 994
+    },
+    "rejected_usage": {
+      "native_sha256": "c4e64e09e4594da54a16f33616ecc89c9c3420f861789137bed291981b2efc7c",
+      "native_tool_calls": 16,
+      "tool_counts": {
+        "read": 12,
+        "bash": 2,
+        "write": 2
+      },
+      "import_attempts": 1,
+      "import_exit_code": 2,
+      "retry": false,
+      "seed_rows": 1,
+      "seed_total_cents": 98,
+      "before_after_ledger_sha256": "27a5fbd2f43c031b24625f34737f7136b2447c18feb3964b46277ee8b77805ef",
+      "pending_file_present": false
+    },
+    "retained_driver_independent_replays": "Both match the Decimal oracle and persisted outcomes; this review did not execute another replay.",
+    "application_files_unchanged": 4
+  },
+  "actual_comment_review": {
+    "native_sha256": "8b9fd747373a3a68e63860d130343d5778a22af4f397cdb8261dae76928ff49e",
+    "report_sha256": "1cd098e660878ddca6dc0ece0422b7f74e3f57d8feeba093d7d051e09fb71e23",
+    "typed_review_sha256": "38301b37de26993c60c98e4f6b6823b276c03b3e90da363a2de15bfd34787b42",
+    "completed_and_closed": true,
+    "actual_protocol_violation": "Successful Bash ls -laR on the scoped skill directory was outside its explicitly declared exact diff/cat grammar.",
+    "violation_call_row_zero_based": 16,
+    "violation_result_row_zero_based": 17,
+    "finding_count": 4,
+    "recorded_finding_actions": [
+      "keep"
+    ],
+    "interpretation": "These four entries are keeps, not proposed source revisions. Separate open work requests further verification and possible architecture assessment; those requests remain unadjudicated, not proven necessary changes.",
+    "substantive_open_work_preserved": true
+  },
+  "lead": {
+    "native_sha256": "531b6104c79db91c953ced8d70f276ad15b2f1d7df6b37d8adbc3944df11603e",
+    "disposition_sha256": "645c4ea614484b86350025b6c72df314a8ee3eed6c79ca0d33b7035c0947ba15",
+    "review_sha256": "5b2241f3556e8ee3ed04ec6f2b0c8bc5f48faeb8d353e44dc424e3606dd97ad7",
+    "comment_artifacts_read_after_delivery": true,
+    "decision": "unresolved",
+    "commit_push_or_pr_creation_observed": false,
+    "report_digest_contract_gap": "The required report SHA cannot be obtained through the declared controller grammar, which only allows hashing authored files. The lead disclosed that limitation instead of inventing a digest."
+  },
+  "integrity": {
+    "source_hashes": 217,
+    "bundled_resources": 198,
+    "source_config_creator_settings_checks_pass": true,
+    "original_fixture_checkout_unchanged": true,
+    "tasks_done_and_closed": 3,
+    "owned_panes_absent": "Passes the fail-closed driver cleanup check. Separate final per-pane response receipts were not retained."
+  },
+  "future_contract_corrections": [
+    "Bind the actual complete staged patch to frozen/index source independently of a later commit; bind any eventual commit separately.",
+    "Permit hashing only the actual canonical delivered Comment report after delivery.",
+    "Clarify typed findings versus supported keeps without discarding real recommendations or open work."
+  ],
+  "limitations": [
+    "The original FAIL remains unchanged. Correct forward use and a correct unresolved stop do not complete Authoring or Opening a PR.",
+    "Fixing evaluator attribution and command contracts does not remove the actual Comment shell violation or adjudicate its deeper-work requests.",
+    "No new model run, replay or remote PR check was performed for this audit; no fresh integrated pass is claimed."
+  ]
+}

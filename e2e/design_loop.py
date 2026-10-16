@@ -421,7 +421,11 @@ rev-list/diff-tree/ls-files/ls-remote with no --output; git add [--] cli.py and/
 storage.py; git commit without -n or hook/signature bypass; git push [-u or
 --set-upstream] origin {self.branch}; git branch --show-current; git remote get-url
 origin; gh/origin repo view, pr list/view/create (create exact base/head/repo,
-ready); cat ONE_FILE without flags; pwd; command -v origin; which origin.
+ready); cat ONE_FILE without flags; pwd; command -v origin; which origin;
+exactly sha256sum ABSOLUTE_COMMENT_TASK_DIR/report.md for the actual slot
+comment-review's canonical report only, after its native horch wait proves done
+and closed. No flags, extra operands, other task reports/results or review.json
+hashes. Hash output never replaces the required complete report/result reads.
 No other command is accepted. Use native-written --body-file for multiline PRs.
 Use only bundled {self.bundle / 'skills/herdr-orchestrator/scripts/horch.py'} for
 delegation; run includes --caller-pane {self.pane}. Literal standalone horch wait
@@ -472,6 +476,8 @@ then launch slot comment-review once on its integration cwd, configured worker
 --- BEGIN EXACT COMMENT BRIEF ---
 {self.comment_brief()}--- END EXACT COMMENT BRIEF ---
 Wait for actual done/closed, then full-read result.json, report.md and review.json.
+Run literal sha256sum on ONLY this task's absolute canonical report.md path to
+obtain report_sha256; no hash before its actual native done/closed delivery.
 Write {self.artifacts / 'comment-disposition.json'} with actual task_id,
 report_sha256, decision ('accept' or 'unresolved'), summary, findings_assessment,
 deletion_count, restored_comments, reruns, architect_sketch, fixes, encoding_offers,
@@ -955,10 +961,12 @@ nested delegation. Follow the original CommentSicko scope and report honestly.
         self.check('complete_selected_import_and_grafts', imported == allowed and len(applied) == len(grafts)
                    and all((self.worktree / name).read_text() == text for name, text in state.items()))
 
-    def command_allowed(self, command):
+    def command_allowed(self, command, *, comment_report=None):
         argv = support.literal(command)
         if not argv or any(word in ('--no-verify', '--no-gpg-sign') for word in argv):
             return False
+        if comment_report is not None and argv == ['sha256sum', str(comment_report)]:
+            return True
         binary = Path(argv[0]).name
         if binary in ('python', 'python3'):
             return len(argv) >= 3 and ((self.worktree / argv[1]).resolve() == self.probe or (
@@ -1010,11 +1018,15 @@ nested delegation. Follow the original CommentSicko scope and report honestly.
         self.check('one_native_controller_session', len(paths) == 1)
         native_path = paths[0]
         required = [self.bundle / 'skills' / path for path in (*READS, f'poteto-mode/playbooks/{self.args.scenario}.md')]
-        self.native = core.audit_pi(native_path, self.session, self.worktree, self.wall_started, self.spec, required, [], tasks, self.bundle)
-        self.check('native_model_effort_reads_delivery', all(c.get('ok') is True for c in self.native['checks']))
         events, all_events = self.native_events(native_path), self.native_events(native_path, include_errors=True)
-        self.check('controller_shell_authorization', all(self.command_allowed(e['args'].get('command', '')) for e in all_events if e['name'] == 'bash'))
         records = self.task_records(tasks, events)
+        self.check('unique_comment_hash_owner', 'comment-review' in records)
+        comment_report = Path(records['comment-review']['task']['task_dir']).resolve() / 'report.md'
+        self.native = core.audit_pi(native_path, self.session, self.worktree, self.wall_started, self.spec,
+                                    required, [], tasks, self.bundle, allowed_artifact_hashes=(comment_report,))
+        self.check('native_model_effort_reads_delivery', all(c.get('ok') is True for c in self.native['checks']))
+        self.check('controller_shell_authorization', all(self.command_allowed(e['args'].get('command', ''),
+                   comment_report=comment_report) for e in all_events if e['name'] == 'bash'))
         required_slots = set(self.slots) - {slot for slot in self.slots if slot.startswith('review-')}
         self.check('all_mandatory_slots_used_once', required_slots <= set(records))
         first_launch = min(r['launch']['call_row'] for r in records.values())

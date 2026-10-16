@@ -74,6 +74,13 @@ and Git `rev:path` forms. These were local reads of the owned repository, and
 the restrictions were present in its brief. Its original FAIL remains unchanged.
 The current evaluator permits only the observed bounded How forms under a new
 contract; independent code review does not establish a fresh workflow pass.
+The [second Authoring run](evidence/playbook-authoring-review-audit.json)
+delivered the required comment review and correctly stopped on unresolved work
+before committing or creating a PR. Its complete staged patch was incorrectly
+compared to a nonexistent later commit. That checker defect and an impossible
+report-hash command do not erase the actual Comment shell violation or its
+unadjudicated deeper-work requests. Both usage cases and retained independent
+replays remain correct; the complete workflow remains unresolved.
 
 For live replacement and removal of worker definitions, use the existing
 `check_workers.py --hot-swap-only` mode. It keeps two real reconciliation tasks

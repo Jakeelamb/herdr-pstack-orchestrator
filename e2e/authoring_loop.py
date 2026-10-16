@@ -330,6 +330,11 @@ Accepted controller command grammar (all other commands fail proof):
   and ready status; preserve the forge-selection and readback requirements below.
 - sha256sum followed by exactly one or two authored file paths; cat ONE_FILE
   without flags; pwd; command -v origin; or which origin.
+One additional hash form is allowed ONLY AFTER the actual CommentSicko task is
+done/closed: sha256sum ABSOLUTE_CANONICAL_COMMENT_TASK_DIR/report.md. It hashes
+exactly that one actual owned delivered report, no flags/aliases/extra operands
+or other task files. Use this native result for comment-review.report_sha256;
+no arbitrary task/path hashing is authorized.
 This is the controller grammar; forward workers retain their narrower standalone
 real-CLI/cat grammar below. Never bypass these restrictions with a wrapper.
 Author only {self.worktree / AUTHORED[0]} and {self.worktree / AUTHORED[1]}.
@@ -678,7 +683,10 @@ nonempty passage at least 20 characters) and conclusion explaining actual review
 findings: actual objects with path, excerpt, reason and action; deletion_count:
 actual nonnegative integer; restored_comments, must_kill, skips, encoding_offers,
 unenforced_constraints and open_work: arrays. Record all recommended work rather
-than applying it. This bounded worker cannot run deeper How/Why/Architect or seek
+than applying it. findings means actionable proposed changes, not supported keeps.
+Record supported keeps in skips with their scoped evidence and reasons; preserve
+every actual recommendation and open issue, never manufacture a clean review.
+This bounded worker cannot run deeper How/Why/Architect or seek
 approval: report those needs as open_work. Complete this review yourself.
 '''
 
@@ -721,6 +729,18 @@ approval: report those needs as open_work. Complete this review yourself.
         scoped = {self.worktree / name for name in AUTHORED}
         allowed = {*guides, *scoped, directory / 'brief.md', directory / 'task.json', *outputs}
         diff_argv = ['git', '-C', str(self.worktree), 'diff', '--cached', '--', *AUTHORED]
+        entries = self.git('ls-files', '--stage', '--', *AUTHORED).splitlines()
+        self.check('comment_exact_authored_index_paths', len(entries) == len(AUTHORED)
+                   and {line.split('\t', 1)[1] for line in entries if '\t' in line} == set(AUTHORED)
+                   and all(line.split('\t', 1)[0].endswith(' 0') for line in entries))
+        for name in AUTHORED:
+            indexed = subprocess.run(['git', '-C', str(self.worktree), 'show', ':' + name],
+                                     capture_output=True, timeout=20, check=True).stdout
+            self.check('comment_index_matches_frozen_authored_bytes_' + Path(name).name,
+                       hashlib.sha256(indexed).hexdigest() == self.skill_hashes[name])
+        indexed_diff = self.git('diff', '--cached', self.base, '--', *AUTHORED)
+        self.check('comment_nonempty_complete_index_scope', bool(indexed_diff.strip())
+                   and set(self.git('diff', '--cached', '--name-only', self.base, '--', *AUTHORED).splitlines()) == set(AUTHORED))
         diffs = []
         for event in all_events:
             args = event['args']
@@ -739,7 +759,7 @@ approval: report those needs as open_work. Complete this review yourself.
                            or len(argv) == 2 and argv[0] == 'cat' and (self.worktree / argv[1]).resolve() in allowed)
                 if argv == diff_argv and event['successful']:
                     self.check('comment_complete_actual_diff', patch_headers(event['output']).strip()
-                               == patch_headers(self.git('diff', self.base, 'HEAD')).strip())
+                               == patch_headers(indexed_diff).strip())
                     diffs.append(event)
         self.check('comment_actual_diff_inspected', bool(diffs))
         writes = []
@@ -781,6 +801,20 @@ approval: report those needs as open_work. Complete this review yourself.
                                 'result_sha256': core.sha(Path(task['result_path'])),
                                 'nonce_validated': True, 'working_session_captured': True})
         return facts
+
+    def delivered_comment_report(self):
+        reports = []
+        for task in self.tasks.values():
+            directory = Path(task['task_dir']).resolve()
+            if (task.get('worker') != self.comment_worker or task.get('cwd') != str(self.worktree)
+                    or self.task_root.resolve() not in directory.parents):
+                continue
+            state = core.read_json(directory / 'state.json')
+            if state.get('state') == 'done' and state.get('closed') is True:
+                report = directory / 'report.md'
+                if report.resolve() == report and report.is_file():
+                    reports.append(report)
+        return reports[0] if len(reports) == 1 else None
 
     def command_allowed(self, command):
         argv = support.literal(command)
@@ -830,7 +864,9 @@ approval: report those needs as open_work. Complete this review yourself.
                              and argv[argv.index('--repo') + 1] == self.args.forge_repo))
             return argv[1:3] in (['pr', 'view'], ['pr', 'list'], ['repo', 'view'])
         if binary == 'sha256sum':
-            return len(argv) in (2, 3) and all((self.worktree / word).resolve() in {self.worktree / name for name in AUTHORED} for word in argv[1:])
+            authored = len(argv) in (2, 3) and all((self.worktree / word).resolve() in {self.worktree / name for name in AUTHORED} for word in argv[1:])
+            report = self.delivered_comment_report()
+            return authored or report is not None and argv == ['sha256sum', str(report)]
         return argv in (['command', '-v', 'origin'], ['which', 'origin'], ['pwd']) or binary == 'cat' and len(argv) == 2 and not argv[1].startswith('-')
 
     def verify(self):
@@ -844,7 +880,8 @@ approval: report those needs as open_work. Complete this review yourself.
         paths = list((self.directory / 'native-sessions').glob('*.jsonl'))
         self.check('one_controller_native_session', len(paths) == 1)
         self.native = core.audit_pi(paths[0], self.session, self.worktree, self.wall_started, self.spec,
-                                    [self.bundle / 'skills' / name for name in READS], [], tasks, self.bundle)
+                                    [self.bundle / 'skills' / name for name in READS], [], tasks, self.bundle,
+                                    allowed_artifact_hashes=((Path(comment_tasks[0]['task_dir']) / 'report.md'),))
         self.check('controller_native_model_effort_reads_delivery', all(check['ok'] for check in self.native['checks']))
         events, all_events = self.native_events(paths[0]), self.native_events(paths[0], include_errors=True)
         self.check('controller_authorized_literal_commands', all(self.command_allowed(e['args'].get('command', '')) for e in all_events if e['name'] == 'bash'))
@@ -930,8 +967,19 @@ approval: report those needs as open_work. Complete this review yourself.
                                         after=delivery['result_row'])
             self.check('comment_lead_complete_delivered_read_' + name, bool(reads))
             comment_reads.append(reads[0])
+        report_path = (Path(comment['task_dir']) / 'report.md').resolve()
+        hash_argv = ['sha256sum', str(report_path)]
+        hash_calls = [event for event in all_events if event['name'] == 'bash'
+                      and support.literal(event['args'].get('command', '')) == hash_argv]
+        self.check('comment_report_hash_after_actual_delivery', bool(hash_calls)
+                   and all(event['call_row'] > delivery['result_row'] for event in hash_calls))
+        hash_results = [event for event in hash_calls if event['successful']
+                        and event['output'].strip() == core.sha(report_path) + '  ' + str(report_path)]
+        self.check('comment_actual_native_report_hash', bool(hash_results))
         facts = self.audit_comment(comment)
         disposition = self.written(events, 'comment-review.json', after=max(event['result_row'] for event in comment_reads))
+        self.check('comment_native_report_hash_before_disposition', any(
+            event['result_row'] < disposition['call_row'] for event in hash_results))
         resolved = json.loads(disposition['args']['content'])
         self.check('comment_lead_actual_disposition', resolved.get('task_id') == comment['task_id']
                    and resolved.get('report_sha256') == core.sha(Path(comment['task_dir']) / 'report.md')

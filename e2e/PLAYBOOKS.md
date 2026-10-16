@@ -321,6 +321,18 @@ was omitted under the evaluator's extra-task restriction. A created ready PR
 and correct usage do not complete Authoring or Opening a PR. Independent CLI
 and remote-parent/ref replay stopped at the early failure and remain unverified.
 
+The [second Authoring receipt](evidence/playbook-authoring-review.json) also
+remains failed. Its [independent audit](evidence/playbook-authoring-review-audit.json)
+verifies both real usages and retained independent replays, actual Comment
+delivery and the lead's correct unresolved stop before commit/push/PR.
+The checker compared the complete staged new-file patch against an empty
+base-to-HEAD patch because no commit existed. The declared grammar also could
+not produce the required delivered-report hash, and the typed finding contract
+did not distinguish supported keeps from actionable changes. Those evaluator
+repairs do not remove Comment's prohibited Bash listing or adjudicate its
+deeper-work requests. The 217 source hashes, creator guidance, settings and
+owned cleanup checks pass; no full Authoring or Opening a PR pass is claimed.
+
 The [first Runtime receipt](evidence/playbook-runtime-env.json) remains failed.
 Its checker rejected legitimate `uptime` and `nproc` observations, then independent
 review found two further mismatches: a valid checklist completion edit and the
@@ -461,8 +473,8 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 | Hillclimb | Reviewed `hillclimb_loop.py`, including mandatory Comment Sicko delivery; live sensitivity, attempts, decisions and PR unrun; unattended wake unavailable |
 | Runtime forensics | [PASS: five-stage owned-process diagnosis](evidence/playbook-runtime.json); raw Inspector/profile/source independently checked; large-artifact delegation unverified |
 | Trace forensics | [PASS: bounded paired-capture core workflow](evidence/playbook-trace.json); large-capture delegation unverified |
-| Visual parity | Untouched screenshots, real migration, zero pixel diff, real PR |
-| Authoring a skill | [FAIL with separate actual-use audit](evidence/playbook-authoring-literal-reanalysis.json); structural cases work, mandatory nested review and fresh integrated pass missing |
+| Visual parity | Local browser/diff tools available; UI fixture, untouched baseline, real migration, zero pixel diff and PR unrun; required `/loop` unavailable |
+| Authoring a skill | [Second FAIL with independent audit](evidence/playbook-authoring-review-audit.json); usage and correct review stop verified, deeper work and complete integrated pass unresolved |
 | Eval | Scoped Pi transcripts are accessible in principle; current global skill catalog violates strict blinding under unchanged settings |
 | Multi-phase plan | Validator exists; executable cloud lanes and configured swarm role are unavailable |
 | Opening a PR | [Earlier eligibility withdrawn](evidence/playbook-opening-pr-correction.json): ready PR facts verified, mandatory Comment Sicko review omitted |

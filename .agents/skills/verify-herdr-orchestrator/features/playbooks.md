@@ -117,6 +117,12 @@ resolution in native, Git and Python/application file operands.
 The first Authoring run retains its FAIL and separate actual-use audit. Literal
 controller grammar, owned usage status and exact-path diff-prefix handling are
 declared repairs; the mandatory delegated comment review also needs execution.
+The second Authoring run delivered that review and correctly stopped unresolved
+before commit/PR. Its complete staged patch failed a checker that required a
+later commit, and the lead could not hash the delivered report under the declared
+command grammar. Preserve that FAIL and its independent audit: the actual Comment
+Bash violation and unadjudicated deeper work remain unresolved after evaluator
+repairs. Do not retry solely to obtain a cleaner report.
 
 `hillclimb_loop.py` additionally requires an explicit configured different-family
 `--trail-reviewer` and the pristine reconciliation baseline. It retains all

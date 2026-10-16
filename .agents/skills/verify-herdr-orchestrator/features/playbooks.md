@@ -67,11 +67,21 @@ configured Comment Sicko task and accepted delivered report before final PR revi
 a bounded task-count rule cannot waive this child skill. Their independent
 code reviews do not replace fresh passing live receipts. Perf additionally
 requires live worker UUIDs and all-attempt native scope audits.
+Named-agent loading must use tools before any assistant text when the original
+agent constrains its first output. Read the unchanged original instructions,
+then follow their output rule; do not copy the rule into the brief. Native
+audits bind both full instruction reads before first natural text.
 The third Perf attempt was manually stopped on explicitly prohibited How Bash
 listing and Git `rev:path` calls. Its separate metadata audit confirms owned-local
 reads and complete brief disclosure; the original FAIL remains unchanged.
 The new contract admits only exact owned-cwd How listing and bounded
 `HEAD:path`/`HEAD~:path` reads. A fresh run must verify the expanded grammar.
+The fourth Perf run verifies those owned How forms and its implementation scope,
+but remains failed on Comment's original first-output rule and unresolved work.
+The lead stops before commit/PR. Its separate behavior audit verifies native
+70.2% reduction, independent 70.0% replay, six profile reductions and three
+six-flow CLI suites; none promotes the full workflow. Preserve the disclosed
+How iterator aside error and original receipt.
 Authoring additionally needs existing creator guidance
 and its validator dependencies; Runtime uses `runtime_loop.py` with Node
 Inspector and built-in WebSocket support. Preserve failed receipts and disclose

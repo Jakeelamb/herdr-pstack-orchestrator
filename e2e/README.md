@@ -74,6 +74,12 @@ and Git `rev:path` forms. These were local reads of the owned repository, and
 the restrictions were present in its brief. Its original FAIL remains unchanged.
 The current evaluator permits only the observed bounded How forms under a new
 contract; independent code review does not establish a fresh workflow pass.
+The [fourth Perf audit](evidence/playbook-perf-comment-audit.json) verifies
+delivered How and implementation scopes, a native 70.2% reduction, an independent
+70.0% replay and three six-flow CLI suites. The workflow still fails: Comment
+Sicko emitted text before its required first output and left open work. The lead
+correctly stopped before commit/PR. The How report also has a disclosed iterator
+aside error. These observations do not complete Perf or Opening a PR.
 The [second Authoring run](evidence/playbook-authoring-review-audit.json)
 delivered the required comment review and correctly stopped on unresolved work
 before committing or creating a PR. Its complete staged patch was incorrectly
@@ -81,6 +87,9 @@ compared to a nonexistent later commit. That checker defect and an impossible
 report-hash command do not erase the actual Comment shell violation or its
 unadjudicated deeper-work requests. Both usage cases and retained independent
 replays remain correct; the complete workflow remains unresolved.
+Named-agent briefs now require tool-only loading of the original agent and
+required skill before any assistant text. The original instructions and exact
+output rules remain unchanged; this forward repair needs fresh live evidence.
 
 For live replacement and removal of worker definitions, use the existing
 `check_workers.py --hot-swap-only` mode. It keeps two real reconciliation tasks

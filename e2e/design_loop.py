@@ -610,13 +610,15 @@ Reason: configured judgment and prose role fits this bounded CommentSicko audit.
 Use only direct native read/bash/write/edit/grep/find/ls, no codemode or wrappers.
 Do not delegate, use native subagents, or run a whole playbook. Complete this
 assignment yourself. No config/model/trust changes, retries, commits or forge.
-Full-read original bundled guides, without restating or replacing their rules:
+Runtime bootstrap: BEFORE ANY nonempty assistant natural-language text, use
+native tools to FULL-read the original no-comments skill and CommentSicko agent
+below. No preamble or acknowledgment before both reads finish. Then follow the
+original agent's first-output rule. Do not copy, paraphrase or replace its rules.
+Full-read original bundled guides:
 {self.bundle / 'skills/no-comments/SKILL.md'}
 {self.bundle / 'skills/pstack-herdr/references/agents/comment-sicko.md'}
 {self.bundle / 'skills/pstack-herdr/references/agents/poteto-agent.md'}
 {self.bundle / 'skills/poteto-mode/SKILL.md'}
-Your first nonempty assistant text block must be EXACTLY the original agent's
-greeting, with no extra prose: Yes... Ha ha ha... Yes!
 Scope: actual integration files {json.dumps(self.comment_scope())}, cwd
 {self.worktree}, base {self.base}; NOT a detached baseline. Full-read each scoped
 file and inspect the complete real diff with exactly this standalone command:
@@ -684,12 +686,16 @@ nested delegation. Follow the original CommentSicko scope and report honestly.
         self.check('comment_native_identity_model_effort_guides', all(item['ok'] for item in audit['checks'])
                    and core.sha(saved) == audit['sha256'])
         rows = [json.loads(line) for line in saved.read_text().splitlines() if line.strip()]
-        texts = [block.get('text', '') for row in rows if row.get('message', {}).get('role') == 'assistant'
+        texts = [(index, block.get('text', '')) for index, row in enumerate(rows)
+                 if row.get('message', {}).get('role') == 'assistant'
                  for block in row['message'].get('content', []) if block.get('type') == 'text'
                  and block.get('text', '').strip()]
-        self.check('comment_original_exact_first_output', bool(texts) and texts[0].strip() == 'Yes... Ha ha ha... Yes!')
+        self.check('comment_original_exact_first_output', bool(texts) and texts[0][1].strip() == 'Yes... Ha ha ha... Yes!')
         calls = self.native_events(saved, include_errors=True)
         successful = [event for event in calls if event['successful']]
+        for guide in guides[:2]:
+            self.check('comment_original_bootstrap_before_text_' + guide.name, bool(core.workflow_reads(
+                successful, self.worktree, guide, before=texts[0][0])))
         directory = record['directory'].resolve()
         scoped = {self.worktree / name for name in self.comment_scope()}
         outputs = {directory / name for name in ('report.md', 'review.json', 'result.json')}

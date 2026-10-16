@@ -1,0 +1,130 @@
+{
+  "schema": "horch/playbook-partial-audit/v1",
+  "kind": "independent post-run native and artifact review",
+  "scenario": "fourth Perf issue attempt",
+  "original_receipt": "playbook-perf-comment.json",
+  "original_receipt_unchanged": true,
+  "original_receipt_sha256": "4e1c0d8936da6d6044b1b09218b5538a8dab6871bc3288fa7fc48da89a4050be",
+  "source_revision": "e4ffc207ff8e9a800bcce1efc5523562667819bd",
+  "original_workflow_verdict": "fail",
+  "recorded_checks": {
+    "passed": 594,
+    "total": 595
+  },
+  "first_failed_check": {
+    "name": "comment_worker_original_first_output",
+    "classification": "Actual original-agent instruction violation",
+    "first_text_row_zero_based": 7,
+    "required_greeting_later_row_zero_based": 12,
+    "observation": "The worker emitted a natural-language preamble before reading the original agent instructions. The required exact greeting appeared only later, inside an explanatory block."
+  },
+  "delivered_how": {
+    "native_sha256": "0fcd218d850326da4818599c1d333ce74e544ef882c0c08ddc44773b91bfc86f",
+    "report_sha256": "af5ee31be36f632d2124ae7965d0cb11f59cf8f0d3b46aba1665004677e02c89",
+    "tool_calls": 19,
+    "tool_counts": {
+      "read": 10,
+      "bash": 6,
+      "fffind": 1,
+      "write": 2
+    },
+    "all_calls_successful_and_resolved": true,
+    "scope": "Configured live identity, exact owned listing and HEAD:path reads, one own-cwd FFF query, full instructions and delivery-before-preservation are verified.",
+    "reader_tree": {
+      "entries": 12,
+      "symlinks": 0,
+      "before_after_match": true
+    },
+    "factual_caveat": "The report overstates one-shot iterator consumption: later lookups can succeed for keys still remaining. The exercised CLI uses lists; the measured index mechanism remains grounded."
+  },
+  "delivered_writer": {
+    "native_sha256": "69b9e043c9680bb17354cc1578c142ba95c374aaae1d1ca076f5ccb642570942",
+    "report_sha256": "c57a201bec68c3add783e2fd7ce698f24b9e48aef305a28915da86d695b3e566",
+    "tool_calls": 24,
+    "tool_counts": {
+      "read": 17,
+      "bash": 4,
+      "edit": 1,
+      "write": 2
+    },
+    "all_calls_successful_and_resolved": true,
+    "measured_source_sha256": "93e2ebd88d17c9ccd4c96d1320dad482709bb86bd930e3144ec240ebbdfd7c3a",
+    "source_scope": "One native edit changes only reconcile_linear, retaining its signature and exact outside bytes. A setdefault index preserves first-match values.",
+    "delivery": "Complete result and report were read after done/closed, before lead diff review."
+  },
+  "actual_comment_review": {
+    "native_sha256": "07315891f53a5fe0d775b3a27a5924c337d042ee723d32b485b71fba9ebfd243",
+    "report_sha256": "8e599f95d9c7bde1621d1734612a11fa4ca42b04ec77ba702bed8e3976a4790d",
+    "scope_sha256": "5c1235c8e07c7bc61d507b2b1fedec8e195cfced4bce0583c4a7f35c598fba24",
+    "patch_sha256": "504ca5e4fb33a15964b6219fff2cde1993cf09a432edbd19f850757b0669aec6",
+    "performance_document_sha256": "4e278583a2276b41e2424d555cf3aed45e7792a2e50ab8305c01f851fa368a93",
+    "tool_calls": 27,
+    "tool_counts": {
+      "read": 18,
+      "bash": 7,
+      "write": 2
+    },
+    "all_calls_successful_and_resolved": true,
+    "scope": "Full original guides, measured source, patch, scope and report evidence read before reporting; source and documentation unchanged.",
+    "finding": "One deletion suggestion for unchanged lookup_reference, with conditional verification/open work; no comments, suppressions, must-kills or encodings recorded.",
+    "limitations": "Tool scope compliance does not cure the first-output violation or resolve the recorded open work."
+  },
+  "lead": {
+    "native_sha256": "525adf86ae4d9ffc2b1091680359ba522b11ce8a47d7a67f24f22f71db8dd0c2",
+    "disposition_sha256": "ba16b4f1e36e7eb71fd00132de5e606d414e3c8ed880e8b689bbafc2c38073e6",
+    "tool_calls": 80,
+    "decision": "unresolved",
+    "assessment": "The lead fully read the delivered review, rejected the helper deletion as outside its authorized function boundary and unproven for direct importers, preserved open work and stopped.",
+    "commit_push_forge_or_pr_calls": 0,
+    "source_or_document_rewrites_after_comment": 0,
+    "shared_hash_guard": "The lead made an actual report-hash call, but the old shared guard was never reached because the genuine first-output check failed earlier."
+  },
+  "separate_behavior_evidence": {
+    "native_comparison": {
+      "sha256": "00c0b86f631fa074a21e0c6afb8bf79bdf922d662e9d4a4cace9ae57b6e64995",
+      "baseline_median_ms": 132.396548,
+      "after_median_ms": 39.44793,
+      "reduction_fraction": 0.7020471409873918,
+      "alternating_pairs": 5
+    },
+    "independent_comparison": {
+      "sha256": "a094ee4a2ac1e01eb1013a4cbb7414e99abddf4d06ad74dc349162fabe07d11f",
+      "baseline_median_ms": 131.283105,
+      "after_median_ms": 39.359897,
+      "reduction_fraction": 0.7001906909499132,
+      "alternating_pairs": 5
+    },
+    "raw_profiles_reduced_exactly": 6,
+    "measurement_stdout_results_verified": 36,
+    "each_result": {
+      "references": 2500,
+      "payments": 6000,
+      "total_units": 958008,
+      "errors": 0,
+      "stderr": ""
+    },
+    "lookup_calls_before": 6000,
+    "lookup_calls_after": 0,
+    "reconcile_calls_each_profile": 1,
+    "cli_e2e_suites": {
+      "native": 6,
+      "independent_before": 6,
+      "independent_after": 6,
+      "each_suite": "Three successful real CLI flows and three structured exit-2 rejections; all pass."
+    },
+    "replay_provenance": "Root ran existing retained measurement/CLI scripts only after owned model cleanup, using hash-verified separate snapshots and fresh output directories. All three command receipts are retained privately; the reviewer inspected results without executing another replay."
+  },
+  "integrity": {
+    "source_hashes": 202,
+    "bundled_resources": 198,
+    "source_config_bundle_probe_fixture_checks_pass": true,
+    "tasks_done_and_closed": 3,
+    "owned_panes_absent": true
+  },
+  "limitations": [
+    "The original FAIL remains unchanged; neither full Perf nor Opening a PR is eligible.",
+    "Correct faster CLI behavior is separate from original instruction fidelity and an unresolved review.",
+    "Measurements cover one host and workload, not a production ceiling or universal speedup.",
+    "A forward tool-only instruction-loading rule cannot promote this historical run."
+  ]
+}

@@ -333,6 +333,20 @@ repairs do not remove Comment's prohibited Bash listing or adjudicate its
 deeper-work requests. The 217 source hashes, creator guidance, settings and
 owned cleanup checks pass; no full Authoring or Opening a PR pass is claimed.
 
+The [fourth Perf receipt](evidence/playbook-perf-comment.json) retains its
+genuine exact-first-output failure. Its
+[independent audit](evidence/playbook-perf-comment-audit.json) verifies complete
+delivered How and implementation scopes, the measured first-wins index change,
+six raw profile reductions and 36 correct measurement results. Native timings
+fall from 132.397 to 39.448 ms; separate replay gives 131.283 to 39.360 ms.
+The native and both independent six-flow CLI suites pass. Comment's scope-safe
+report still violates its required first output and preserves open work; the lead
+stops without commit/push/PR. A How iterator aside is also inaccurate outside the
+exercised CLI list inputs. These narrower facts do not complete the workflow.
+Future named-agent briefs explicitly load the original instructions through
+tools before natural text, with native ordering evidence. No agent rules are
+rewritten and no failed receipt is promoted.
+
 The [first Runtime receipt](evidence/playbook-runtime-env.json) remains failed.
 Its checker rejected legitimate `uptime` and `nproc` observations, then independent
 review found two further mismatches: a valid checklist completion edit and the
@@ -469,7 +483,7 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 | Feature | Reviewed `design_loop.py`, including mandatory Comment Sicko delivery; live Arena, behavior gate and real PR still unrun |
 | Refactoring | Reviewed `design_loop.py`, including mandatory Comment Sicko delivery; live frozen baseline, equivalence and real PR still unrun |
 | Prototype | [PASS: fixed-direction behavioral core workflow](evidence/playbook-prototype.json); open visual design search unverified |
-| Perf issue | [Second machine PASS rejected by worker-tool audit](evidence/playbook-perf-worker-tools-audit.json); [third attempt stopped on declared grammar violations](evidence/playbook-perf-worker-shell-audit.json); full Perf unresolved |
+| Perf issue | [Fourth FAIL with independent behavior audit](evidence/playbook-perf-comment-audit.json): 70.2% native / 70.0% replay reduction; original output rule and review unresolved |
 | Hillclimb | Reviewed `hillclimb_loop.py`, including mandatory Comment Sicko delivery; live sensitivity, attempts, decisions and PR unrun; unattended wake unavailable |
 | Runtime forensics | [PASS: five-stage owned-process diagnosis](evidence/playbook-runtime.json); raw Inspector/profile/source independently checked; large-artifact delegation unverified |
 | Trace forensics | [PASS: bounded paired-capture core workflow](evidence/playbook-trace.json); large-capture delegation unverified |

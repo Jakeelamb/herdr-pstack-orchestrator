@@ -186,6 +186,21 @@ verbatim preservation, including escapes and whitespace; the checker is intact.
 Use a new immutable source/run to verify it. No full Refactoring or PR follows
 from the three bounded deliveries.
 
+The third Refactoring run verified that exact preservation contract, both
+Architects and their independent prior-frozen score comparison, the chosen
+eager helper implementation, nine matching normalized CLI observations and
+a source-grounded reader-load review. Eight native deliveries passed; this is
+one implementation followed by a reader reviewer, not an Arena alternative.
+The ninth Comment task was automatically quarantined before payload delivery:
+its first text block starts with the original greeting but appends prose,
+violating the original exact-output rule. Keep its report/result/native body
+payloads unread and preserve FAIL. No commit, push or PR followed. Independent
+metadata proves sufficient grounds for rejection, without replaying earlier
+body checks or claiming the exact first internal throw. Retain ancillary
+coverage-attribution caveats. New bootstrap text specifies the entire first
+block and a separate native read before further prose; validators remain
+unchanged. A new immutable live receipt must verify it.
+
 The second Hillclimb run separately verified How, three scoped source changes,
 both original logs and retained final full-CLI timings (71.3% reduction).
 The simplification attempt was 0.7% slower within its declared allowance.

@@ -192,7 +192,8 @@ gap. A bounded new How contract requires fresh evidence. The original FAIL
 and all quarantined payloads remain untouched.
 The reviewed Design and Hillclimb contracts now admit How-only typed
 `fffind`/`ffgrep` requests and exact owned-cwd shell listings, with identical
-symlink-free before/after reader trees. Other roles gain no exception. Startup
+symlink-free before/after reader trees. Other roles gain no FFF exception;
+Hill's trail listing contract is separate. Startup
 settings stay unchanged; static review does not prove successful live delivery.
 The [second Refactoring receipt](evidence/playbook-refactor-preservation.json)
 retains a manual interruption before implementation. Its
@@ -207,9 +208,24 @@ unreached checker required literal inclusion. The minimal forward repair
 explicitly declares opaque/verbatim text preservation and retains that checker.
 Both unfinished Architect payloads remain unread. No complete Refactoring,
 post-change equivalence or PR pass follows; new live evidence is required.
+The [third Refactoring receipt](evidence/playbook-refactor-comment.json) retains
+an automatic Comment quarantine. Its [independent audit](evidence/playbook-refactor-comment-audit.json)
+verifies eight accepted deliveries, exact complete How preservation, genuine
+design alternatives and prior-frozen independent scoring, one scoped
+implementation, and a source-grounded reader-load review. Nine normalized CLI
+observations match before/after; the original seven-flow suite passes.
+The final worker's first natural-text block starts with the required original
+greeting but adds prose: 403 bytes instead of exactly 23. No Comment payload
+reached the lead; no commit, push or PR followed. The exact first internal
+exception is unproven because quarantined bodies were not replayed; this
+observed original-rule violation is sufficient to reject. Accuracy and
+verification-attribution caveats remain disclosed. This does not complete
+Refactoring or Opening a PR.
 Named-agent briefs now require tool-only loading of the original agent and
-required skill before any assistant text. The original instructions and exact
-output rules remain unchanged; this forward repair needs fresh live evidence.
+required skill before any assistant text, the original greeting alone in the
+entire first text block, then a separate assigned native read before further
+prose. Original instructions and exact validators remain intact; the revised
+bootstrap passed static review and compilation and needs fresh live evidence.
 
 For live replacement and removal of worker definitions, use the existing
 `check_workers.py --hot-swap-only` mode. It keeps two real reconciliation tasks

@@ -59,9 +59,9 @@ The second Perf machine receipt passes its checks but misses an actual How
 worker's unsupported FFF call because worker-native tools were not audited.
 Independent review rejects full Perf coverage. Preserve the machine receipt
 unchanged and disclose this separate judgment; owned-path search does not prove
-pre-dispatch containment. Its standalone Opening a PR stage has separate
-independent core eligibility: exact ready child, reviewed commit/body,
-parent/ref integrity and cleanup. Do not use that result to promote full Perf.
+pre-dispatch containment. Its earlier standalone Opening a PR eligibility is
+withdrawn: ready child/commit/body/ref facts are verified, but the mandatory
+Comment Sicko review was omitted. Reading no-comments is not applying it.
 Authoring additionally needs existing creator guidance
 and its validator dependencies; Runtime uses `runtime_loop.py` with Node
 Inspector and built-in WebSocket support. Preserve failed receipts and disclose

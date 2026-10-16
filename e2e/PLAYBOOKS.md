@@ -359,12 +359,13 @@ without a pre-dispatch attestation. The original machine verdict remains
 unchanged. Native alternating timings measured 133.099 to 37.799 ms (71.6%
 reduction), with correct work and all six CLI cases passing. Those observations
 do not erase the protocol failure.
-The standalone Opening a PR workflow is independently eligible: actual guidance
-and complete staged diff review precede the single narrow commit, forge
-resolution precedes PR operations, and a ready child PR has exact head, base and
-body readback. Only its owned branch/PR was added; parent/local refs and cleanup
-agree. No merge or auto-merge occurred. This separate core result does not make
-the preceding Perf workflow eligible.
+The earlier standalone Opening a PR judgment is
+[withdrawn](evidence/playbook-opening-pr-correction.json). Its ready child PR,
+reviewed commit, exact head/base/body and parent/ref integrity remain verified,
+but the required `no-comments` skill unconditionally spawns Comment Sicko. That
+task was omitted; reading the guidance and reviewing locally do not substitute
+for it. Neither full Perf nor Opening a PR is eligible. The machine receipt and
+earlier independent audit remain unchanged beside this correction.
 
 The [fresh live-replacement receipt](evidence/hot-swap.json) verifies two real
 Pi tasks using distinct configured models. Both were held working while the
@@ -405,7 +406,7 @@ observations; those do not replace a passing independent replay.
 
 ## Complete inventory
 
-Six bounded scenarios have complete core-workflow evidence. The remaining 17
+Five bounded scenarios have complete core-workflow evidence. The remaining 18
 playbooks are unresolved, as are untested branches of the passing scenarios.
 
 | Playbook | Scenario or remaining requirement |
@@ -423,7 +424,7 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 | Authoring a skill | Reviewed `authoring_loop.py`; live authored skill, structural usage cases and real PR unrun; automatic discovery separate |
 | Eval | Scoped Pi transcripts are accessible in principle; current global skill catalog violates strict blinding under unchanged settings |
 | Multi-phase plan | Validator exists; executable cloud lanes and configured swarm role are unavailable |
-| Opening a PR | [PASS: independently verified ready-child-PR core](evidence/playbook-perf-worker-tools-audit.json); exact parent/head/body/ref integrity; earlier Perf protocol remains noneligible |
+| Opening a PR | [Earlier eligibility withdrawn](evidence/playbook-opening-pr-correction.json): ready PR facts verified, mandatory Comment Sicko review omitted |
 | Babysit | Reviewed `babysit_loop.py`; live bounded Check unrun; drive/background wake mechanism unavailable |
 | Shipping | Cloud verifier unavailable; no authorization to merge test PRs |
 | Autonomous run | Required wake mechanism unavailable |

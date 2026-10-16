@@ -1,0 +1,45 @@
+{
+  "schema": "horch/playbook-eligibility-correction/v1",
+  "kind": "withdrawal of an incomplete independent workflow judgment",
+  "scenario": "Opening a PR in the second Perf run",
+  "original_machine_receipt": "playbook-perf-worker-tools.json",
+  "original_machine_receipt_sha256": "623092ec81347a13b3c091987b77b6e1eca5b69fc333b311eb21940d48a072eb",
+  "previous_independent_audit": "playbook-perf-worker-tools-audit.json",
+  "previous_independent_audit_sha256": "ab9f3916c5f40d5e70706474dd4a7f1ebe3a4ed65b46ee92d794de945fcf2d9a",
+  "historical_artifacts_unchanged": true,
+  "previous_opening_a_pr_eligibility": "withdrawn",
+  "current_opening_a_pr_eligibility": "unresolved: mandatory independent Comment Sicko task omitted",
+  "current_perf_eligibility": "noneligible: worker-tool protocol failure and missing required nested review",
+  "required_sources": {
+    "skills/poteto-mode/playbooks/opening-a-pr.md": "a5aef646de8b651306c2d10974623650e4a013a245aec1c00525bbe0e31bfa76",
+    "skills/no-comments/SKILL.md": "fc7d67e188446a8d421b5bfd9c93700118f4de51a297b8ded1496b821be26d61",
+    "skills/pstack-herdr/references/agents/comment-sicko.md": "3e239e40b7b4b9beb2cf7f3ccc57f2388eb8b69bd1ba8ae888ef87ef6e0e2116"
+  },
+  "reason": "Opening a PR requires applying no-comments before review. That skill unconditionally requires spawning Comment Sicko; reading the skill or reviewing a diff locally is insufficient, even when the change has no comments.",
+  "actual_evidence": {
+    "owned_tasks": 2,
+    "roles": [
+      "how explainer",
+      "perf-issue"
+    ],
+    "comment_sicko_tasks": 0,
+    "original_native_sha256": "8ff036c80242e8b4b47778ae548096c397cc2ca83c5ea3517fa669c92eb73d60"
+  },
+  "facts_retained": [
+    "The measured workload results, one-function change and actual timing reductions remain independently verified.",
+    "The owned ready child PR, exact head/base/body and parent/ref integrity remain verified facts.",
+    "Those facts do not complete the original Opening a PR workflow without its mandatory nested review."
+  ],
+  "discovery": "Independent review of the later Authoring run exposed the same omitted nested step; the earlier OpeningPR judgment was then rechecked against the original leaf instructions.",
+  "aggregate_coverage_after_correction": {
+    "bounded_core_playbooks_with_positive_evidence": 5,
+    "unresolved_playbooks": 18,
+    "total": 23
+  },
+  "required_future_evidence": "A fresh configured worker must actually execute the bundled Comment Sicko assignment, deliver and close, and have its complete report independently checked before commit and PR creation. All original failures and this withdrawn judgment remain published.",
+  "limitations": [
+    "This correction does not turn any historical failed or incomplete run into a pass.",
+    "A ready PR and correct measurements are narrower observations than complete original-playbook execution.",
+    "Raw sessions, configuration and private forge identities remain private."
+  ]
+}

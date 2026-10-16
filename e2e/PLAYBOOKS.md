@@ -36,6 +36,11 @@ results. Submitted tasks must match configured launch arguments and deliver
 valid results. Artifact reads must follow delivery. Final claims that a skill
 was followed do not establish execution.
 
+The current auditor recognizes direct native `read`, `bash`, `write`, `edit`,
+`grep`, `find` and `ls` calls. Pi's `codemode` is a native tool, but its nested
+calls are outside this evidence grammar. The evaluation prompt states that
+restriction explicitly; it does not change the configured harness or permissions.
+
 The controller does not grade its own result:
 
 | Scenario | Independent observations |
@@ -45,9 +50,19 @@ The controller does not grade its own result:
 | Trace forensics | Real paired profiles, exact SQLite row preservation, source attribution and equal reconciliation results |
 
 Prototype observations must come from direct CLI invocations with oracle-checked
-JSON outputs. Profile conversion must precede a query through the frozen
-analysis CLI; query outputs are checked against the retained database. Command
-text mentioning a tool is only a hint.
+JSON outputs. Profile conversion must precede analysis through the frozen CLI.
+The importer preserves function rows and captured caller edges; query outputs
+are checked against the retained database. Source citations resolve to the exact
+supplied file, including valid fixture-relative and worktree-relative paths.
+Command text mentioning a tool is only a hint.
+
+The Investigation fixture uses a narrower presentation protocol than How's
+allowance for light edits: the explainer applies `unslop` before delivery, and
+the controller presents that explanation unchanged with one throughput line.
+This makes explanation preservation observable without a semantic-similarity
+score. A synthesis that needs substantive correction leaves the stage unresolved.
+Each canonical `report.md` must be read and propagated in full. The revised
+protocol has no positive live receipt yet.
 
 ## Interpret evidence
 
@@ -58,8 +73,8 @@ the sanitized receipt is a candidate for publication.
 - `behavior_verdict` covers independent fixture checks.
 - `stage_coverage` covers declared stages and their native evidence.
 - `workflow_verdict` additionally requires full workflow eligibility and ordered
-  native evidence. Only the fixed-direction Prototype scenario is currently
-  eligible; Investigation and Trace forensics still need complete-stage audits.
+  native evidence. Measured core-workflow passes cover fixed-direction Prototype
+  and bounded paired-capture Trace forensics. Investigation remains failed.
 - `inventory` accounts for every playbook. `not_run` is not a pass.
 - `full_inventory_verdict` cannot pass from one scenario.
 
@@ -90,6 +105,26 @@ with a fixed direction; it does not cover an open visual design search or a
 production Feature build. The [earlier stage receipt](evidence/playbook-prototype-stages.json)
 retains its original unresolved workflow verdict.
 
+The [fresh Trace forensics receipt](evidence/playbook-trace.json) passes all six
+stages in 148.428 seconds. Independent review compared every SQLite row and edge
+with the original profiles: nine function rows and five caller edges were
+preserved exactly. Four native SQL observations were replayed read-only without
+changing database bytes. The controller converted before analysis, queried the
+hot path and captured caller, mapped it to source, compared the pair, then wrote
+the diagnosis. The captures show 6,000 lookups before and zero after, with equal
+reconciliation results of 958008. No workload rerun or source change occurred.
+This covers bounded controller-local captures, not large-capture delegation,
+runtime instrumentation, or a generalized performance improvement.
+
+The [Investigation attempt](evidence/playbook-investigation-codemode.json)
+remains failed. The native audit could not inspect a `codemode` wrapper.
+Independent review confirmed both full explorer reports reached synthesis and
+all five technical facts were correct, but the controller substantially rewrote
+the delivered explanation. That violates How's presentation rule. The
+[separate artifact reanalysis](evidence/playbook-investigation-reanalysis.json)
+fixes an overly narrow citation check using actual Python symbol scopes; it
+preserves the failed workflow verdict. Correct facts do not complete this workflow.
+
 The [fresh live-replacement receipt](evidence/hot-swap.json) verifies two real
 Pi tasks using distinct configured models. Both were held working while the
 private alias was changed and removed. A dispatch after removal failed without
@@ -107,6 +142,8 @@ This verifies worker definition replacement, not automatic role or skill reload.
 | [Prototype contract](evidence/playbook-prototype-contract.json) | Controller ran both variants, but the fixture omitted exact JSON field names and the independent checker could not replay them |
 | [Replacement launch](evidence/hot-swap-launch.json) | Verifier parsed an empty successful pane-run response as JSON before any worker allocation |
 | [Replacement audit](evidence/hot-swap-audit.json) | Swap/removal gates passed, but verifier queried a live agent after delivery had automatically closed it |
+| [Investigation tooling](evidence/playbook-investigation-codemode.json) | Native `codemode` was outside the auditor's grammar; separate review also found a substantive How rewrite |
+| [Trace source path](evidence/playbook-trace-path.json) | All six native stages executed, but the checker rejected a valid worktree-relative source path |
 
 Each attempt retained its failure verdict and confirmed owned cleanup. The first
 prototype run did not execute a model task. The contract run produced real
@@ -114,12 +151,12 @@ observations; those do not replace a passing independent replay.
 
 ## Complete inventory
 
-One fixed-direction Prototype scenario has complete core-workflow evidence.
-The remaining 22 playbooks are unresolved, as are other Prototype branches.
+Two bounded scenarios have complete core-workflow evidence. The remaining 21
+playbooks are unresolved, as are untested branches of the passing scenarios.
 
 | Playbook | Scenario or remaining requirement |
 |---|---|
-| Investigation | Live scenario implemented; complete stage audit pending |
+| Investigation | [FAIL](evidence/playbook-investigation-codemode.json): correct facts, unsupported wrapper and substantial synthesis rewrite; revised preservation protocol unrun |
 | Bug fix | Failing input, runtime cause, delegated fix, real PR |
 | Feature | Design exploration, delegated implementation, behavior gate, real PR |
 | Refactoring | Frozen baseline, equivalent final artifact, real PR |
@@ -127,7 +164,7 @@ The remaining 22 playbooks are unresolved, as are other Prototype branches.
 | Perf issue | Frozen workload, paired repeat measurements, correctness, real PR |
 | Hillclimb | Sensitive harness, metric and stop predicate, kept/reverted attempts |
 | Runtime forensics | Live signal, instrumentation, source-attributed mechanism |
-| Trace forensics | Live scenario implemented; complete stage audit pending |
+| Trace forensics | [PASS: bounded paired-capture core workflow](evidence/playbook-trace.json); large-capture delegation unverified |
 | Visual parity | Untouched screenshots, real migration, zero pixel diff, real PR |
 | Authoring a skill | Discovered skill, structural cases and links, real PR |
 | Eval | Blinded candidates, hidden rubric, native transcript audit, independent synthesis |

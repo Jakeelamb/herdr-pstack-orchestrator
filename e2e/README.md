@@ -11,9 +11,11 @@ independent behavior checks, complete workflow eligibility and unavailable
 capabilities. `playbook_loop.py` drives a fresh Pi controller through the original
 skills; its initial scenarios are Investigation, Prototype and Trace forensics.
 Partial stage evidence must not be described as a completed playbook.
-The [fixed-direction Prototype receipt](evidence/playbook-prototype.json) records
-an ordered six-stage core workflow pass; the inventory keeps the other 22
-playbooks unresolved.
+The [fixed-direction Prototype receipt](evidence/playbook-prototype.json) and
+[paired-capture Trace receipt](evidence/playbook-trace.json) record ordered
+six-stage core workflow passes. The other 21 playbooks remain unresolved. The
+Investigation failure includes an actual explanation-preservation violation;
+its separately passing artifact checks do not promote the workflow.
 
 For live replacement and removal of worker definitions, use the existing
 `check_workers.py --hot-swap-only` mode. It keeps two real reconciliation tasks

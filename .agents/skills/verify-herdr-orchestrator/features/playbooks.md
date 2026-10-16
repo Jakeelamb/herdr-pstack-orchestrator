@@ -19,6 +19,13 @@ inventory and cleanup outcomes. Missing native evidence fails closed. A partial
 stage pass does not complete a playbook. Do not promote a previous failed run
 after fixing the evaluator.
 
+Use the supported direct native tools stated in the evaluation prompt. Nested
+`codemode` calls are outside the auditor's grammar. Investigation requires
+canonical full reports and an unchanged delivered explanation plus one
+throughput line; this is a narrower witness than How's light-edit allowance.
+Check actual source citations, including valid enclosing-function locations.
+Review prose preservation independently before publishing any full-workflow claim.
+
 Inspect retained worktrees under `handoff/<run>/worktree`, then remove only the
 exact owned worktree with Git. Preserve the external receipt and diagnostics.
 Never publish configuration, profiles, raw native sessions or pane text.

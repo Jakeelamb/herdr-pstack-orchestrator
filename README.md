@@ -226,7 +226,9 @@ Runtime checks run on Linux with real Pi workers. Real Codex and Claude Code con
 
 The original Prototype playbook has an [ordered six-stage core workflow receipt](e2e/evidence/playbook-prototype.json) for a fixed-direction behavioral fork. Both independent alternatives and their labeled runner were replayed; the production build remains a separate Feature task. Live worker replacement also has [independent evidence](e2e/evidence/hot-swap.json).
 
-Not verified: macOS, deliberate approval denial, task turns longer than 30 minutes, and Claude Code native discovery, which was not measured although installation was checked. Most original pstack skills and 22 other playbooks remain unverified at runtime; see the [complete inventory](e2e/PLAYBOOKS.md). Discovery does not prove workflow execution.
+[Trace forensics](e2e/evidence/playbook-trace.json) also passed its six-stage paired-capture workflow. Independent review checked all profile rows and caller edges, replayed the SQL observations, and verified source attribution and unchanged inputs. Investigation produced correct technical facts but failed How's explanation-preservation rule; that failure remains published.
+
+Not verified: macOS, deliberate approval denial, task turns longer than 30 minutes, and Claude Code native discovery, which was not measured although installation was checked. Most original pstack skills and 21 other playbooks lack a complete passing scenario; see the [complete inventory](e2e/PLAYBOOKS.md). Discovery does not prove workflow execution.
 
 Historical receipts keep their original source attribution in [evidence and source attribution](e2e/README.md#evidence-and-source-attribution). To rerun the checks, use [verify-herdr-orchestrator](.agents/skills/verify-herdr-orchestrator/SKILL.md).
 

@@ -131,6 +131,8 @@ def invocation_result(command, output, cwd, requirement):
             if len(argv) != 3 + len(prefix):
                 return False
             sql = argv[-1]
+            if requirement.get('sql') is not None and sql != requirement['sql']:
+                return False
             if not sql.lstrip().lower().startswith('select '):
                 return False
             with sqlite3.connect(f"file:{requirement['database']}?mode=ro", uri=True) as database:
@@ -138,15 +140,19 @@ def invocation_result(command, output, cwd, requirement):
                 database.set_progress_handler(lambda: int(time.monotonic() > deadline), 1000)
                 accessed = set()
                 def authorize(action, table, column, *_):
-                    if action == sqlite3.SQLITE_READ and table == 'profile_samples':
-                        accessed.add(column)
-                    return sqlite3.SQLITE_OK
+                    if action == sqlite3.SQLITE_READ:
+                        if table == requirement.get('required_table', 'profile_samples'):
+                            accessed.add(column)
+                        return sqlite3.SQLITE_OK
+                    return sqlite3.SQLITE_OK if action in {sqlite3.SQLITE_SELECT, sqlite3.SQLITE_FUNCTION} else sqlite3.SQLITE_DENY
                 database.set_authorizer(authorize)
                 cursor = database.execute(sql)
                 expected = {'columns': [item[0] for item in cursor.description],
                             'rows': [list(row) for row in cursor.fetchmany(100)]}
-            return (bool(expected['rows']) and actual == expected
-                    and 'function' in accessed and bool(accessed & {'self_seconds', 'cumulative_seconds'}))
+            required_columns = requirement.get('required_read_columns')
+            columns_ok = (set(required_columns) <= accessed if required_columns is not None
+                          else 'function' in accessed and bool(accessed & {'self_seconds', 'cumulative_seconds'}))
+            return bool(expected['rows']) and actual == expected and columns_ok
     except (ValueError, TypeError, KeyError, OSError, sqlite3.Error):
         return False
     return False
@@ -333,8 +339,341 @@ def audit_prototype(events, calls, cwd, tasks, bundle, requirements, workflow, i
     return [{'name': name, 'ok': ok} for name, ok in checks.items()], proof
 
 
+def workflow_steps(workflow, bundle, name, count):
+    expected = re.findall(r'^\d+\. (.+)$',
+                          (bundle / f'skills/poteto-mode/playbooks/{name}.md').read_text(), re.M)
+    supplied = workflow.get('steps', [])
+    return expected if len(expected) == count and [
+        re.sub(r'^\d+\.\s*', '', step) for step in supplied] == expected else []
+
+
+def workflow_writes(events, cwd, path, after=-1, before=float('inf'), final=False):
+    target = Path(path).resolve()
+    return [event for event in events if event['name'] == 'write'
+            and isinstance(event['args'].get('path'), str)
+            and (cwd / event['args']['path']).resolve() == target
+            and isinstance(event['args'].get('content'), str)
+            and event['args']['content'].strip()
+            and event['call_row'] > after and event['result_row'] < before
+            and (not final or target.is_file() and event['args']['content'] == target.read_text())]
+
+
+def workflow_reads(events, cwd, path, after=-1, before=float('inf')):
+    target = Path(path).resolve()
+    if not target.is_file():
+        return []
+    content = target.read_text().strip()
+    return [event for event in events if content and read_target(event['name'], event['args'], cwd) == target
+            and content in event['output'] and event['call_row'] > after and event['result_row'] < before]
+
+
+def workflow_launches(events, tasks, cwd, bundle):
+    known = {task['task_id']: task for task in tasks}
+    launches, deliveries = {}, {}
+    for event in events:
+        argv = literal_horch_command(event['name'], event['args'], cwd, bundle)
+        if not argv:
+            continue
+        for line in event['output'].splitlines():
+            try:
+                result = json.loads(line)
+            except ValueError:
+                continue
+            if not isinstance(result, dict):
+                continue
+            task = known.get(result.get('task_id'))
+            if not task:
+                continue
+            if (argv[0] == 'run' and len(argv) > 1 and argv[1] == task['worker']
+                    and result.get('worker') == task['worker']):
+                launches.setdefault(task['task_id'], event)
+            if (argv[0] == 'wait' and result.get('state') == 'done'
+                    and result.get('result_path') == task['result_path']):
+                deliveries.setdefault(task['task_id'], event)
+    return launches, deliveries
+
+
+def workflow_report_reads(events, task, cwd, delivery, before=float('inf'), report_name=None):
+    if delivery is None:
+        return []
+    result = read_json(Path(task['result_path']))
+    directory = Path(task['task_dir']).resolve()
+    reads = []
+    for filename in result.get('files', []):
+        path = (directory / filename).resolve()
+        if directory not in path.parents or path.suffix.lower() not in {'.md', '.txt'}:
+            continue
+        if report_name is not None and path != directory / report_name:
+            continue
+        for event in workflow_reads(events, cwd, path, after=delivery['result_row'], before=before):
+            reads.append((event, path.read_text().strip()))
+    return sorted(reads, key=lambda item: item[0]['result_row'])
+
+
+def audit_investigation(events, calls, cwd, tasks, bundle, workflow, roles):
+    names = ('investigation checklist precedes how delegation',
+             'investigation how loaded before delegation',
+             'investigation configured parallel explorer routing',
+             'investigation delivered explorer reports precede synthesis',
+             'investigation synthesis includes both explorer reports',
+             'investigation findings and reply follow synthesis',
+             'investigation unslop follows synthesis before reply',
+             'investigation reply preserves the delivered explanation')
+    checks = dict.fromkeys(names, False)
+    steps = workflow_steps(workflow, bundle, 'investigation', 4)
+    proof = {'type': 'investigation', 'stages': [], 'sequence_verified': False,
+             'quality_scope': 'Verbatim delivered explanation plus one checkpoint; no generic prose-quality guarantee.'}
+    if not steps:
+        return [{'name': name, 'ok': False} for name in names], proof
+    launches, deliveries = workflow_launches(events, tasks, cwd, bundle)
+    first_run = min((call['call_row'] for call in calls
+                     if (argv := literal_horch_command(call['name'], call['args'], cwd, bundle))
+                     and argv[0] == 'run'), default=-1)
+    initial = next((event for event in workflow_writes(events, cwd, workflow['checklist'], before=first_run)
+                    if all(step in event['args']['content'] for step in steps)), None)
+    how_reads = workflow_reads(events, cwd, bundle / 'skills/how/SKILL.md', before=first_run)
+    checks[names[0]], checks[names[1]] = initial is not None, bool(how_reads)
+    explorer_role, explainer_role = workflow['explorer_role'], workflow['explainer_role']
+    expected_roles = (explorer_role, explainer_role)
+    assignments, classified = {}, {role: [] for role in expected_roles}
+    routing = len(tasks) == 3 and len(launches) == 3
+    for task in tasks:
+        assignment = Path(task['brief_path']).read_text().split('## Worker rules', 1)[0]
+        assignments[task['task_id']] = assignment
+        # The assignment's own role comes before any pasted explorer reports.
+        mentions = [(assignment.find(role), role) for role in expected_roles if role in assignment]
+        role = min(mentions)[1] if mentions else None
+        configured = roles.get(role)
+        selected = configured if isinstance(configured, list) else [configured]
+        valid = (role is not None and task['worker'] in selected
+                 and task['worker'] in assignment and re.search(r'\b(?:reason|because)\b', assignment, re.I)
+                 and re.search(r'\bread[- ]only\b', assignment, re.I)
+                 and re.search(r'\b(?:do not|must not|never)\s+(?:delegate|spawn\s+(?:sub)?agents?|use\s+(?:native\s+)?subagents?)\b|\bno\s+(?:delegation|subagents)\b', assignment, re.I))
+        routing = routing and bool(valid)
+        if role is not None:
+            classified[role].append(task)
+    explorers, explainers = classified[explorer_role], classified[explainer_role]
+    angles = workflow.get('angles', [])
+    actual_angles = []
+    for task in explorers:
+        matches = re.findall(r'(?m)^Angle:\s*([a-z_]+)\s*$', assignments[task['task_id']])
+        actual_angles.extend(matches)
+        routing = routing and len(matches) == 1
+    scope = workflow.get('source_paths', [])
+    routing = routing and all(any(
+        str(Path(path).resolve()) in assignments[task['task_id']]
+        or str(Path(path).resolve().parent) in assignments[task['task_id']]
+        for path in scope) for task in explorers)
+    routing = routing and len(scope) == 3 and all(any(
+        str(Path(path).resolve()) in assignments[task['task_id']]
+        or str(Path(path).resolve().parent) in assignments[task['task_id']]
+        for task in explorers) for path in scope)
+    first_wait = min((call['call_row'] for call in calls
+                      if (argv := literal_horch_command(call['name'], call['args'], cwd, bundle))
+                      and argv[0] == 'wait'), default=-1)
+    parallel = (len(explorers) == 2 and len(explainers) == 1 and len(angles) == 2
+                and sorted(actual_angles) == sorted(angles)
+                and all(task['task_id'] in launches and launches[task['task_id']]['call_row'] < first_wait
+                        for task in explorers))
+    checks[names[2]] = bool(routing and parallel)
+    explainer = explainers[0] if len(explainers) == 1 else None
+    synthesis = launches.get(explainer['task_id']) if explainer else None
+    reports = {}
+    if synthesis:
+        for task in explorers:
+            reads = workflow_report_reads(events, task, cwd, deliveries.get(task['task_id']),
+                                          before=synthesis['call_row'], report_name='report.md')
+            if reads:
+                reports[task['task_id']] = reads[0]
+    checks[names[3]] = len(explorers) == 2 and len(reports) == 2
+    if synthesis and len(reports) == 2:
+        assignment = assignments[explainer['task_id']]
+        checks[names[4]] = (all(content in assignment for _, content in reports.values())
+                            and all(angle in assignment for angle in angles))
+    synthesized = workflow_report_reads(events, explainer, cwd, deliveries.get(explainer['task_id']),
+                                         report_name='report.md') if explainer else []
+    synthesis_read = synthesized[0][0] if synthesized else None
+    findings, reply, unslop = None, None, None
+    if synthesis_read:
+        after = synthesis_read['result_row']
+        findings = next(iter(workflow_writes(events, cwd, workflow['findings'], after=after, final=True)), None)
+        reply = next(iter(workflow_writes(events, cwd, workflow['reply'], after=after, final=True)), None)
+        checks[names[5]] = bool(findings and reply
+                                and workflow['throughput'] in reply['args']['content'].splitlines())
+        if reply:
+            unslop = next(iter(workflow_reads(events, cwd, bundle / 'skills/unslop/SKILL.md',
+                                              after=after, before=reply['call_row'])), None)
+        checks[names[6]] = unslop is not None
+        if reply:
+            checkpoint = workflow['throughput']
+            final_lines = reply['args']['content'].splitlines()
+            delivered = '\n'.join(line for line in synthesized[0][1].splitlines()
+                                   if line.strip() != checkpoint).strip()
+            presented = '\n'.join(line for line in final_lines
+                                   if line.strip() != checkpoint).strip()
+            checks[names[7]] = final_lines.count(checkpoint) == 1 and bool(delivered) and presented == delivered
+    proof['stages'] = [
+        {'step': 1, 'instruction': steps[0],
+         'checklist_result_row': initial['result_row'] if initial else None,
+         'how_read_result_row': how_reads[0]['result_row'] if how_reads else None,
+         'explorer_launch_call_rows': [launches[task['task_id']]['call_row'] for task in explorers if task['task_id'] in launches],
+         'first_wait_call_row': first_wait if first_wait >= 0 else None,
+         'explorer_delivery_result_rows': [deliveries[task['task_id']]['result_row'] for task in explorers if task['task_id'] in deliveries],
+         'explorer_report_read_result_rows': [event['result_row'] for event, _ in reports.values()],
+         'explainer_launch_call_row': synthesis['call_row'] if synthesis else None},
+        {'step': 2, 'instruction': steps[1], 'throughput': workflow['throughput'],
+         'reply_result_row': reply['result_row'] if reply else None},
+        {'step': 3, 'instruction': steps[2],
+         'explainer_delivery_result_row': deliveries[explainer['task_id']]['result_row'] if explainer and explainer['task_id'] in deliveries else None,
+         'synthesis_report_read_result_row': synthesis_read['result_row'] if synthesis_read else None,
+         'findings_result_row': findings['result_row'] if findings else None},
+        {'step': 4, 'instruction': steps[3],
+         'unslop_read_result_row': unslop['result_row'] if unslop else None,
+         'delivered_explanation_sha256': hashlib.sha256(synthesized[0][1].encode()).hexdigest() if synthesized else None,
+         'verbatim_presentation_verified': checks[names[7]],
+         'final_reply_call_row': reply['call_row'] if reply else None,
+         'final_reply_result_row': reply['result_row'] if reply else None},
+    ]
+    proof['sequence_verified'] = all(checks.values())
+    return [{'name': name, 'ok': bool(ok)} for name, ok in checks.items()], proof
+
+
+def literal_python_argv(command):
+    if not isinstance(command, str) or any(t in command for t in ('\n', ';', '|', '&', '>', '<', chr(96), '$', '\\')):
+        return None
+    try:
+        argv = shlex.split(command)
+    except ValueError:
+        return None
+    return argv if len(argv) > 1 and Path(argv[0]).name in {'python', 'python3'} else None
+
+
+def audit_trace(events, calls, cwd, tasks, bundle, requirements, workflow):
+    names = ('trace checklist precedes conversion',
+             'trace conversion precedes raw inspection and queries',
+             'trace ranked query supports source attribution',
+             'trace captured call tree supports hot path',
+             'trace paired query confirms lookup elimination',
+             'trace source inspected after conversion before diagnosis',
+             'trace diagnosis and reply follow supported observations')
+    checks = dict.fromkeys(names, False)
+    steps = workflow_steps(workflow, bundle, 'trace-forensics', 6)
+    proof = {'type': 'trace-forensics', 'stages': [], 'sequence_verified': False,
+             'scope': 'Bounded controller-local capture inspection; delegated inspection is unsupported.'}
+    if not steps:
+        return [{'name': name, 'ok': False} for name in names], proof
+    expected_sql = {
+        'hot_sql': "SELECT file,line,function,calls,self_seconds,cumulative_seconds FROM profile_samples WHERE capture='before' ORDER BY self_seconds DESC LIMIT 10",
+        'pair_sql': "SELECT capture,SUM(CASE WHEN function='lookup_reference' THEN calls ELSE 0 END) AS lookup_calls FROM profile_samples GROUP BY capture ORDER BY capture",
+        'edge_sql': "SELECT caller_file,caller_line,caller_function,callee_file,callee_line,callee_function,calls FROM profile_edges WHERE capture='before' AND callee_function='lookup_reference' ORDER BY caller_file,caller_line,caller_function",
+    }
+    source, tool = Path(workflow['source']).resolve(), Path(workflow['profile_tool']).resolve()
+    imports, queries = [], {key: [] for key in expected_sql}
+    for event in events:
+        if event['name'] != 'bash':
+            continue
+        argv = literal_python_argv(event['args'].get('command', ''))
+        if not argv or (cwd / argv[1]).resolve() != tool:
+            continue
+        for requirement in requirements:
+            if not invocation_result(event['args']['command'], event['output'], cwd, requirement):
+                continue
+            if requirement.get('oracle') == 'json_equals' and argv[2:3] == ['import']:
+                imports.append(event)
+            elif requirement.get('oracle') == 'sqlite_query' and argv[2:3] == ['query']:
+                for key, sql in expected_sql.items():
+                    if workflow.get(key) == sql and argv[-1] == sql:
+                        queries[key].append(event)
+    imported = imports[0] if imports else None
+    first_import_call = min((call['call_row'] for call in calls if call['name'] == 'bash'
+                             and (argv := literal_python_argv(call['args'].get('command', '')))
+                             and (cwd / argv[1]).resolve() == tool and argv[2:3] == ['import']), default=-1)
+    initial = next((event for event in workflow_writes(
+        events, cwd, workflow['checklist'], before=first_import_call)
+        if all(step in event['args']['content'] for step in steps)), None)
+    checks[names[0]] = initial is not None and imported is not None
+    protected = [source, Path(workflow['database']).resolve(),
+                 *[Path(path).resolve() for path in workflow['captures']]]
+    accesses = []
+    for call in calls:
+        target = read_target(call['name'], call['args'], cwd)
+        raw = target in protected
+        if call['name'] == 'bash':
+            command = call['args'].get('command', '')
+            argv = literal_python_argv(command)
+            is_import = bool(argv and (cwd / argv[1]).resolve() == tool and argv[2:3] == ['import'])
+            is_query = bool(argv and (cwd / argv[1]).resolve() == tool and argv[2:3] == ['query'])
+            try:
+                shell = shlex.split(command)
+            except ValueError:
+                shell = []
+            metadata = bool(shell and shell[0] in {'ls', 'stat', 'file'})
+            mentions_raw = any(str(path) in command or path.name in command for path in protected)
+            raw = raw or is_query or (mentions_raw and not is_import and not metadata)
+        elif call['name'] == 'grep':
+            argument_text = json.dumps(call['args'])
+            raw = raw or any(str(path) in argument_text or str(path.parent) in argument_text for path in protected)
+        if raw:
+            accesses.append(call)
+    checks[names[1]] = bool(imported and not tasks and all(
+        call['call_row'] > imported['result_row'] for call in accesses))
+    hot, edge, paired = (next(iter(queries[key]), None) for key in ('hot_sql', 'edge_sql', 'pair_sql'))
+    if hot:
+        output = json.loads(hot['output'].strip())
+        rows = output.get('rows', [])
+        checks[names[2]] = bool(
+            output.get('columns') == ['file', 'line', 'function', 'calls', 'self_seconds', 'cumulative_seconds']
+            and rows and len(rows[0]) == 6 and Path(rows[0][0]).resolve() == source
+            and rows[0][1:4] == [1, 'lookup_reference', 6000]
+            and all(type(value) in {int, float} and value > 0 for value in rows[0][4:])
+            and rows[0][5] >= rows[0][4])
+    if edge:
+        output = json.loads(edge['output'].strip())
+        checks[names[3]] = bool(
+            output.get('columns') == ['caller_file', 'caller_line', 'caller_function',
+                                      'callee_file', 'callee_line', 'callee_function', 'calls']
+            and any(len(row) == 7 and Path(row[0]).resolve() == source and row[2] == '<genexpr>'
+                    and Path(row[3]).resolve() == source and row[4:] == [1, 'lookup_reference', 6000]
+                    for row in output.get('rows', [])))
+    if paired:
+        output = json.loads(paired['output'].strip())
+        checks[names[4]] = (output.get('columns') == ['capture', 'lookup_calls']
+                            and output.get('rows') == [['after', 0], ['before', 6000]])
+    source_read = None
+    if imported and hot and edge and paired:
+        after = max(imported['result_row'], hot['result_row'], edge['result_row'])
+        source_read = next(iter(workflow_reads(events, cwd, source, after=after,
+                                               before=paired['call_row'])), None)
+    checks[names[5]] = source_read is not None
+    diagnosis, reply = None, None
+    if imported and hot and edge and paired and source_read:
+        after = max(event['result_row'] for event in (imported, hot, edge, paired, source_read))
+        diagnosis = next(iter(workflow_writes(events, cwd, workflow['diagnosis'], after=after, final=True)), None)
+        reply = next(iter(workflow_writes(events, cwd, workflow['reply'], after=after, final=True)), None)
+        checks[names[6]] = bool(diagnosis and reply
+                                and workflow['throughput'] in reply['args']['content'].splitlines())
+    proof['stages'] = [
+        {'step': 1, 'instruction': steps[0], 'checklist_result_row': initial['result_row'] if initial else None,
+         'import_call_row': imported['call_row'] if imported else None},
+        {'step': 2, 'instruction': steps[1], 'import_result_row': imported['result_row'] if imported else None},
+        {'step': 3, 'instruction': steps[2], 'ranked_query_result_row': hot['result_row'] if hot else None,
+         'call_tree_query_result_row': edge['result_row'] if edge else None},
+        {'step': 4, 'instruction': steps[3], 'source_read_result_row': source_read['result_row'] if source_read else None},
+        {'step': 5, 'instruction': steps[4], 'paired_query_call_row': paired['call_row'] if paired else None,
+         'paired_query_result_row': paired['result_row'] if paired else None,
+         'lookup_calls': {'before': 6000, 'after': 0} if checks[names[4]] else None},
+        {'step': 6, 'instruction': steps[5], 'throughput': workflow['throughput'],
+         'diagnosis_call_row': diagnosis['call_row'] if diagnosis else None,
+         'diagnosis_result_row': diagnosis['result_row'] if diagnosis else None,
+         'reply_call_row': reply['call_row'] if reply else None,
+         'reply_result_row': reply['result_row'] if reply else None},
+    ]
+    proof['sequence_verified'] = all(checks.values())
+    return [{'name': name, 'ok': bool(ok)} for name, ok in checks.items()], proof
+
+
 def audit_pi(path, session, cwd, started, spec, required_reads, required_commands, tasks, bundle,
-             required_invocations=(), required_order=(), workflow=None, implementation_workers=()):
+             required_invocations=(), required_order=(), workflow=None, implementation_workers=(), configured_roles=None):
     """Trust native successful calls/results, never a controller's self-report."""
     rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
     if not rows or rows[0].get('type') != 'session' or rows[0].get('version') != 3:
@@ -491,10 +830,17 @@ def audit_pi(path, session, cwd, started, spec, required_reads, required_command
             for left, right in zip(required_order, required_order[1:]))})
     ordered_workflow = None
     if workflow:
-        if workflow.get('type') != 'prototype':
+        if workflow.get('type') == 'prototype':
+            workflow_checks, ordered_workflow = audit_prototype(
+                events, calls, cwd, tasks, bundle, required_invocations, workflow, implementation_workers)
+        elif workflow.get('type') == 'investigation':
+            workflow_checks, ordered_workflow = audit_investigation(
+                events, calls, cwd, tasks, bundle, workflow, configured_roles or {})
+        elif workflow.get('type') == 'trace-forensics':
+            workflow_checks, ordered_workflow = audit_trace(
+                events, calls, cwd, tasks, bundle, required_invocations, workflow)
+        else:
             raise Failure('native_workflow_unsupported')
-        workflow_checks, ordered_workflow = audit_prototype(
-            events, calls, cwd, tasks, bundle, required_invocations, workflow, implementation_workers)
         checks.extend(workflow_checks)
     return {'checks': checks, 'tool_calls': len(successful),
             **({'ordered_workflow': ordered_workflow} if ordered_workflow is not None else {}),
@@ -621,10 +967,41 @@ class Run:
                          '--env', 'MISE_CONFIG_DIR=' + self.env['MISE_CONFIG_DIR'],
                          '--env', 'MISE_STATE_DIR=' + self.env['MISE_STATE_DIR'])
         self.pane = tab['root_pane']['pane_id']
+        workflow_type = self.prepared.get('workflow', {}).get('type')
+        workflow_instructions = {
+            'prototype': '''Use separate native write calls for the stage checklist, decision.json and
+reply.md. Include any valid fixed-direction reference skip in the initial
+checklist before delegation. Inspect every delegated script with a separate
+full-file native read before the comparison observations. The decision and
+final report must follow those observations.''',
+            'investigation': '''Use separate native write calls for the exact original four-step checklist,
+findings.json and reply.md. Write the checklist and fully read the how skill
+before delegation. Launch both scoped explorers before the first wait. Read
+their complete delivered Markdown reports before launching the explainer;
+include the actual full report bodies and both angle keys in its brief.
+Require each explorer and explainer to write its complete report as report.md
+in its task directory and list that report in result.json files, then read it.
+After reading the delivered explainer report, write findings.json, fully read
+the unslop skill again, then present the report unchanged with only the exact
+throughput line added. Tell the explainer to apply unslop before delivering.
+This fixture's witness protocol is stricter than How's allowance for light
+edits. If the synthesis needs substantive correction, report the unresolved
+stage instead of rewriting it yourself.''',
+            'trace-forensics': '''Use separate native write calls for the exact original six-step checklist,
+diagnosis.json and reply.md. Write the checklist before importing captures.
+Do not read source or raw capture contents or query the database before the
+import result. Observe ranked and captured-edge queries, fully read the source,
+then observe the paired query. Write diagnosis and final reply only after all
+those successful results, with the exact throughput line in the final reply.''',
+        }.get(workflow_type, '')
         prompt = f'''This is a real playbook evaluation. Read {self.bundle / 'skills/poteto-mode/SKILL.md'}
 in full first, then select and execute the applicable original playbook and its
 Herdr mapping. Follow the playbook's required stages and use configured roles.
 The source bundle is {self.bundle}; work only in {self.worktree}.
+This evaluator supports only the native read, bash, write, edit, grep, find and
+ls tools. Do not use codemode or another tool wrapper: its nested calls are not
+visible to this auditor. Use separate native calls for report reads and brief
+writes, even when combining the data would be convenient.
 For each required source document use a separate native read call without an
 offset/limit, or a literal cat of that single file, so its full contents appear
 in the native tool result. If truncated, report the unsupported evidence stage.
@@ -635,11 +1012,7 @@ absolute horch.py path, wait, and task IDs. Read each delivered task's report or
 result with a separate native read call, after wait has reported state done.
 Write your final answer to {self.artifacts / 'reply.md'}.
 Put all checklists and control notes under {self.artifacts}; the worktree is read-only.
-Use separate native write calls for the stage checklist, decision.json and
-reply.md. Include any valid fixed-direction reference skip in the initial
-checklist before delegation. Inspect every delegated script with a separate
-full-file native read before the comparison observations. The decision and
-final report must follow those observations.
+{workflow_instructions}
 Do not create or edit evidence.json or an evaluator/checker. No external forge
 writes, merges, configuration edits, trust changes, or model substitutions are
 authorized. Report any blocked required stage explicitly.
@@ -760,7 +1133,8 @@ authorized. Report any blocked required stage explicitly.
                                self.prepared.get('workflow'),
                                [self.config.get('roles', {}).get('feature, refactoring')]
                                if isinstance(self.config.get('roles', {}).get('feature, refactoring'), str)
-                               else self.config.get('roles', {}).get('feature, refactoring', [])))
+                               else self.config.get('roles', {}).get('feature, refactoring', []),
+                               self.config.get('roles', {})))
         self.stage_checks = self.native['checks']
         self.behavior = cases.verify(self.args.scenario, self.worktree, self.artifacts,
                                      self.prepared.get('context', {}))
@@ -870,7 +1244,7 @@ authorized. Report any blocked required stage explicitly.
                    'failure_categories': self.categories, 'last_phase': self.phase,
                    'claims': self.prepared.get('claims', []) if passed else [],
                    'limitations': self.behavior.get('limitations', []) + [
-                       'Inter-task dependency graphs are not inferred; native audit proves delivery before individual artifact reads only.'],
+                       'Arbitrary inter-task dependency graphs are not inferred; only declared workflow sequences and delivery before artifact reads are audited.'],
                    'seconds': round(time.monotonic() - self.started, 3)}
         try:
             receipt['config_sha256_after'] = sha(self.config_path)

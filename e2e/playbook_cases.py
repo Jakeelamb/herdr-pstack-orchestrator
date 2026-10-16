@@ -1,6 +1,7 @@
 """Independent artifact checks for live, original pstack playbook scenarios."""
 from __future__ import annotations
 
+import ast
 import cProfile
 import hashlib
 import importlib.util
@@ -16,8 +17,9 @@ import sys
 CASES = {
     "investigation": {
         "playbook": "investigation",
-        "workflow_complete": False,
-        "claims": ["read-only multi-module explanation", "configured how delegation"],
+        "workflow_complete": True,
+        "claims": ["read-only multi-module Investigation core workflow",
+                   "configured parallel how exploration and synthesis"],
         "required_stages": ["source and supplied captures unchanged",
                             "investigation identifies duplicate_scope",
                             "investigation identifies commit_operation",
@@ -25,7 +27,18 @@ CASES = {
                             "investigation identifies failure_effect",
                             "investigation identifies export_order",
                             "investigation source citations resolve across all modules",
-                            "how output explains flow and gotchas"],
+                            "how output explains flow and gotchas",
+                            "investigation checklist copies all four steps",
+                            "investigation reports the read-only throughput checkpoint",
+                            "investigation reply follows concrete unslop rules",
+                            "investigation checklist precedes how delegation",
+                            "investigation how loaded before delegation",
+                            "investigation configured parallel explorer routing",
+                            "investigation delivered explorer reports precede synthesis",
+                            "investigation synthesis includes both explorer reports",
+                            "investigation findings and reply follow synthesis",
+                            "investigation unslop follows synthesis before reply",
+                            "investigation reply preserves the delivered explanation"],
     },
     "prototype": {
         "playbook": "prototype",
@@ -53,17 +66,31 @@ CASES = {
     },
     "trace-forensics": {
         "playbook": "trace-forensics",
-        "workflow_complete": False,
-        "claims": ["captured-profile diagnosis", "queryable paired captures", "source attribution"],
+        "workflow_complete": True,
+        "claims": ["paired-capture Trace forensics core workflow",
+                   "queryable preserved profile and call tree", "source attribution"],
         "required_stages": ["source and supplied captures unchanged",
                             "capture transformed into queryable SQLite",
                             "capture queried through SQLite",
+                            "capture call tree queried through SQLite",
+                            "paired captures queried through SQLite",
                             "native required invocation order",
                             "SQLite rows exactly preserve both captured profiles",
+                            "SQLite edges exactly preserve captured call trees",
                             "diagnosis maps dominant own-time frame to exact source",
                             "profile format identified",
                             "mechanism distinguishes repeated linear lookup",
-                            "paired capture confirms lookup elimination with equal results"],
+                            "paired capture confirms lookup elimination with equal results",
+                            "trace checklist copies all six steps",
+                            "trace reply cites source and both capture artifacts",
+                            "trace reports the read-only throughput checkpoint",
+                            "trace checklist precedes conversion",
+                            "trace conversion precedes raw inspection and queries",
+                            "trace ranked query supports source attribution",
+                            "trace captured call tree supports hot path",
+                            "trace paired query confirms lookup elimination",
+                            "trace source inspected after conversion before diagnosis",
+                            "trace diagnosis and reply follow supported observations"],
     },
 }
 
@@ -164,11 +191,20 @@ if args.action == "import":
     counts = {}
     with sqlite3.connect(args.db) as database:
         database.execute("CREATE TABLE profile_samples (capture TEXT, file TEXT, line INTEGER, function TEXT, calls INTEGER, self_seconds REAL, cumulative_seconds REAL)")
+        database.execute("CREATE TABLE profile_edges (capture TEXT, caller_file TEXT, caller_line INTEGER, caller_function TEXT, callee_file TEXT, callee_line INTEGER, callee_function TEXT, calls INTEGER, self_seconds REAL, cumulative_seconds REAL)")
         for label, path in (("before", args.before), ("after", args.after)):
             stats = pstats.Stats(path)
             rows = [(label, file, line, function, calls, own, cumulative)
                     for (file, line, function), (_, calls, own, cumulative, _) in stats.stats.items()]
+            edges = []
+            for callee, (_, _, _, _, callers) in stats.stats.items():
+                for caller, values in callers.items():
+                    if not isinstance(values, tuple) or len(values) != 4:
+                        raise ValueError("Unsupported captured caller statistics")
+                    calls, _, own, cumulative = values
+                    edges.append((label, *caller, *callee, calls, own, cumulative))
             database.executemany("INSERT INTO profile_samples VALUES (?,?,?,?,?,?,?)", rows)
+            database.executemany("INSERT INTO profile_edges VALUES (?,?,?,?,?,?,?,?,?,?)", edges)
             counts[label] = len(rows)
     print(json.dumps({"capture_rows": counts}, sort_keys=True))
 else:
@@ -215,6 +251,18 @@ def prepare(name, worktree, artifacts, bundle):
         required += ["skills/how/SKILL.md", "skills/how/references/explorer-prompt.md",
                      "skills/how/references/explainer-prompt.md"]
         roles = ["how explorer", "how explainer"]
+        steps = re.findall(r"^\d+\. (.+)$", (bundle / "skills/poteto-mode/playbooks/investigation.md").read_text(), re.M)
+        if len(steps) != 4:
+            raise ValueError("investigation_stage_inventory_changed")
+        context["investigation_steps"] = steps
+        workflow = {"type": "investigation", "steps": steps,
+                    "checklist": str(artifacts / "checklist.md"),
+                    "findings": str(artifacts / "findings.json"),
+                    "reply": str(artifacts / "reply.md"),
+                    "explorer_role": "how explorer", "explainer_role": "how explainer",
+                    "angles": ["transaction_boundaries", "command_money_export"],
+                    "throughput": "throughput checkpoint: n/a, read-only investigation",
+                    "source_paths": [str(fixture / filename) for filename in LEDGER_FILES]}
         prompt = f'''Explain the complete import transaction path in {fixture}, across
 the command boundary, money rules and storage. We need to understand duplicate
 IDs across old state and multiple input files, a validation failure late in a
@@ -222,6 +270,15 @@ batch, the exact rounding boundary, and why deterministic export is possible.
 This is an architecture investigation with a cited explanation, not a request
 to change code. If executing examples, put all scratch inputs/state under
 {artifacts / 'examples'}, never inside the source fixture.
+The architectural slices are transaction_boundaries, covering staging, duplicate
+state and commit/rollback, and command_money_export, covering CLI errors, money
+rounding and deterministic export. Keep these two exploration assignments
+distinct. Put `Angle: transaction_boundaries` or `Angle: command_money_export`
+in the respective submitted brief. Give the synthesizing explainer both full
+delivered explorer reports, including their angle labels, rather than a summary
+or a path that the explainer cannot see. Keep each assignment read-only and
+bounded, with no nested delegation. Write the original four-step checklist
+to {artifacts / 'checklist.md'} before assignments.
 Alongside your final explanation, write {artifacts / 'findings.json'} with this
 machine-readable summary (discover the values from the source):
 {{"duplicate_scope": {{"persisted": true or false, "within_batch": true or false,
@@ -232,8 +289,18 @@ machine-readable summary (discover the values from the source):
  "export_order": {{"key": "...", "direction": "ascending" or "descending"}}, "evidence": [
    {{"file": "<fixture-relative file>", "line": 1, "symbol": "<symbol>"}}]}}
 Use machine-readable values for the five facts. Include at least one accurate source
-citation for each of cli.py, storage.py and money.py. Do not change source or
-open a PR for this read-only task.'''
+citation for each of cli.py, storage.py and money.py. Use all five How sections,
+with Markdown headings: Overview, Key Concepts, How It Works, Where Things Live,
+and Gotchas. Include the original read-only throughput checkpoint as one line.
+Ask the explainer to apply unslop before delivering its complete report.md.
+Present that delivered explanation verbatim, adding only the original exact
+one-line throughput checkpoint. Keep findings.json separate. This evaluation
+uses an unchanged explanation as a deterministic, narrower witness for How's
+preservation rule. If substantive corrections are needed, leave the stage
+unresolved rather than rewriting the explanation yourself.
+After reading the delivered synthesis, reread {bundle / 'skills/unslop/SKILL.md'}
+in full as the native witness for that final editing step, then write the reply.
+Do not change source or open a PR for this read-only task.'''
     elif name == "prototype":
         required += ["skills/principle-exhaust-the-design-space/SKILL.md"]
         roles = ["feature, refactoring"]
@@ -308,8 +375,29 @@ the Feature handoff in your final answer. No PR is appropriate for a throwaway p
             totals[label] = profiler.runcall(function, references, payments)
             profiler.dump_stats(str(fixture / f"{label}.prof"))
         context["capture_totals"] = totals
+        write_json(fixture / "capture_manifest.json", {
+            "format": "cProfile", "workload": {"references": 2500, "payments": 6000},
+            "results": totals,
+            "capture_sha256": {label: sha(fixture / f"{label}.prof") for label in totals},
+            "source_sha256": sha(source)})
         counts = {label: len(pstats.Stats(str(fixture / f"{label}.prof")).stats)
                   for label in ("before", "after")}
+        hot_sql = "SELECT file,line,function,calls,self_seconds,cumulative_seconds FROM profile_samples WHERE capture='before' ORDER BY self_seconds DESC LIMIT 10"
+        edge_sql = "SELECT caller_file,caller_line,caller_function,callee_file,callee_line,callee_function,calls FROM profile_edges WHERE capture='before' AND callee_function='lookup_reference' ORDER BY caller_file,caller_line,caller_function"
+        pair_sql = "SELECT capture,SUM(CASE WHEN function='lookup_reference' THEN calls ELSE 0 END) AS lookup_calls FROM profile_samples GROUP BY capture ORDER BY capture"
+        steps = re.findall(r"^\d+\. (.+)$", (bundle / "skills/poteto-mode/playbooks/trace-forensics.md").read_text(), re.M)
+        if len(steps) != 6:
+            raise ValueError("trace_stage_inventory_changed")
+        context["trace_steps"] = steps
+        workflow = {"type": "trace-forensics", "steps": steps,
+                    "checklist": str(artifacts / "checklist.md"),
+                    "diagnosis": str(artifacts / "diagnosis.json"),
+                    "reply": str(artifacts / "reply.md"), "source": str(source),
+                    "profile_tool": str(fixture / "profile_query.py"),
+                    "captures": [str(fixture / f"{label}.prof") for label in ("before", "after")],
+                    "database": str(artifacts / "profile.sqlite"),
+                    "hot_sql": hot_sql, "edge_sql": edge_sql, "pair_sql": pair_sql,
+                    "throughput": "throughput checkpoint: n/a, read-only forensics"}
         invocations = [
             {"name": "capture transformed into queryable SQLite", "script": str(fixture / "profile_query.py"),
              "arguments": ["import", "--db", str(artifacts / "profile.sqlite"),
@@ -317,7 +405,20 @@ the Feature handoff in your final answer. No PR is appropriate for a throwaway p
              "oracle": "json_equals", "expected_output": {"capture_rows": counts}},
             {"name": "capture queried through SQLite", "script": str(fixture / "profile_query.py"),
              "arguments": ["query", "--db", str(artifacts / "profile.sqlite"), "--sql"],
-             "oracle": "sqlite_query", "database": str(artifacts / "profile.sqlite")},
+             "oracle": "sqlite_query", "database": str(artifacts / "profile.sqlite"),
+             "sql": hot_sql,
+             "required_read_columns": ["file", "line", "function", "calls", "self_seconds", "cumulative_seconds"]},
+            {"name": "capture call tree queried through SQLite", "script": str(fixture / "profile_query.py"),
+             "arguments": ["query", "--db", str(artifacts / "profile.sqlite"), "--sql"],
+             "oracle": "sqlite_query", "database": str(artifacts / "profile.sqlite"),
+             "sql": edge_sql,
+             "required_table": "profile_edges",
+             "required_read_columns": ["caller_file", "caller_line", "caller_function", "callee_file", "callee_line", "callee_function", "calls"]},
+            {"name": "paired captures queried through SQLite", "script": str(fixture / "profile_query.py"),
+             "arguments": ["query", "--db", str(artifacts / "profile.sqlite"), "--sql"],
+             "oracle": "sqlite_query", "database": str(artifacts / "profile.sqlite"),
+             "sql": pair_sql,
+             "required_read_columns": ["capture", "function", "calls"]},
         ]
         order = [item["name"] for item in invocations]
         prompt = f'''Diagnose these already captured Python profiles. The same
@@ -325,11 +426,14 @@ the Feature handoff in your final answer. No PR is appropriate for a throwaway p
 and {fixture / 'after.prof'}; the corresponding source is {source}.
 Identify the format, dominant hot path, source location and mechanism. Decide
 whether the paired capture supports the mechanism. These captures are the fixed
-input; do not rerun the workload or change source/captures.
+input; do not rerun the workload or change source/captures. These bounded
+captures fit in the controller. Keep parsing, queries and diagnosis in this
+controller so their native order is observable; no worker delegation is needed.
 Transform BOTH captures into {artifacts / 'profile.sqlite'} before investigating.
 Use a table profile_samples(capture TEXT, file TEXT, line INTEGER,
 function TEXT, calls INTEGER, self_seconds REAL, cumulative_seconds REAL), one
 row per pstats function per capture, with capture values before and after.
+The importer also preserves captured caller relationships in profile_edges.
 Use queries on that database to narrow the cause. Keep full file names from the
 captures in the private database; they will not be published.
 The supplied generic profile tool is {fixture / 'profile_query.py'}.
@@ -339,10 +443,27 @@ python3 <absolute profile_query.py> query --db <absolute database> --sql
 'SELECT ...'. Choose your own useful queries. Use separate direct shell tool
 calls, no wrapper or pipeline, and no trailing SQL semicolon, so the native
 result records the actual imported row counts and query outputs.
+Keep the original six-step checklist at {artifacts / 'checklist.md'} before
+conversion. For this replayable evidence surface, run these two queries after
+import to rank frames and walk the captured caller relationship:
+{hot_sql}
+{edge_sql}
+Then read {source} in full to map the hot frame to source. Read the immutable
+{fixture / 'capture_manifest.json'} for the workload and captured result checks.
+After mapping source, use this paired comparison query:
+{pair_sql}
+You may run additional useful queries. Keep the original captures fixed and
+do not inspect raw profiles with a different parser before conversion.
 Write {artifacts / 'diagnosis.json'} containing {{"format": "...",
 "hot_function": "...", "file": "<fixture-relative source>", "line": 1,
-"mechanism": "...", "paired_capture_confirms": true or false}} alongside the
-cited explanation and artifact paths. This task is diagnosis only, no fix or PR.'''
+"mechanism": "...", "paired_capture_confirms": true or false,
+"before_strategy": "...", "after_strategy": "...",
+"before_lookup_calls": integer, "after_lookup_calls": integer}} alongside the
+cited explanation and artifact paths. Use strategy values linear_scan_per_payment
+or dictionary_index, as supported by source and queries. Cite the exact source
+as reconcile.py:<line>, name both capture paths and profile.sqlite, say whether
+the paired capture confirmed the diagnosis, and include the original one-line
+read-only forensics throughput checkpoint. This task is diagnosis only, no fix or PR.'''
     else:
         raise ValueError("scenario_not_implemented")
     context["source_hashes"] = hashes(fixture)
@@ -400,14 +521,31 @@ def verify(name, worktree, artifacts, context):
             filename, line, symbol = item.get("file"), item.get("line"), item.get("symbol")
             if filename not in LEDGER_FILES or type(line) is not int or not isinstance(symbol, str) or not symbol:
                 continue
-            lines = (fixture / filename).read_text().splitlines()
-            if 1 <= line <= len(lines) and symbol in "\n".join(lines[max(0, line-2):line+1]):
+            source = (fixture / filename).read_text()
+            tree = ast.parse(source)
+            scopes = [node for node in ast.walk(tree)
+                      if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+                      and node.name == symbol]
+            references = [node for node in ast.walk(tree)
+                          if isinstance(node, (ast.Name, ast.Attribute)) and ast.unparse(node) == symbol]
+            if any(node.lineno <= line <= node.end_lineno for node in scopes + references):
                 cited.add(filename)
         checks.append(check("investigation source citations resolve across all modules", cited == set(LEDGER_FILES),
                             cited_modules=sorted(cited)))
         report = (artifacts / "reply.md").read_text()
+        headings = ("Overview", "Key Concepts", "How It Works", "Where Things Live", "Gotchas")
         checks.append(check("how output explains flow and gotchas", all(
-            re.search(phrase, report, re.I) for phrase in (r"overview", r"how it works", r"gotchas"))))
+            re.search(r"(?im)^#{1,6}\s+" + re.escape(heading) + r"\s*$", report)
+            for heading in headings)))
+        checks.append(check("investigation checklist copies all four steps", all(
+            step in (artifacts / "checklist.md").read_text() for step in context["investigation_steps"])))
+        checkpoints = [line.strip() for line in report.splitlines()
+                       if line.strip().startswith("throughput checkpoint:")]
+        checks.append(check("investigation reports the read-only throughput checkpoint",
+                            checkpoints == ["throughput checkpoint: n/a, read-only investigation"]))
+        checks.append(check("investigation reply follows concrete unslop rules",
+                            not any(character in report for character in ("\u2014", "\u201c", "\u201d", "\u2018", "\u2019"))
+                            and not re.search(r"I hope this helps|let me know if|certainly!|great question!", report, re.I)))
         observations = {"cited_modules": sorted(cited), "fact_checks": len(predicates)}
     elif name == "prototype":
         vectors = [
@@ -488,12 +626,20 @@ def verify(name, worktree, artifacts, context):
         observations = {"inputs": vectors, "observed_totals": outputs, "runner_outputs": runner_outputs}
     elif name == "trace-forensics":
         expected = {}
+        expected_edges = {}
         for label in ("before", "after"):
             stats = pstats.Stats(str(fixture / f"{label}.prof"))
             expected[label] = {(str(file), line, function): (calls, own, cumulative)
                                for (file, line, function), (_, calls, own, cumulative, _) in stats.stats.items()}
+            expected_edges[label] = {}
+            for callee, (_, _, _, _, callers) in stats.stats.items():
+                for caller, values in callers.items():
+                    if not isinstance(values, tuple) or len(values) != 4:
+                        raise ValueError("unsupported_captured_callers")
+                    expected_edges[label][(*caller, *callee)] = (values[0], values[2], values[3])
         with sqlite3.connect(f"file:{artifacts / 'profile.sqlite'}?mode=ro", uri=True) as database:
             records = database.execute("SELECT capture,file,line,function,calls,self_seconds,cumulative_seconds FROM profile_samples").fetchall()
+            edge_records = database.execute("SELECT capture,caller_file,caller_line,caller_function,callee_file,callee_line,callee_function,calls,self_seconds,cumulative_seconds FROM profile_edges").fetchall()
         observed = {label: {} for label in expected}
         duplicate = False
         for label, file, line, function, calls, own, cumulative in records:
@@ -503,22 +649,59 @@ def verify(name, worktree, artifacts, context):
             observed[label][(file, line, function)] = (calls, own, cumulative)
         checks.append(check("SQLite rows exactly preserve both captured profiles", not duplicate and observed == expected,
                             capture_rows={k: len(v) for k, v in observed.items()}))
+        observed_edges = {label: {} for label in expected_edges}
+        duplicate_edge = False
+        for label, *values in edge_records:
+            identity, metrics = tuple(values[:6]), tuple(values[6:])
+            if label not in observed_edges or identity in observed_edges.get(label, {}):
+                duplicate_edge = True
+                continue
+            observed_edges[label][identity] = metrics
+        checks.append(check("SQLite edges exactly preserve captured call trees",
+                            not duplicate_edge and observed_edges == expected_edges,
+                            capture_edges={label: len(edges) for label, edges in observed_edges.items()}))
         diagnosis = load_object(artifacts / "diagnosis.json")
         source = fixture / "reconcile.py"
         own_frames = {key: values for key, values in expected["before"].items() if key[0] == str(source)}
         hottest = max(own_frames, key=lambda key: own_frames[key][1])
+        reported_file = diagnosis.get("file")
+        source_cited = isinstance(reported_file, str) and any(
+            (base / reported_file).is_file() and (base / reported_file).resolve() == source.resolve()
+            for base in (fixture, worktree))
         checks.append(check("diagnosis maps dominant own-time frame to exact source", diagnosis.get("hot_function") == hottest[2]
-                            and diagnosis.get("file") == "reconcile.py" and diagnosis.get("line") == hottest[1]))
+                            and source_cited
+                            and type(diagnosis.get("line")) is int and diagnosis["line"] == hottest[1]))
         checks.append(check("profile format identified", bool(re.search(r"(?:cprofile|pstats)", str(diagnosis.get("format")), re.I))))
         checks.append(check("mechanism distinguishes repeated linear lookup", bool(re.search(
             r"(?:linear|scan|search).*?(?:repeat|payment|lookup)|(?:repeat|payment|lookup).*?(?:linear|scan|search)",
-            str(diagnosis.get("mechanism")), re.I))))
+            str(diagnosis.get("mechanism")), re.I))
+                            and diagnosis.get("before_strategy") == "linear_scan_per_payment"
+                            and diagnosis.get("after_strategy") == "dictionary_index"))
         before_calls = sum(v[0] for k,v in expected["before"].items() if k[2] == "lookup_reference")
         after_calls = sum(v[0] for k,v in expected["after"].items() if k[2] == "lookup_reference")
         checks.append(check("paired capture confirms lookup elimination with equal results", before_calls == 6000 and after_calls == 0
                             and context["capture_totals"]["before"] == context["capture_totals"]["after"]
-                            and diagnosis.get("paired_capture_confirms") is True))
+                            and diagnosis.get("paired_capture_confirms") is True
+                            and type(diagnosis.get("before_lookup_calls")) is int
+                            and type(diagnosis.get("after_lookup_calls")) is int
+                            and diagnosis["before_lookup_calls"] == before_calls
+                            and diagnosis["after_lookup_calls"] == after_calls))
+        checks.append(check("trace checklist copies all six steps", all(
+            step in (artifacts / "checklist.md").read_text() for step in context["trace_steps"])))
+        report = (artifacts / "reply.md").read_text()
+        checks.append(check("trace reply cites source and both capture artifacts",
+                            f"reconcile.py:{hottest[1]}" in report
+                            and str(fixture / "before.prof") in report
+                            and str(fixture / "after.prof") in report
+                            and str(artifacts / "profile.sqlite") in report
+                            and bool(re.search(r"(?:cProfile|pstats)", report, re.I))
+                            and bool(re.search(r"(?:paired|before.*after).*confirm|confirm.*(?:paired|before.*after)", report, re.I))))
+        checkpoints = [line.strip() for line in report.splitlines()
+                       if line.strip().startswith("throughput checkpoint:")]
+        checks.append(check("trace reports the read-only throughput checkpoint",
+                            checkpoints == ["throughput checkpoint: n/a, read-only forensics"]))
         observations = {"workload": {"references": 2500, "payments": 6000}, "capture_rows": {k: len(v) for k,v in expected.items()},
+                        "capture_edges": {label: len(edges) for label, edges in expected_edges.items()},
                         "hot_function": hottest[2], "source_line": hottest[1], "lookup_calls": {"before": before_calls, "after": after_calls},
                         "equal_reconciliation_results": len(set(context["capture_totals"].values())) == 1}
     else:

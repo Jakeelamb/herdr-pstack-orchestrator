@@ -55,3 +55,7 @@ e2e/evidence/*
 !e2e/evidence/playbook-prototype-stages.json
 !e2e/evidence/hot-swap.json
 !e2e/evidence/playbook-prototype.json
+!e2e/evidence/playbook-investigation-codemode.json
+!e2e/evidence/playbook-investigation-reanalysis.json
+!e2e/evidence/playbook-trace-path.json
+!e2e/evidence/playbook-trace.json

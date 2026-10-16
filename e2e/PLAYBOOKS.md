@@ -156,8 +156,8 @@ install locked Bun dependencies at execution time. Unsupported Origin selection,
 unavailable checks or a changing forge snapshot remain unresolved. Even a pass
 would cover bounded Check only, not the entire Babysit playbook. The first Check
 attempt stopped in preparation on a checker-contract gap; its original failed
-receipt and independent audit are preserved below. Hillclimb has no passing
-live evidence yet.
+receipt and independent audit are preserved below. The first Hillclimb run was manually stopped on explicitly excluded
+How shell listings before any measured attempt or PR.
 
 ## Interpret evidence
 
@@ -436,6 +436,18 @@ final review/commit. Perf also audits every worker tool attempt and records
 before/after reader-tree evidence. These repairs have independent code review;
 a fresh complete live pass is still required.
 
+The [first Hillclimb receipt](evidence/playbook-hillclimb-shell.json) remains an
+operator-stopped FAIL, with 28 passing setup/cleanup checks and no measured
+attempt. The [metadata-only audit](evidence/playbook-hillclimb-shell-audit.json)
+binds the configured How worker to a captured working session and records
+explicitly excluded Bash listings inside its owned reader. No report reached
+the lead; no application change, measurement, commit or PR followed. A separate
+unreached checker split an internal Worker rules heading and would exclude
+instructions that were actually present. It did not cause the manual stop.
+The reviewed forward repair validates the exact nonce-bound Horch suffix and
+inspects the complete authored prefix, with no shell-grammar relaxation or
+new live pass.
+
 The [first Babysit Check receipt](evidence/playbook-babysit-grammar.json) retains
 its preparation FAIL: 34 of 35 checks passed, without executing the watcher or
 creating before/after forge snapshots. Its
@@ -493,6 +505,7 @@ This verifies worker definition replacement, not automatic role or skill reload.
 | [Snapshot shell grammar](evidence/playbook-forge-shell.json) | Composed shell and Bash ls calls triggered automatic quarantine; no worker payload reached the lead |
 | [Authoring command grammar](evidence/playbook-authoring-literal.json) | Undeclared controller restrictions and diff-prefix mismatch; mandatory Comment Sicko task also omitted |
 | [Feature worker scope](evidence/playbook-feature-scope.json) | Unsupported explorer tools and task-store traversal; lead consumed reports before manual halt, so no automatic quarantine claim |
+| [Hillclimb shell grammar](evidence/playbook-hillclimb-shell.json) | Manual stop on explicitly excluded local How shell listings; no delivered report, measured attempt or PR |
 
 Each attempt retained its failure verdict and confirmed owned cleanup. The first
 prototype run did not execute a model task. The contract run produced real
@@ -511,7 +524,7 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 | Refactoring | Reviewed `design_loop.py`, including mandatory Comment Sicko delivery; live frozen baseline, equivalence and real PR still unrun |
 | Prototype | [PASS: fixed-direction behavioral core workflow](evidence/playbook-prototype.json); open visual design search unverified |
 | Perf issue | [Fourth FAIL with independent behavior audit](evidence/playbook-perf-comment-audit.json): 70.2% native / 70.0% replay reduction; original output rule and review unresolved |
-| Hillclimb | Reviewed `hillclimb_loop.py`, including mandatory Comment Sicko delivery; live sensitivity, attempts, decisions and PR unrun; unattended wake unavailable |
+| Hillclimb | [First FAIL](evidence/playbook-hillclimb-shell.json): manual stop on explicitly excluded How shell listings; measured attempts and PR unresolved; unattended wake unavailable |
 | Runtime forensics | [PASS: five-stage owned-process diagnosis](evidence/playbook-runtime.json); raw Inspector/profile/source independently checked; large-artifact delegation unverified |
 | Trace forensics | [PASS: bounded paired-capture core workflow](evidence/playbook-trace.json); large-capture delegation unverified |
 | Visual parity | Local browser/diff tools available; UI fixture, untouched baseline, real migration, zero pixel diff and PR unrun; required `/loop` unavailable |

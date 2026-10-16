@@ -102,3 +102,5 @@ e2e/evidence/*
 !e2e/evidence/playbook-feature-scope-audit.json
 !e2e/evidence/playbook-babysit-grammar.json
 !e2e/evidence/playbook-babysit-grammar-audit.json
+!e2e/evidence/playbook-hillclimb-shell.json
+!e2e/evidence/playbook-hillclimb-shell-audit.json

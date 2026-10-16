@@ -94,6 +94,12 @@ missing working-state binding and incomplete early task accounting. Its lead
 had already consumed both reports and launched synthesis. There was no source
 change, commit or PR; this was not automatic quarantine. Existing recorded
 checks cover setup and cleanup only, without a completed worker or workflow audit.
+The [first Hillclimb attempt](evidence/playbook-hillclimb-shell-audit.json) was
+manually stopped on explicitly excluded How shell listings inside its owned
+reader. No report, measured attempt or PR followed. Its original FAIL remains
+unchanged, alongside a separate unreached brief-heading parser mismatch. Its
+reviewed repair strips only the exact Horch suffix; shell restrictions remain
+unchanged and no new live Hillclimb pass is established.
 The [first Babysit Check receipt](evidence/playbook-babysit-grammar.json) stopped
 in preparation before any watcher or PR snapshot. Its
 [independent audit](evidence/playbook-babysit-grammar-audit.json) identifies an

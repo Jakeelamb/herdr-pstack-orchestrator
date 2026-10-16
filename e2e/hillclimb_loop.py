@@ -512,7 +512,7 @@ Use ONLY native read, bash, write, edit, grep, find, ls. No codemode, eval, shel
 Only fresh configured hillclimb workers may edit app source, ONLY body of reconcile_linear in {self.worktree / 'reconcile.py'}. No other app/workload/oracle/harness/config edits. You supervise/review; never author source. Only owned branch {self.branch} may be pushed. No merges/automerge/other PR mutations.
 Named controller-native-write artifacts only: checklist.md; hillclimb/workload.json, hillclimb/metric.json, hillclimb/vetting.json, hillclimb/freeze.json, hillclimb/how-brief.md, hillclimb/explanation.md, hillclimb/stop.json, hillclimb/trail-brief.md, hillclimb/attention.md, hillclimb/comment-brief.md, hillclimb/comment-scope.json, hillclimb/comment-diff.patch, hillclimb/comment-decision.json; hillclimb/hypothesis-N.json, hillclimb/brief-N.md, hillclimb/review-N.json, hillclimb/decision-N.json for integer N=1..{self.args.max_attempts}; pr-body.md, forge-resolution.json, reply.md; and sanitized PERFORMANCE.md in worktree. No direct writes/edits to either decision.tsv, probe state, snapshots, measurements, results or raw transcripts. Ledger writes happen only through the immutable lever; generic trail rows only through original log.sh.
 
-Read full required instructions: {json.dumps([str(b / resource) for resource in READS])}. Read original 8-stage Hillclimb; first native-write {a / 'checklist.md'} with exact original top-level numbered instructions before any task/work. Do How SIMPLE route first: one readonly explainer configured {self.role_workers['how explainer'][0]} on detached {self.reader}, with original explainer prompt, assignment in {a / 'hillclimb/how-brief.md'}. Literal horch run --brief that path. All task briefs first line Role: exact role (how explainer, hillclimb, bounded trail audit, or judgment and prose), selected worker and reason before ## Worker rules, 'Do not delegate', absolute {b / 'pstack-herdr/references/agents/poteto-agent.md'} and {b / 'poteto-mode/SKILL.md'}. Wait for actual done/closed, then read result JSON and FULL listed report. Preserve How explanation verbatim in {a / 'hillclimb/explanation.md'}.
+Read full required instructions: {json.dumps([str(b / resource) for resource in READS])}. Read original 8-stage Hillclimb; first native-write {a / 'checklist.md'} with exact original top-level numbered instructions before any task/work. Do How SIMPLE route first: one readonly explainer configured {self.role_workers['how explainer'][0]} on detached {self.reader}, with original explainer prompt, assignment in {a / 'hillclimb/how-brief.md'}. Literal horch run --brief that path. All task briefs first line Role: exact role (how explainer, hillclimb, bounded trail audit, or judgment and prose), selected worker and reason in the full controller-authored prefix before Horch's appended rules, 'Do not delegate', absolute {b / 'pstack-herdr/references/agents/poteto-agent.md'} and {b / 'poteto-mode/SKILL.md'}. Wait for actual done/closed, then read result JSON and FULL listed report. Preserve How explanation verbatim in {a / 'hillclimb/explanation.md'}.
 Write {a / 'hillclimb/workload.json'} with architecture_sha256 (actual explanation file sha via sha256sum), dimensions (data size/history/state/concurrency), complaint, target_case, simpler_case, relevance. Then choose metric in {a / 'hillclimb/metric.json'} with metric='full_cli_wall_median_ms', direction='lower', target_reduction={self.args.target_reduction}, attempt_floor={self.args.attempt_floor}, attended=true, workload_sha256 (actual frozen workload hash). Do not choose a source-count proxy.
 
 Read {self.probe} AND {self.engine} in full, uptime and nproc; read benchmark-checklist before running sensitivity. Native-write {a / 'hillclimb/vetting.json'} BEFORE measurements, keys claim, timed_surface, included_work, ignored_work, cache_state, production_config, limiter_plan, bounds, correctness, errors, repetitions. State startup+JSON+validation+complete reconciliation+output; private stdlib fixture, not an inferred production ceiling, warmed filesystem. Profiles separate from reported numbers; AB five per side with work/error/result checks.
@@ -711,19 +711,27 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
                     if isinstance(n, ast.FunctionDef) and n.name == 'reconcile_linear')
         return ast.dump(node, include_attributes=False)
 
+    def controller_assignment(self, task):
+        """Strip only Horch's exact nonce-bound appended suffix, never a heading."""
+        retained = Path(task['brief_path']).read_text()
+        suffix = '\n\n' + horch.WORKER_RULES.format(
+            result_path=Path(task['task_dir'])/'result.json',task_id=task['task_id'],nonce=task['nonce'])
+        self.check('retained_brief_exact_horch_suffix', retained.endswith(suffix))
+        return retained[:-len(suffix)]
+
     def bind_brief(self, events, all_events, task, launch, source, role):
         writes = core.workflow_writes(events, self.worktree, source, before=launch['call_row'], final=True)
         argv = core.literal_horch_command(launch['name'], launch['args'], self.worktree, self.bundle)
         retained = Path(task['brief_path'])
         expected = source.read_text().rstrip('\n') + '\n\n' + horch.WORKER_RULES.format(
             result_path=Path(task['task_dir'])/'result.json',task_id=task['task_id'],nonce=task['nonce'])
-        assignment = source.read_text()
+        assignment = self.controller_assignment(task)
         self.check('bound_native_brief_' + source.name, bool(writes) and argv.count('--brief') == 1
                    and Path(argv[argv.index('--brief')+1]).resolve() == source
                    and retained.resolve() == Path(task['task_dir'])/'brief.md' and retained.read_text() == expected
                    and re.match(r'\A\s*Role: '+re.escape(role)+r'(?:\r?\n|\Z)', assignment)
                    and task['worker'] in assignment and re.search(r'reason|because', assignment, re.I)
-                   and all(word in assignment.split('## Worker rules',1)[0] for word in ('Do not delegate',
+                   and all(word in assignment for word in ('Do not delegate',
                        str(self.bundle/'skills/pstack-herdr/references/agents/poteto-agent.md'),
                        str(self.bundle/'skills/poteto-mode/SKILL.md')))
                    and all(e['result_row'] < launch['call_row'] for e in all_events
@@ -758,7 +766,7 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
         audit = core.audit_pi(path, session, Path(task['cwd']).resolve(), core.stamp(task['created_at']),
                               spec, [], [], [], self.bundle)
         self.check('actual_task_native_model_effort_tools', all(row['ok'] for row in audit['checks']))
-        assignment=Path(task['brief_path']).read_text().split('## Worker rules',1)[0]
+        assignment=self.controller_assignment(task)
         role_match = re.match(r'\A\s*Role: ([^\r\n]+)(?:\r?\n|\Z)', assignment)
         role = role_match[1] if role_match else None
         if role == 'judgment and prose':
@@ -813,7 +821,7 @@ Final native-write {a / 'reply.md'}: metric+target, exact primary_number, attemp
         saved = self.directory / 'comment-worker-native.jsonl'
         shutil.copy2(path, saved)
         self.check('comment_native_retained_stable', core.sha(path) == core.sha(saved))
-        assignment = Path(task['brief_path']).read_text()
+        assignment = self.controller_assignment(task)
         inputs = {self.artifacts / ('hillclimb/' + name) for name in (
             'comment-scope.json','comment-diff.patch','decision.tsv','attention.md')}
         inputs |= {self.artifacts / 'trail/decision.tsv', self.artifacts / 'pr-body.md',

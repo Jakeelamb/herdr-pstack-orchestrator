@@ -303,9 +303,14 @@ The original receipt remains failed; a fresh automated pass is still required.
 The [first Perf receipt](evidence/playbook-perf-copy.json) remains failed after
 the native auditor rejected a literal copy of an already delivered and read How
 report. The attempt produced new profiles, alternating CLI timings, unchanged
-outputs and a ready private child PR. A separate independent review is checking
-these actual observations and the remaining verifier contracts; none promotes
-the original failed workflow verdict.
+outputs and a ready private child PR. Its
+[separate independent audit](evidence/playbook-perf-copy-reanalysis.json) supports
+all six observed stages. Five alternating full-CLI pairs measured a median
+131.403 to 37.985 ms (71.1% reduction); independent replay measured 130.795 to
+38.117 ms (70.9%). Work counts and total 958008 match across all 36 retained
+measurement outputs, and all six CLI cases pass. Source, profiles, commit,
+ready PR, remote body, parent/ref inventory and cleanup agree. The audit records
+additional verifier/prompt mismatches without promoting the failed workflow.
 
 The [fresh live-replacement receipt](evidence/hot-swap.json) verifies two real
 Pi tasks using distinct configured models. Both were held working while the
@@ -354,7 +359,7 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 | Feature | Reviewed `design_loop.py`; live design/implementation Arena, behavior gate and real PR still unrun |
 | Refactoring | Reviewed `design_loop.py`; live frozen baseline, equivalence and real PR still unrun |
 | Prototype | [PASS: fixed-direction behavioral core workflow](evidence/playbook-prototype.json); open visual design search unverified |
-| Perf issue | [FAIL: report-copy grammar](evidence/playbook-perf-copy.json); actual measurements/fix/ready PR under separate review; no complete automated pass |
+| Perf issue | [FAIL: report-copy grammar](evidence/playbook-perf-copy.json); measurements/fix/ready PR independently audited; no complete automated pass |
 | Hillclimb | Reviewed `hillclimb_loop.py`; live sensitivity, measured attempts, independent decisions and PR unrun; unattended wake unavailable |
 | Runtime forensics | [FAIL: planning order](evidence/playbook-runtime-planning.json); all three attempts separately audited; fresh corrected run pending |
 | Trace forensics | [PASS: bounded paired-capture core workflow](evidence/playbook-trace.json); large-capture delegation unverified |

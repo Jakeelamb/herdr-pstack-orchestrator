@@ -37,8 +37,9 @@ READS = ('poteto-mode/SKILL.md', 'pstack-herdr/SKILL.md',
          'poteto-mode/playbooks/opening-a-pr.md', 'deslop/SKILL.md',
          'no-comments/SKILL.md', 'technical-writing/SKILL.md', 'unslop/SKILL.md',
          'principle-sequence-verifiable-units/SKILL.md')
-MANTRAS = ("Don't do it", "Do it, but don't do it again", 'Do it less',
-           'Do it later', "Do it when they're not looking", 'Do it concurrently', 'Do it cheaper')
+MANTRAS = ("Don't do it. Stop work whose result nothing uses rather than cheapening it.",
+           "Do it, but don't do it again.", 'Do it less.', 'Do it later.',
+           "Do it when they're not looking.", 'Do it concurrently.', 'Do it cheaper.')
 APP = '''def lookup_reference(references, account):
     for key, value in references:
         if key == account:
@@ -486,6 +487,10 @@ class Run(core.Run):
             argv += ['--repo', str(repo or self.worktree)]
         return argv + ['--output', str(self.directory / label), '--nonce', self.nonce]
 
+    def cli_e2e_argv(self):
+        return ['python3', '-B', str(self.worktree / 'e2e_reconcile.py'),
+                '--output', str(self.artifacts / 'cli-e2e')]
+
     def prompt(self):
         a, b = self.artifacts, self.bundle / 'skills'
         cli = lambda label, **kw: shlex.join(self.probe_argv(label, **kw))
@@ -493,6 +498,7 @@ class Run(core.Run):
 Goal: the reconciliation CLI is slow on the frozen workload. Improve end-to-end wall time by at least 50%, preserve all behavior and show credible measurements. This is one Perf issue, not Hillclimb.
 
 Evidence protocol: use ONLY native read, bash, write, edit, grep, find, ls. No codemode, wrappers, eval, shell pipelines, redirection, command substitution, inline Python, or scripts you invent. Use single literal CLI commands. Tool policy is evidence grammar, not permission/configuration changes. Use absolute paths. All instructions below apply to worker briefs too. Do not answer trust or approval dialogs. Stop and report failures, never retry or retune models.
+Bash grammar is limited to: the exact measurement commands below; the exact retained CLI E2E command {shlex.join(self.cli_e2e_argv())}; bare uptime, nproc, pwd, or command -v origin; cat or sha256sum with one absolute file path, plus exactly sha256sum {self.directory / 'native-after/observation.json'} {self.directory / 'native-compare/observation.json'}; python3 or python followed by the absolute bundled horch.py and run/wait/list/stats/close/detect; the single exact How report copy described below; and the scoped Git/forge commands in this paragraph. Git must start git -C {self.worktree}, except the detached reader permits exactly git -C {self.reader} status --short --branch. Worktree read operations are status/diff/show/log/rev-parse/rev-list/diff-tree/ls-files/ls-remote with no --output, --ext-diff or --textconv options, remote get-url origin, and branch --show-current. Staging is add of exactly reconcile.py and PERFORMANCE.md (optional --); committing is commit -m with one perf(scope): message; pushing is push origin {self.branch}, optionally -u or --set-upstream. gh/origin allow pr view, pr list, repo view, and the one authorized pr create with explicit base/head/body-file and no --draft. Other inspection uses native read/grep/find/ls; no other bash utilities, copy forms, or compositions are accepted.
 Source edits are ONLY by the configured implementation worker, ONLY inside reconcile_linear in {self.worktree / 'reconcile.py'}. You may write named artifacts below and one sanitized {self.worktree / 'PERFORMANCE.md'}. Do not edit any other source, measurement harness, config, workload, oracle, refs or parent checkout. No pushes except the owned branch {self.branch}; no merge/automerge/other PR writes. Normal Git identity, hooks and signing must remain in effect.
 
 Read all these full source instructions as appropriate: {json.dumps([str(b / p) for p in READS])}.
@@ -502,7 +508,7 @@ Capture baseline via control-cli using exactly:
 {cli('native-before')}
 Read {self.directory / 'native-before/observation.json'} fully. Write {a / 'baseline-vetting.json'} with observation_sha256 (actual sha256sum result), claim, timed_surface, host_observations, limiter, work_counts, errors, bounds, caveats. Bind limiter to actual measured frame self time/calls; vet which work is timed and whether it happened. Use host_observations={{'uptime':actual full stripped uptime output,'nproc':actual integer nproc output}}, work_counts={{'references':2500,'payments':6000}}, errors=0 and limiter={{'function':'lookup_reference','calls':6000,'self_seconds':actual profile lookup_self_seconds,'profile_self_seconds':actual profile profile_self_seconds}}. Do not use profiled duration for speedup. Read baseline frames if needed.
 
-Use How's valid simple route (one small source module, no explorers); write {a / 'how-route.json'} with keys route='simple' and reason giving actual scope. Write its assignment with native write to {a / 'how-brief.md'} and pass exactly that path as horch run --brief. Delegate exactly one read-only how explainer on detached {self.reader}, worker {self.role_workers['how explainer'][0]}, using original explainer prompt. Its first assignment line must be Role: how explainer; include selected worker/reason, read-only scope, no delegation, absolute bundled poteto-agent and poteto-mode paths. Use literal python3 {b / 'herdr-orchestrator/scripts/horch.py'} run/wait, wait to done/closed; fully read result JSON and actual delivered explanation report after done. Preserve full explanation verbatim in {a / 'how-explanation.md'}.
+Use How's valid simple route (one small source module, no explorers); write {a / 'how-route.json'} with keys route='simple' and reason giving actual scope. Write its assignment with native write to {a / 'how-brief.md'} and pass exactly that path as horch run --brief. Delegate exactly one read-only how explainer on detached {self.reader}, worker {self.role_workers['how explainer'][0]}, using original explainer prompt. Its first assignment line must be Role: how explainer; include selected worker/reason, read-only scope, no delegation, absolute bundled poteto-agent and poteto-mode paths. Use literal python3 {b / 'herdr-orchestrator/scripts/horch.py'} run/wait, wait to done/closed; require its canonical report.md in result.json files, then fully read result JSON and that delivered report after done. Preserve its exact complete bytes in {a / 'how-explanation.md'} with exactly one native write OR one literal cp SOURCE {a / 'how-explanation.md'}, where SOURCE is the absolute canonical report.md of this actual owned delivered How task. The copy accepts no flags, recursion or other paths. Preserve only after delivery/closure and the full report read, before hypothesis.json or the implementation launch. Do not edit or overwrite the preserved artifact later.
 Then write {a / 'hypothesis.json'} with baseline_sha256, mechanism, function_scope='reconcile_linear', selected_mantra=2, mantras=list of all seven exact mantra strings in original order, earlier_applicability explaining why required work cannot be dropped, expected_work_counts, stop_rule. Ground this plan in actual baseline and How, stop at first successful applicable mantra; do not claim later attempts.
 Write the implementation assignment with native write to {a / 'perf-brief.md'} and pass exactly that path as horch run --brief. Delegate exactly one bounded implementation task Role: perf-issue via unchanged configured worker {self.role_workers['perf-issue'][0]}, cwd {self.worktree}, only reconcile_linear implementation, no commits/delegation/config edits. Both briefs must include 'Do not delegate' and {b / 'pstack-herdr/references/agents/poteto-agent.md'} and {b / 'poteto-mode/SKILL.md'} and role/worker/reason before Worker rules. Do not replace worker settings.
 Wait for done/closed, read actual result+full report. Run git -C {self.worktree} diff -- reconcile.py and inspect full actual diff, read applicable review guidance, then write {a / 'diff-review.json'} with scope, public_contract, correctness, mechanism, concerns and source_sha256; no unconditional extra review panel.
@@ -512,29 +518,37 @@ Full comparison (the reported improvement comes ONLY from these unprofiled alter
 {cli('native-compare', compare=True)}
 Read both observation JSONs and compare frames fully through native read. Read actual observation SHA via sha256sum. Write {a / 'diagnosis.json'} with baseline_lookup_calls, after_lookup_calls, baseline_reconcile_calls, after_reconcile_calls, references, payments, errors, speedup_fraction, comparison_sha256, limiter, mechanism, scope, limitations. Write {a / 'final-vetting.json'} covering every benchmark-checklist question with actual median/range, host/run conditions, independent correctness, limiter, honest bounds and caveats. Use median_range exactly equal to comparison.timings; host_conditions={{'uptime': actual full stripped uptime output, 'nproc': actual integer nproc output}}; correctness={{'references':2500,'payments':6000,'errors':0,'total_units':actual total}}; limiter={{'function':'lookup_reference','calls':6000,'self_seconds':actual baseline profile lookup_self_seconds,'profile_self_seconds':actual baseline profile profile_self_seconds}}; bounds and caveats state observed range and unestablished production ceiling. No source-based invented ceiling. Each number must be tied to real observation.
 Write PERFORMANCE.md EXACTLY the portable_report string from native-compare observation; no private paths or raw profiles. This is the only authorized additional tracked file. Prepare {a / 'pr-body.md'} with original OpeningPR headings, the exact primary_number string, and relative PERFORMANCE.md evidence link.
-Read OpeningPR and deslop/no-comments/technical-writing/unslop/sequence guidance before committing. Review git diff --stat and full diff. Create ONE ordered commit of reconcile.py and PERFORMANCE.md with normal Git checks. Verify actual clean state.
-Resolve one forge using original Origin discovery ('command -v origin' first; if present actually try resolving this repository with origin; use gh only if unavailable/not resolving). Record {a / 'forge-resolution.json'} with selected and actual reason after observed discovery. Push only owned {self.branch}. Create exactly ONE READY child PR, explicit --base {self.args.base_ref}, --head {self.branch}, repository {self.args.forge_repo}; use --body-file {a / 'pr-body.md'}. No draft, no merge/automerge, no parent edits. Read back the actual created PR head/base/state/ready through that same forge.
-Write {a / 'reply.md'} with baseline, post-fix, delta, unit, actual PR link, and private artifact path. Do not claim other playbooks or full inventory passed. If any mandatory stage fails, stop with failure.
+Read OpeningPR and deslop/no-comments/technical-writing/unslop/sequence guidance before committing. Review diff --stat and the complete actual diff: git diff, git diff --cached, or git diff --staged on the owned worktree; --stat/--check alone do not replace the full diff. Create ONE ordered commit of reconcile.py and PERFORMANCE.md with normal Git checks. Verify actual clean state using status --porcelain, status --porcelain=v1, or status --short --branch. The short form must show only the exact ## {self.branch} header, optionally followed by ...origin/{self.branch}, and no change rows.
+Resolve one forge using original Origin discovery ('command -v origin' first; if present actually try resolving this repository with origin; use gh only if unavailable/not resolving). Record {a / 'forge-resolution.json'} with selected and actual reason after observed discovery. Push only owned {self.branch}. Create exactly ONE READY child PR, explicit --base {self.args.base_ref}, --head {self.branch}, repository {self.args.forge_repo}; use --body-file {a / 'pr-body.md'}. No draft, no merge/automerge, no parent edits. Read back the actual created PR head/base/state/ready through that same forge, explicitly including headRefOid in its JSON fields and verifying the full actual committed head SHA, headRefName, baseRefName, state and isDraft.
+Write {a / 'reply.md'} with baseline, post-fix, delta, unit, actual PR link, and private artifact path. Include the exact comparison.primary_number string once in the final reply; keep the separately typed diagnosis numbers bound to the real comparison. Do not claim other playbooks or full inventory passed. If any mandatory stage fails, stop with failure.
 """
 
     native_events = forge_helpers.Run.native_events
     stage = forge_helpers.Run.stage
 
-    def controller_command_allowed(self, command):
+    def controller_command_allowed(self, command, *, how_report=None):
         argv = forge_helpers.literal(command)
         if not argv:
             return False
         if argv in (['uptime'], ['nproc'], ['pwd'], ['command', '-v', 'origin']):
             return True
+        if argv[0] == 'cp':
+            return how_report is not None and argv == ['cp', str(how_report), str(self.artifacts / 'how-explanation.md')]
         if argv[0] in ('python3', 'python'):
+            if argv == self.cli_e2e_argv():
+                return True
             if argv in [self.probe_argv(label, compare=label == 'native-compare')
                         for label in ('native-before', 'native-after', 'native-compare')]:
                 return True
             return (len(argv) > 2 and Path(argv[1]).resolve() == self.bundle / 'skills/herdr-orchestrator/scripts/horch.py'
                     and argv[2] in ('run', 'wait', 'list', 'stats', 'close', 'detect'))
         if argv[0] in ('cat', 'sha256sum'):
-            return len(argv) == 2 and Path(argv[1]).is_absolute()
+            return (len(argv) == 2 and Path(argv[1]).is_absolute()) or argv == [
+                'sha256sum', str(self.directory / 'native-after/observation.json'),
+                str(self.directory / 'native-compare/observation.json')]
         if argv[0] == 'git':
+            if argv == ['git', '-C', str(self.reader), 'status', '--short', '--branch']:
+                return True
             if argv[1:3] != ['-C', str(self.worktree)] or len(argv) < 4:
                 return False
             rest = argv[3:]
@@ -562,6 +576,33 @@ Write {a / 'reply.md'} with baseline, post-fix, delta, unit, actual PR link, and
             return all(flag in argv and argv.index(flag) + 1 < len(argv)
                        and argv[argv.index(flag) + 1] == value for flag, value in required.items())
         return False
+
+    def how_explanation(self, events, all_events, task, delivery, reports, *, before):
+        directory = Path(task['task_dir']).resolve()
+        source, destination = directory / 'report.md', self.artifacts / 'how-explanation.md'
+        self.check('canonical_how_report_fully_read', any(
+            core.read_target(event['name'], event['args'], self.worktree) == source
+            and delivery['result_row'] < event['call_row'] for event, _ in reports))
+        copy_argv = ['cp', str(source), str(destination)]
+        modifications = [event for event in all_events if (
+            event['name'] in ('write', 'edit') and isinstance(event['args'].get('path'), str)
+            and (self.worktree / event['args']['path']).resolve() == destination)
+            or (event['name'] == 'bash' and forge_helpers.literal(event['args'].get('command', '')) == copy_argv)]
+        self.check('single_how_explanation_preservation_attempt', len(modifications) == 1)
+        witness = modifications[0]
+        self.check('native_how_explanation_preservation_order', witness['successful']
+                   and max([delivery['result_row'], *(event['result_row'] for event, _ in reports)]) < witness['call_row']
+                   and witness['result_row'] < before
+                   and (witness['name'] == 'write' or witness['name'] == 'bash'
+                        and forge_helpers.literal(witness['args'].get('command', '')) == copy_argv))
+        self.check('how_explanation_precedes_hypothesis_attempts', all(
+            witness['result_row'] < event['call_row'] for event in all_events
+            if event['name'] in ('write', 'edit') and isinstance(event['args'].get('path'), str)
+            and (self.worktree / event['args']['path']).resolve() == self.artifacts / 'hypothesis.json'))
+        self.check('how_explanation_bytes_and_hash_bound', destination.is_file() and not destination.is_symlink()
+                   and destination.read_bytes() == source.read_bytes() and core.sha(destination) == core.sha(source)
+                   and (witness['name'] != 'write' or witness['args'].get('content') == source.read_text()))
+        return destination.read_text(), [witness]
 
     def artifact(self, events, name, *, after=-1, before=float('inf'), keys=()):
         path = self.artifacts / name
@@ -681,12 +722,19 @@ Write {a / 'reply.md'} with baseline, post-fix, delta, unit, actual PR link, and
     def verify(self):
         rows = self.scan()
         roles = self.verify_tasks(rows)
+        how, writer = roles['how explainer'], roles['perf-issue']
+        how_report = Path(how['task_dir']).resolve() / 'report.md'
+        how_result = core.read_json(Path(how['result_path']))
+        self.check('canonical_how_report_delivered', how_report.is_file() and how_report.resolve() == how_report
+                   and sum((how_report.parent / name).resolve() == how_report
+                           for name in how_result.get('files', [])) == 1)
         tasks = [task for task, _ in rows]
         sessions = list((self.directory / 'native-sessions').glob('*.jsonl'))
         self.check('one_native_pi_session', len(sessions) == 1)
         path = sessions[0]
         self.native = core.audit_pi(path, self.session, self.worktree, self.wall_started, self.spec,
-                                   [self.bundle / 'skills' / name for name in READS], [], tasks, self.bundle)
+                                   [self.bundle / 'skills' / name for name in READS], [], tasks, self.bundle,
+                                   allowed_artifact_copies=((how_report, self.artifacts / 'how-explanation.md'),))
         self.check('native_model_effort_guidance_delivery', all(row['ok'] for row in self.native['checks']))
         events, all_events = self.native_events(path), self.native_events(path, include_errors=True)
         named = {'checklist.md', 'measurement-plan.json', 'baseline-vetting.json', 'how-route.json',
@@ -699,11 +747,10 @@ Write {a / 'reply.md'} with baseline, post-fix, delta, unit, actual PR link, and
             and (self.worktree / e['args']['path']).resolve() in allowed_writes
             for e in all_events if e['name'] in ('write', 'edit')))
         self.check('literal_commands_within_authorized_scope', all(
-            self.controller_command_allowed(e['args'].get('command', ''))
+            self.controller_command_allowed(e['args'].get('command', ''), how_report=how_report)
             for e in all_events if e['name'] == 'bash'))
         launches, delivered = core.workflow_launches(events, tasks, self.worktree, self.bundle)
         self.check('literal_tasks_launch_and_delivery', set(launches) == set(delivered) == {t['task_id'] for t in tasks})
-        how, writer = roles['how explainer'], roles['perf-issue']
         for role, name in (('how explainer', 'how-brief.md'), ('perf-issue', 'perf-brief.md')):
             task = roles[role]
             launch = launches[task['task_id']]
@@ -798,14 +845,17 @@ Write {a / 'reply.md'} with baseline, post-fix, delta, unit, actual PR link, and
                                             before=how_start['call_row'], keys=('route', 'reason'))
         self.check('actual_small_how_simple_route', route['route'] == 'simple'
                    and len([n for n in ast.parse(APP).body if isinstance(n, ast.FunctionDef)]) == 2)
-        explanation, explanation_events = self.artifact(events, 'how-explanation.md',
-            after=max(e['result_row'] for e, _ in how_reports), before=code_start['call_row'])
+        explanation, explanation_events = self.how_explanation(events, all_events, how,
+            delivered[how['task_id']], how_reports, before=code_start['call_row'])
         self.check('actual_how_explanation_preserved', all(text in explanation for _, text in how_reports))
         hypothesis, hypothesis_events = self.artifact(events, 'hypothesis.json',
             after=explanation_events[-1]['result_row'], before=code_start['call_row'],
             keys=('baseline_sha256', 'mechanism', 'function_scope', 'selected_mantra', 'mantras',
                   'earlier_applicability', 'expected_work_counts', 'stop_rule'))
-        self.check('ordered_mantras_actual_baseline_single_function', hypothesis['mantras'] == list(MANTRAS)
+        original_mantras = re.findall(r'^   [1-7]\. (.+)$',
+            (self.bundle / 'skills/poteto-mode/playbooks/perf-issue.md').read_text(), re.M)
+        self.check('ordered_mantras_actual_baseline_single_function', len(original_mantras) == 7
+                   and original_mantras == list(MANTRAS) and hypothesis['mantras'] == original_mantras
                    and hypothesis['selected_mantra'] == 2 and hypothesis['function_scope'] == 'reconcile_linear'
                    and hypothesis['baseline_sha256'] == core.sha(self.directory / 'native-before/observation.json'))
         self.stage('perf_issue_2_how_and_earliest_mantra', route_events + [how_start] +
@@ -902,18 +952,24 @@ Write {a / 'reply.md'} with baseline, post-fix, delta, unit, actual PR link, and
             self.check('opening_guidance_before_commit_' + resource.split('/')[0], bool(reads))
             guidance += reads
         full_diff = [e for e in events if e['name'] == 'bash'
-                     and forge_helpers.literal(e['args'].get('command', '')) ==
-                     ['git', '-C', str(self.worktree), 'diff']
+                     and forge_helpers.literal(e['args'].get('command', '')) in (
+                         ['git', '-C', str(self.worktree), 'diff'],
+                         ['git', '-C', str(self.worktree), 'diff', '--cached'],
+                         ['git', '-C', str(self.worktree), 'diff', '--staged'])
                      and e['result_row'] < c['call_row'] and 'reconcile_linear' in e['output']]
         self.check('review_actual_full_diff_before_commit', bool(full_diff))
         clean = [e for e in events if e['name'] == 'bash'
-                 and forge_helpers.literal(e['args'].get('command', '')) in (
-                     ['git', '-C', str(self.worktree), 'status', '--porcelain'],
-                     ['git', '-C', str(self.worktree), 'status', '--porcelain=v1'])
                  and c['result_row'] < e['call_row'] and e['result_row'] < created['call_row']
                  # Pi's exact successful empty-bash marker is accepted only for
                  # this literal owned Git status witness, never generic reads.
-                 and e['output'].strip() in ('', '(no output)')]
+                 and ((forge_helpers.literal(e['args'].get('command', '')) in (
+                     ['git', '-C', str(self.worktree), 'status', '--porcelain'],
+                     ['git', '-C', str(self.worktree), 'status', '--porcelain=v1'])
+                     and e['output'].strip() in ('', '(no output)'))
+                     or (forge_helpers.literal(e['args'].get('command', '')) ==
+                         ['git', '-C', str(self.worktree), 'status', '--short', '--branch']
+                         and e['output'].strip() in ('## ' + self.branch,
+                             '## ' + self.branch + '...origin/' + self.branch)))]
         self.check('native_clean_state_before_pr', bool(clean))
         body, body_events = self.artifact(events, 'pr-body.md',
             after=max(e['result_row'] for e in diagnosis_events + final_vet), before=created['call_row'])
@@ -966,7 +1022,7 @@ Write {a / 'reply.md'} with baseline, post-fix, delta, unit, actual PR link, and
                    and re.fullmatch(r'perf\([a-z0-9_-]+\): [^\n.]+', self.pr['title']) is not None)
         reply, reply_events = self.artifact(events, 'reply.md', after=max(e['result_row'] for e in readback))
         self.check('reply_actual_pr_and_measured_units', self.pr['url'] in reply
-                   and comparison['primary_number'] in reply and str(self.directory / 'native-compare') in reply)
+                   and reply.count(comparison['primary_number']) == 1 and str(self.directory / 'native-compare') in reply)
         self.stage('opening_a_pr', guidance + full_diff + commit + clean + resolution_events + push + creates + readback + reply_events)
         self.stage('perf_issue_6_opening_a_pr', creates + readback + reply_events)
 

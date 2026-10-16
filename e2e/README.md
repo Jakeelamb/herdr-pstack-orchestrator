@@ -40,8 +40,9 @@ the actual five-stage observations while preserving the failed verdict.
 Correcting a verifier does not promote the historical receipt.
 The [first Perf attempt](evidence/playbook-perf-copy.json) also retains its
 failure: the native auditor rejected a legitimate delivered-report copy.
-Actual timings, behavior and its retained ready private PR are undergoing
-separate independent review.
+Its [separate independent audit](evidence/playbook-perf-copy-reanalysis.json)
+verified actual timings, behavior and the retained ready private PR, while
+preserving that failure.
 
 For live replacement and removal of worker definitions, use the existing
 `check_workers.py --hot-swap-only` mode. It keeps two real reconciliation tasks

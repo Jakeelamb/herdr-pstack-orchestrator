@@ -673,7 +673,8 @@ def audit_trace(events, calls, cwd, tasks, bundle, requirements, workflow):
 
 
 def audit_pi(path, session, cwd, started, spec, required_reads, required_commands, tasks, bundle,
-             required_invocations=(), required_order=(), workflow=None, implementation_workers=(), configured_roles=None):
+             required_invocations=(), required_order=(), workflow=None, implementation_workers=(), configured_roles=None,
+             allowed_artifact_copies=()):
     """Trust native successful calls/results, never a controller's self-report."""
     rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
     if not rows or rows[0].get('type') != 'session' or rows[0].get('version') != 3:
@@ -695,6 +696,7 @@ def audit_pi(path, session, cwd, started, spec, required_reads, required_command
     delivered, artifact_reads = set(), set()
     known_tasks = {task['task_id']: task for task in tasks}
     horch_script = (bundle / 'skills/herdr-orchestrator/scripts/horch.py').resolve()
+    copy_pairs = {(str(source), str(destination)) for source, destination in allowed_artifact_copies}
     last = None
     ids = set()
     models = set()
@@ -739,6 +741,18 @@ def audit_pi(path, session, cwd, started, spec, required_reads, required_command
             events.append({'name': name, 'args': args, 'output': output,
                            'call_row': call_row, 'result_row': row_index})
             target = read_target(name, args, cwd)
+            is_artifact_copy = False
+            if name == 'bash':
+                command = args.get('command', '')
+                if not any(token in command for token in ('\n', ';', '|', '&', '>', '<', '`', '$', '\\')):
+                    try:
+                        copy_words = shlex.split(command)
+                    except ValueError:
+                        copy_words = []
+                    if (len(copy_words) == 3 and copy_words[0] == 'cp'
+                            and tuple(copy_words[1:]) in copy_pairs):
+                        target = Path(copy_words[1]).resolve()
+                        is_artifact_copy = True
             # Other literal artifact-access forms must not disappear from an
             # ordering audit merely because their shell grammar is unsupported.
             argument_text = json.dumps(args, ensure_ascii=False)
@@ -792,9 +806,9 @@ def audit_pi(path, session, cwd, started, spec, required_reads, required_command
                         if task['task_id'] not in delivered:
                             raise Failure('artifact_read_before_proven_delivery')
                         content = target.read_text().strip()
-                        if content and content in output:
+                        if not is_artifact_copy and content and content in output:
                             artifact_reads.add(task['task_id'])
-            if target in required_reads:
+            if target in required_reads and not is_artifact_copy:
                 # Native read offsets/truncation and partial sed ranges count only
                 # if the actual result contains the complete required document.
                 content = target.read_text().strip()

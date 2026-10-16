@@ -82,5 +82,6 @@ e2e/evidence/*
 !e2e/evidence/playbook-runtime-planning.json
 !e2e/evidence/playbook-runtime-planning-reanalysis.json
 !e2e/evidence/playbook-perf-copy.json
+!e2e/evidence/playbook-perf-copy-reanalysis.json
 !e2e/evidence/playbook-investigation-concat.json
 !e2e/evidence/playbook-investigation-concat-reanalysis.json

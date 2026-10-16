@@ -62,6 +62,12 @@ reached synthesis. It remains a failed workflow. Runtime's
 [fourth failed receipt](evidence/playbook-runtime-number.json) and
 [separate audit](evidence/playbook-runtime-number-reanalysis.json) retain a
 canonical-number formatting mismatch without promoting its verdict.
+The [second snapshot failure](evidence/playbook-forge-shell-audit.json) verifies
+automatic withholding on composed Bash calls; FFF request shapes were valid.
+The [first Authoring run](evidence/playbook-authoring-literal-reanalysis.json)
+has correct explicit skill usage and rollback observations, but no complete
+workflow pass: controller command/diff contracts failed and mandatory Comment
+Sicko delegation was omitted.
 
 For live replacement and removal of worker definitions, use the existing
 `check_workers.py --hot-swap-only` mode. It keeps two real reconciliation tasks

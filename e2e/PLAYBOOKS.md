@@ -62,6 +62,11 @@ are checked against the retained database. Source citations resolve to the exact
 supplied file, including valid fixture-relative and worktree-relative paths.
 Command text mentioning a tool is only a hint.
 
+Required child skills are part of workflow eligibility. Reading `no-comments`
+does not apply it: its fresh Comment Sicko task must actually deliver and be
+reviewed before commit. An evaluator's task-count restriction cannot silently
+waive that stage; the original workflow stays unresolved.
+
 The Investigation fixture uses a narrower presentation protocol than How's
 allowance for light edits: the explainer applies `unslop` before delivery, and
 the controller presents that explanation unchanged with one throughput line.
@@ -124,7 +129,9 @@ dependency; it never installs that dependency. Explicit forward use does not
 prove automatic discovery. Runtime forensics needs Node with Inspector and
 built-in WebSocket support. A fresh live run passes all five stages after four
 retained checker-contract failures; the independent audits below distinguish them.
-Feature, Refactoring and Authoring model workflows remain unrun. The first Perf
+Feature and Refactoring model workflows remain unrun. The first Authoring run
+failed its controller command check and omitted a mandatory delegated review,
+as detailed below. The first Perf
 attempt retains a failed native-audit receipt. A second machine pass is rejected
 by independent worker-tool review; both are described below.
 The first live Bug fix investigation was stopped for an actual
@@ -287,6 +294,30 @@ in force; concurrent external tree mutation remains an assumption. This new
 support has no live passing receipt yet and makes no universal FFF or containment
 claim.
 
+The [second snapshot attempt](evidence/playbook-forge-shell.json) also remains
+failed. The [independent metadata-only audit](evidence/playbook-forge-shell-audit.json)
+locates the first rejection at `pwd && ls -la`; later composed commands and
+Bash `ls` also exceeded the evidence grammar. FFF request shapes and owned
+paths were valid. The lead received only pending/pending/quarantined metadata,
+with zero report/result or raw-wait access and no synthesis, code or PR. Three
+readers actually launched even though the failed receipt's finish snapshot
+contains `tasks: []`. Owned cleanup and 217 source hashes match. Future briefs
+explicitly name the forbidden shell characters and require native `ls`.
+The failure establishes rejection and withholding, without cross-repository
+access or successful audited delivery.
+
+The [first Authoring receipt](evidence/playbook-authoring-literal.json) remains
+failed at the controller literal-command gate. Its
+[separate artifact audit](evidence/playbook-authoring-literal-reanalysis.json)
+verifies actual creator guidance/validation, five portable links, two frozen
+authored files and two real forward uses: six successful rows total 994 cents,
+and a rejected import preserves the seeded 98-cent ledger byte for byte.
+The complete staged diff also exposes an undeclared mnemonic-prefix mismatch
+in the full-review checker. More importantly, mandatory Comment Sicko delegation
+was omitted under the evaluator's extra-task restriction. A created ready PR
+and correct usage do not complete Authoring or Opening a PR. Independent CLI
+and remote-parent/ref replay stopped at the early failure and remain unverified.
+
 The [first Runtime receipt](evidence/playbook-runtime-env.json) remains failed.
 Its checker rejected legitimate `uptime` and `nproc` observations, then independent
 review found two further mismatches: a valid checklist completion edit and the
@@ -399,6 +430,8 @@ This verifies worker definition replacement, not automatic role or skill reload.
 | [Perf report copy](evidence/playbook-perf-copy.json) | Native auditor rejected a legitimate verbatim copy of a delivered and fully read report |
 | [Snapshot quarantine](evidence/playbook-forge-quarantine.json) | Unsupported FFF tools triggered automatic quarantine before report consumption; no cross-repository leakage established |
 | [Runtime counter format](evidence/playbook-runtime-number.json) | Checker rejected a correct counter written with ordinary thousands separators |
+| [Snapshot shell grammar](evidence/playbook-forge-shell.json) | Composed shell and Bash ls calls triggered automatic quarantine; no worker payload reached the lead |
+| [Authoring command grammar](evidence/playbook-authoring-literal.json) | Undeclared controller restrictions and diff-prefix mismatch; mandatory Comment Sicko task also omitted |
 
 Each attempt retained its failure verdict and confirmed owned cleanup. The first
 prototype run did not execute a model task. The contract run produced real
@@ -421,7 +454,7 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 | Runtime forensics | [PASS: five-stage owned-process diagnosis](evidence/playbook-runtime.json); raw Inspector/profile/source independently checked; large-artifact delegation unverified |
 | Trace forensics | [PASS: bounded paired-capture core workflow](evidence/playbook-trace.json); large-capture delegation unverified |
 | Visual parity | Untouched screenshots, real migration, zero pixel diff, real PR |
-| Authoring a skill | Reviewed `authoring_loop.py`; live authored skill, structural usage cases and real PR unrun; automatic discovery separate |
+| Authoring a skill | [FAIL with separate actual-use audit](evidence/playbook-authoring-literal-reanalysis.json); structural cases work, mandatory nested review and fresh integrated pass missing |
 | Eval | Scoped Pi transcripts are accessible in principle; current global skill catalog violates strict blinding under unchanged settings |
 | Multi-phase plan | Validator exists; executable cloud lanes and configured swarm role are unavailable |
 | Opening a PR | [Earlier eligibility withdrawn](evidence/playbook-opening-pr-correction.json): ready PR facts verified, mandatory Comment Sicko review omitted |

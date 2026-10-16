@@ -1,0 +1,71 @@
+{
+  "schema": "horch/playbook-artifact-reanalysis/v1",
+  "kind": "independent post-run artifact and native review without execution or network replay",
+  "scenario": "first Authoring a skill",
+  "original_receipt": "playbook-authoring-literal.json",
+  "original_receipt_unchanged": true,
+  "original_receipt_sha256": "f0941987f440ba80417448b883e86b5ca4b09c5fdcc3fb29aafd324514f27336",
+  "original_workflow_verdict": "fail",
+  "original_seconds": 517.45,
+  "original_checks_passed": 32,
+  "original_checks_total": 33,
+  "source_revision": "a01f307c46540c52d2559a6f84bcdc599e45d71c",
+  "full_authoring_eligibility": "noneligible",
+  "full_opening_a_pr_eligibility": "noneligible",
+  "evaluator_findings": [
+    "The controller used composed Bash calls. The checker rejects them, but the old prompt did not declare the complete controller literal-command grammar.",
+    "The controller inspected its own read-only usage worktrees with Git status, which the old single-cwd checker did not admit.",
+    "The complete staged diff uses mnemonic c/i prefixes while the commit diff uses a/b. Modes, indexes, hunks and content agree; byte-exact comparison would reject a legitimate full review."
+  ],
+  "unmet_original_requirement": "Opening a PR requires no-comments, which unconditionally spawns Comment Sicko. Only the two forward-use tasks ran. The lead disclosed omitting the review because additional delegation was prohibited. This explains the omission but does not complete the original workflow.",
+  "native_sha256": {
+    "lead": "54fd1794e546424e3ad4648777158b00e1fe2b93db4f9a1d8302afb1aa59e3d9",
+    "success_forward": "cf0c3889ec1a9f51887bb30c25896510c8291a07df1d94a6bd8d19184c4d2c7a",
+    "rollback_forward": "4bdd5870a954424cf1e19a93be8ab482117dfb62708a5d6a4ca063594423183e"
+  },
+  "authored_sha256": {
+    ".agents/skills/ledger-operations/SKILL.md": "e9d3bbad424ddaad6847c70ffa27b1f96fab569b66676dac2a5d4fab4eaa1120",
+    ".agents/skills/ledger-operations/references/cli-contract.md": "c8414ed21976b7b37d3334373dae67a6fcca5d40d2c484d5741c424c40966a32"
+  },
+  "observations": {
+    "creator_guidance": "Complete original copied guidance read before the lead directly authored both skill files.",
+    "actual_validator": {
+      "call_row_zero_based": 53,
+      "result_row_zero_based": 54,
+      "succeeded_before_freeze_and_forwarding": true
+    },
+    "portable_links_resolved": 5,
+    "skill_and_reference_frozen_and_committed_blobs_match": true,
+    "forward_identity": "Both workers match recorded working-pane/canonical-UUID metadata and retained native copies; configured models and efforts unchanged.",
+    "forward_tool_calls": [
+      15,
+      14
+    ],
+    "forward_scope": "Supported direct tools; native writes only canonical task report/result. Full skill and reference reads precede one import, then export and ledger inspection. No retry.",
+    "success": {
+      "rows": 6,
+      "total_cents_independently_calculated": 994
+    },
+    "rollback": {
+      "exit_code": 2,
+      "error": "invalid discount",
+      "seed_rows": 1,
+      "seed_total_cents": 98,
+      "ledger_bytes_unchanged": true
+    },
+    "pending_files_after_cases": 0,
+    "application_files_unchanged": 4,
+    "owned_checkouts_compared": 3,
+    "integration_branch": "Clean; one two-file skill commit whose content matches the complete staged diff.",
+    "native_pr_observation": "One private child PR created from the retained body; native readback matches committed head, assigned base and non-draft status. No merge or auto-merge command observed.",
+    "source_hashes_independently_compared": 217,
+    "configuration_guidance_settings_and_owned_cleanup": "Retained checks report unchanged inputs and absent owned panes; source snapshot and copied guidance resources independently match."
+  },
+  "limitations": [
+    "The original FAIL remains unchanged. Correct forward usage and a created PR do not supply the missing mandatory Comment Sicko review.",
+    "The early failure prevented independent CLI replay and independent remote PR body/state/base-OID/auto-merge/ref/parent-after checks. Native PR readback is narrower evidence.",
+    "The rollback read used offset/limit fields but returned both complete authored documents; full content was independently matched.",
+    "Explicit forward use does not establish native automatic skill discovery or causal improvement.",
+    "This audit performed no model calls, network requests, subprocess replay or tests. Raw sessions, configuration, private forge identities and worktrees stay private."
+  ]
+}

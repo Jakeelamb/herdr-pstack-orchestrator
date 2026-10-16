@@ -1,0 +1,86 @@
+{
+  "schema": "horch/playbook-quarantine-audit/v1",
+  "kind": "independent post-run metadata-only review",
+  "scenario": "second exact-repository snapshot investigation",
+  "original_receipt": "playbook-forge-shell.json",
+  "original_receipt_unchanged": true,
+  "original_receipt_sha256": "a01bc07e99b7a6a0fa431d8c61d1270eabb2965c2c37e7672b9a1c528a1dd711",
+  "source_revision": "a01f307c46540c52d2559a6f84bcdc599e45d71c",
+  "original_workflow_verdict": "fail",
+  "recorded_checks": {
+    "passed": 66,
+    "total": 66
+  },
+  "quarantine_observation": "The failed native gate withheld all worker payloads before lead consumption; this does not complete the investigation or Bug fix workflow.",
+  "first_rejection": {
+    "check": "literal_command",
+    "call_row_zero_based": 14,
+    "result_row_zero_based": 15,
+    "command": "pwd && ls -la",
+    "command_characters": 13,
+    "command_sha256": "0c9b65cde9f999f53c9e5029252bd00f5f5f776cc6c21b20c157f555b7ee621a",
+    "tool_isError": false,
+    "interpretation": "Successful shell composition is outside the single-literal-command evidence grammar."
+  },
+  "additional_observed_protocol_gaps": [
+    "Later composed Bash commands and Bash ls also exceed the allowed shell grammar.",
+    "The other two reader tasks also used shell composition; future clarification must apply to every worker brief."
+  ],
+  "rejected_worker": {
+    "native_sha256": "08e265478e8954bf32e03f07aced2830081b0f0dbc2e4c9642cd9f2577654f84",
+    "rows": 48,
+    "paired_tool_calls": 32,
+    "tool_counts": {
+      "read": 17,
+      "bash": 10,
+      "ffgrep": 3,
+      "write": 2
+    },
+    "tool_errors": 0,
+    "pending_calls": 0,
+    "identity": "live-bound canonical Pi UUID, exact owned cwd, configured model/effort, timestamps and task/brief hashes match",
+    "fff_observation": "All three request paths are owned-local with accepted field shapes and no cursor. This is static post-run shape review; the original gate stopped at the earlier shell composition.",
+    "outside_repository_access_established": false,
+    "direct_network_or_forge_command_observed": false
+  },
+  "lead": {
+    "native_sha256": "7afa3ee33c28213c775826148c82e2593b9c9b80e07b7b4cfd3a4ac62980a76e",
+    "rows": 103,
+    "tool_calls": 49,
+    "delivery_sequence": [
+      "fixed pending metadata",
+      "fixed pending metadata",
+      "fixed fail/quarantined metadata"
+    ],
+    "failed_delivery_call_row_zero_based": 101,
+    "failed_delivery_result_row_zero_based": 102,
+    "worker_report_or_result_accesses": 0,
+    "raw_wait_accesses": 0,
+    "calls_after_failure": 0,
+    "synthesis_or_code_or_forge_write": false
+  },
+  "gate_sha256": "a596d103c6c77f8a32d2f601ff27624989fe7b098d65596707d844b08e21f6cc",
+  "actual_tasks": {
+    "launched": 3,
+    "reader_tasks": 3,
+    "done_and_closed": 1,
+    "unfinished_closed_by_owned_cleanup": 2,
+    "original_receipt_tasks_empty": "The finish snapshot omits task details after runtime failure; it does not mean zero launches."
+  },
+  "integrity": {
+    "exact_repository_requests": 8,
+    "snapshot_files": 11,
+    "source_hashes": 217,
+    "bundled_files": 198,
+    "source_config_snapshot_gateway_unchanged": true,
+    "original_fixture_checkout_unchanged": true,
+    "owned_panes_absent": true
+  },
+  "review_scope": "Only fixed metadata and programmatically extracted call shapes, paths, row identities, error flags and hashes were reviewed. Quarantined reports/results, native write/edit payloads and raw wait output were not consumed.",
+  "limitations": [
+    "The original FAIL remains unchanged; successful audited delivery, synthesis and fix/PR stages are unverified.",
+    "This is post-execution rejection and withholding, not pre-execution denial, credential containment or a syscall sandbox.",
+    "The observed failure is shell evidence grammar; cross-repository or network access is not established.",
+    "Original live-source Why and full Bug fix remain unresolved."
+  ]
+}

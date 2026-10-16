@@ -62,6 +62,8 @@ unchanged and disclose this separate judgment; owned-path search does not prove
 pre-dispatch containment. Its earlier standalone Opening a PR eligibility is
 withdrawn: ready child/commit/body/ref facts are verified, but the mandatory
 Comment Sicko review was omitted. Reading no-comments is not applying it.
+Require an actual fresh configured Comment Sicko task and accepted delivered
+report before commit; a bounded task-count rule cannot waive this child skill.
 Authoring additionally needs existing creator guidance
 and its validator dependencies; Runtime uses `runtime_loop.py` with Node
 Inspector and built-in WebSocket support. Preserve failed receipts and disclose
@@ -99,6 +101,14 @@ unsupported FFF tools; it did not reach synthesis or a PR. Reader FFF support no
 has a narrow own-cwd/no-cursor grammar and requires before/after symlink-free
 tree evidence, while leaving startup settings in force. A new passing live
 receipt is still required.
+The second snapshot run also quarantined delivery, this time on composed Bash
+and Bash ls. FFF shapes and owned paths were valid; no worker payload reached
+the lead. Keep that FAIL unchanged. Worker briefs explicitly name rejected
+shell characters and use native Pi ls. Home syntax is rejected before path
+resolution in native, Git and Python/application file operands.
+The first Authoring run retains its FAIL and separate actual-use audit. Literal
+controller grammar, owned usage status and exact-path diff-prefix handling are
+declared repairs; the mandatory delegated comment review also needs execution.
 
 `hillclimb_loop.py` additionally requires an explicit configured different-family
 `--trail-reviewer` and the pristine reconciliation baseline. It retains all

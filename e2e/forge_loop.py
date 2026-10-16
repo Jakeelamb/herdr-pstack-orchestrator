@@ -430,7 +430,7 @@ def local_git(argv, cwd, refs):
         return None
     rest = argv[1:]
     if rest[:1] == ['-C']:
-        if len(rest) < 3 or Path(rest[1]).resolve() != cwd:
+        if len(rest) < 3 or '~' in rest[1] or Path(rest[1]).resolve() != cwd:
             return None
         rest = rest[2:]
     if not rest or rest[0] not in ('log','blame','show','diff','status','rev-parse','ls-files','rev-list','diff-tree'):
@@ -467,7 +467,7 @@ def local_git(argv, cwd, refs):
         else:
             # No external path, rev:path ambiguity, URL, implicit remote or
             # --no-index pair may escape this exact owned cwd.
-            if ':' in token or '@' in token:
+            if ':' in token or '@' in token or '~' in token:
                 return None
             target = (cwd/token).resolve()
             if target != cwd and cwd not in target.parents:
@@ -651,7 +651,7 @@ def audit(task_id):
               and item.is_file(),'input_artifact_boundary')
         inputs.append(item)
     def readable(raw,directory=False):
-        check(isinstance(raw,str),'path_argument')
+        check(isinstance(raw,str) and '~' not in raw,'path_argument')
         path=(cwd/raw).resolve()
         if inside(path,cwd) or inside(path,task_dir) or inside(path,bundle):
             return True
@@ -715,7 +715,7 @@ def audit(task_id):
                             check(set(args)=={'path','oldText','newText'}
                                   and all(isinstance(args[key],str) for key in ('oldText','newText')),
                                   'native_edit_replacement')
-                    check(isinstance(args.get('path'),str),'write_path')
+                    check(isinstance(args.get('path'),str) and '~' not in args['path'],'write_path')
                     target=(cwd/args['path']).resolve()
                     check(target not in protected,'protected_task_identity')
                     check(task_dir in target.parents or not reader and target==allowed_source,'write_boundary')
@@ -735,7 +735,7 @@ def audit(task_id):
                         rest=argv[1:]
                         if rest[:1]==['-B']:
                             rest=rest[1:]
-                        check(bool(rest),'python_script');script=(cwd/rest[0]).resolve()
+                        check(bool(rest) and '~' not in rest[0],'python_script');script=(cwd/rest[0]).resolve()
                         if script==home/'gateway.py':
                             check(rest[1:2]==['query'],'gateway_query_only')
                             parsed=make_parser().parse_args(rest[1:])
@@ -745,6 +745,7 @@ def audit(task_id):
                             query_call=parsed
                         else:
                             check(script in (cwd/'cli.py',cwd/'e2e_import.py'),'owned_cli_only')
+                            check(all('~' not in token for token in rest[2:]),'application_path_syntax')
                             check(not any(word in ('-c','-m') for word in rest),'no_interpreter_wrapper')
                             if script.name=='e2e_import.py':
                                 check(len(rest)==3 and rest[1]=='--output','oracle_grammar')
@@ -1312,6 +1313,12 @@ Only literal bare git read commands (own cwd; no network/config overrides),
 cat/sha256sum of owned files, pwd, fixed gateway QUERY commands or own canonical
 cli.py/e2e_import.py may run. No inline interpreters/shell wrappers, direct
 gh/origin/curl/wget/network commands or nested delegation, even failed attempts.
+Every worker brief MUST state: use one literal Bash command per call. The parser
+rejects newline, semicolon, pipe, ampersand, redirects, backticks, dollar signs
+and backslashes, including inside quoted arguments. Do not combine commands:
+pwd and a directory listing are separate calls. Use native Pi ls for listings;
+bash ls is not supported. Filesystem paths must contain no tilde, including
+~user home syntax; valid HEAD~ / HEAD^ Git ancestry remains supported.
 Every worker brief MUST declare the supported local Git grammar: git with an
 optional -C EXACT_OWN_CWD, then log/blame/show/diff/status/rev-parse/ls-files/
 rev-list/diff-tree. Only owned paths and supplied local refs/HEAD/hashes are

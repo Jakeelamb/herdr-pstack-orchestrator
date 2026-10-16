@@ -122,7 +122,7 @@ bootstrap checks are not native playbook executions.
 Skill authoring needs existing creator guidance and its validator's PyYAML
 dependency; it never installs that dependency. Explicit forward use does not
 prove automatic discovery. Runtime forensics needs Node with Inspector and
-built-in WebSocket support. Three live receipts failed on checker contracts;
+built-in WebSocket support. Four live receipts failed on checker contracts;
 the separate manual audits below support the actual runtime observations.
 Feature, Refactoring and Authoring model workflows remain unrun. The first Perf
 attempt retains a failed native-audit receipt, described below.
@@ -269,6 +269,23 @@ network access. Snapshot stages, fixture behavior and Opening a PR have separate
 verdicts. A passing fixture experiment would leave original live-source Why and
 the full Bug fix workflow unresolved.
 
+The [first snapshot-lane attempt](evidence/playbook-forge-quarantine.json) remains
+failed. Its source investigator used `fffind` and `ffgrep`, violating the
+explicit seven-tool protocol. The gate automatically quarantined delivery; the
+lead received only fixed failure metadata and consumed no worker report or
+result. No synthesis, coding or PR followed. The
+[separate audit](evidence/playbook-forge-quarantine-audit.json) verifies that
+bounded quarantine and owned cleanup. All requested search paths were within
+the reader tree, and cross-repository leakage was not established. The audit
+also found a hidden restriction on otherwise authorized local Git history flags.
+
+Fresh reader support is restricted to typed FFF calls within the assigned cwd,
+without cursors, traversal or surrounding whitespace/BOM. Reader trees must be
+symlink-free before dispatch and after delivery. Existing startup settings stay
+in force; concurrent external tree mutation remains an assumption. This new
+support has no live passing receipt yet and makes no universal FFF or containment
+claim.
+
 The [first Runtime receipt](evidence/playbook-runtime-env.json) remains failed.
 Its checker rejected legitimate `uptime` and `nproc` observations, then independent
 review found two further mismatches: a valid checklist completion edit and the
@@ -299,6 +316,13 @@ supports all five stages, exact profile reduction, raw Inspector bindings,
 source identity and cleanup. Chronological edit replay now permits earlier
 planning while requiring final completion after all operations and source reads.
 The original receipt remains failed; a fresh automated pass is still required.
+
+The [fourth Runtime receipt](evidence/playbook-runtime-number.json) also remains
+failed: its correct counter `1,127,037` did not match a hidden ungrouped-decimal
+substring requirement. Its [independent audit](evidence/playbook-runtime-number-reanalysis.json)
+verified all five stages and raw protocol/source bindings. The checker now accepts
+the exact plain or canonical comma-grouped integer, including prose punctuation;
+the prompt declares both forms. A fresh automated pass is still required.
 
 The [first Perf receipt](evidence/playbook-perf-copy.json) remains failed after
 the native auditor rejected a literal copy of an already delivered and read How
@@ -342,6 +366,8 @@ This verifies worker definition replacement, not automatic role or skill reload.
 | [Runtime citation contract](evidence/playbook-runtime-citations.json) | Checker required undeclared direct raw-file links despite valid citations to independently bound operation records |
 | [Runtime planning order](evidence/playbook-runtime-planning.json) | Checker treated an explicitly tentative planning edit as premature completion |
 | [Perf report copy](evidence/playbook-perf-copy.json) | Native auditor rejected a legitimate verbatim copy of a delivered and fully read report |
+| [Snapshot quarantine](evidence/playbook-forge-quarantine.json) | Unsupported FFF tools triggered automatic quarantine before report consumption; no cross-repository leakage established |
+| [Runtime counter format](evidence/playbook-runtime-number.json) | Checker rejected a correct counter written with ordinary thousands separators |
 
 Each attempt retained its failure verdict and confirmed owned cleanup. The first
 prototype run did not execute a model task. The contract run produced real
@@ -355,19 +381,19 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 | Playbook | Scenario or remaining requirement |
 |---|---|
 | Investigation | [FAIL](evidence/playbook-investigation-concat.json): native grammar gap and unresolved synthesis; correct stop does not satisfy successful presentation |
-| Bug fix | [FAIL: investigation exceeded repository scope](evidence/playbook-forge-scope-audit.json); operator halted before synthesis or implementation |
+| Bug fix | Original live-query [scope failure](evidence/playbook-forge-scope-audit.json) and later [snapshot quarantine](evidence/playbook-forge-quarantine-audit.json); full workflow unresolved |
 | Feature | Reviewed `design_loop.py`; live design/implementation Arena, behavior gate and real PR still unrun |
 | Refactoring | Reviewed `design_loop.py`; live frozen baseline, equivalence and real PR still unrun |
 | Prototype | [PASS: fixed-direction behavioral core workflow](evidence/playbook-prototype.json); open visual design search unverified |
 | Perf issue | [FAIL: report-copy grammar](evidence/playbook-perf-copy.json); measurements/fix/ready PR independently audited; no complete automated pass |
 | Hillclimb | Reviewed `hillclimb_loop.py`; live sensitivity, measured attempts, independent decisions and PR unrun; unattended wake unavailable |
-| Runtime forensics | [FAIL: planning order](evidence/playbook-runtime-planning.json); all three attempts separately audited; fresh corrected run pending |
+| Runtime forensics | [FAIL: counter format](evidence/playbook-runtime-number.json); all four attempts separately audited; fresh corrected run pending |
 | Trace forensics | [PASS: bounded paired-capture core workflow](evidence/playbook-trace.json); large-capture delegation unverified |
 | Visual parity | Untouched screenshots, real migration, zero pixel diff, real PR |
 | Authoring a skill | Reviewed `authoring_loop.py`; live authored skill, structural usage cases and real PR unrun; automatic discovery separate |
 | Eval | Scoped Pi transcripts are accessible in principle; current global skill catalog violates strict blinding under unchanged settings |
 | Multi-phase plan | Validator exists; executable cloud lanes and configured swarm role are unavailable |
-| Opening a PR | Not reached in the failed Bug fix attempt; real ordered commits and ready child PR remain unverified |
+| Opening a PR | Ready child PR observed and independently verified in the [Perf audit](evidence/playbook-perf-copy-reanalysis.json); complete automated workflow pass pending |
 | Babysit | Reviewed `babysit_loop.py`; live bounded Check unrun; drive/background wake mechanism unavailable |
 | Shipping | Cloud verifier unavailable; no authorization to merge test PRs |
 | Autonomous run | Required wake mechanism unavailable |

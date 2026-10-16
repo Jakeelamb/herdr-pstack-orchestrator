@@ -400,7 +400,7 @@ Read {self.directory / 'observe.json'} fully. Require increasing real counter/ti
 4. Map actual captured frames and live script to source:
 {command('source')}
 Read {self.directory / 'source.json'}, {self.directory / 'runtime-source.json'} and {self.worktree / 'target.mjs'} fully. Write {notes / 'diagnosis.json'} with symbol, caller, source_line (one-based hot function definition), timer_line (one-based setInterval scheduling line), profile_sha256, source_sha256, counter_before, counter_after, requests=0, mechanism and limitations. Use exact actual evidence, not source-only theory. Source location must agree with live script/profile and unchanged file hash.
-5. Write {notes / 'reply.md'} after all observations and source mapping, citing the signal, actual reduced finding, increasing instrumentation counter and caller stack, exact source file:symbol:line plus timer line, private artifact paths, and principles read that changed a decision. Cite the signal through capture.json OR cpu.cpuprofile, the reduced finding through reduce.json OR reduced-frames.json, and the observation through observe.json. Use local Markdown links resolved relative to reply.md or exact absolute artifact paths. The summary JSONs remain independently bound to the original profile, complete reduction and raw CDP evidence. Include EXACTLY one line:
+5. Write {notes / 'reply.md'} after all observations and source mapping, citing the signal, actual reduced finding, increasing instrumentation counter and caller stack, exact source file:symbol:line plus timer line, private artifact paths, and principles read that changed a decision. Include the exact observed final counter as ungrouped decimal or standard comma-grouped decimal, as a complete digit/comma token with no malformed grouping. Cite the signal through capture.json OR cpu.cpuprofile, the reduced finding through reduce.json OR reduced-frames.json, and the observation through observe.json. Use local Markdown links resolved relative to reply.md or exact absolute artifact paths. The summary JSONs remain independently bound to the original profile, complete reduction and raw CDP evidence. Include EXACTLY one line:
 {CHECKPOINT}
 Report uncertainty honestly. Do not claim a fix, throughput benchmark, other playbooks, full inventory, cloud, or wake/sleep coverage.
 '''
@@ -608,10 +608,12 @@ Keep this directory private; do not commit native sessions or raw captures.
             for path in (self.directory / name for name in group)) for group in artifact_groups)
         source_cited = re.search(r'(?<![\w/.-])' + re.escape(str(self.worktree / 'target.mjs'))
                                  + r':(?:' + re.escape(symbol) + r':)?' + str(source_line) + citation_end, reply)
+        counter_cited = re.search(r'(?<![\d,])(?:' + re.escape(str(after['count'])) + '|'
+                                 + re.escape(format(after['count'], ',')) + r')(?!\d|,\S|\.\d)', reply)
         self.check('cited_final_diagnosis_checkpoint', reply.splitlines().count(CHECKPOINT) == 1
-                   and artifacts_cited and bool(source_cited)
+                   and artifacts_cited and bool(source_cited) and bool(counter_cited)
                    and all(text in reply for text in (symbol, 'scheduledReconciliation',
-                                                      str(after['count']), str(timer_line))))
+                                                      str(timer_line))))
         self.verify_protocol()
         self.stage('runtime_1_capture_live_signal', early + [cap])
         self.stage('runtime_2_reduce_then_select', [red] + decision_events)

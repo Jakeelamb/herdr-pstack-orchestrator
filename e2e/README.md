@@ -43,6 +43,12 @@ failure: the native auditor rejected a legitimate delivered-report copy.
 Its [separate independent audit](evidence/playbook-perf-copy-reanalysis.json)
 verified actual timings, behavior and the retained ready private PR, while
 preserving that failure.
+The [snapshot investigation attempt](evidence/playbook-forge-quarantine-audit.json)
+verified automatic quarantine after an unsupported search-tool call; no report
+reached synthesis. It remains a failed workflow. Runtime's
+[fourth failed receipt](evidence/playbook-runtime-number.json) and
+[separate audit](evidence/playbook-runtime-number-reanalysis.json) retain a
+canonical-number formatting mismatch without promoting its verdict.
 
 For live replacement and removal of worker definitions, use the existing
 `check_workers.py --hot-swap-only` mode. It keeps two real reconciliation tasks

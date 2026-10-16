@@ -71,7 +71,10 @@ attempts have separate manual audits. A third failed receipt exposed a planning
 edit incorrectly classified as completion. Its independent raw-evidence audit
 supports all five stages; the checker now replays all edits chronologically and
 requires final completion after observations and source reads. A fresh automated
-pass is still needed.
+pass is still needed. A fourth receipt rejects a correct comma-grouped counter;
+its separate raw-evidence audit supports all five stages. The declared counter
+witness now accepts plain or canonical comma-grouped integers with normal prose
+punctuation. Preserve that fourth failure too.
 The first Bug fix investigation was manually stopped after a worker queried
 outside the assigned repository. Its failed receipt and redacted scope audit
 remain published. Do not repeat that profile with broad forge access. The new
@@ -80,6 +83,11 @@ consumption through a private real-horch wait plus complete native audit. It
 retains raw wait receipts privately and emits fixed metadata. Review its separate
 snapshot/behavior/OpeningPR verdicts; it does not establish credential containment
 or original live-source Why/full Bug fix eligibility. Live evidence is pending.
+The first snapshot run verified automatic quarantine when a worker used
+unsupported FFF tools; it did not reach synthesis or a PR. Reader FFF support now
+has a narrow own-cwd/no-cursor grammar and requires before/after symlink-free
+tree evidence, while leaving startup settings in force. A new passing live
+receipt is still required.
 
 `hillclimb_loop.py` additionally requires an explicit configured different-family
 `--trail-reviewer` and the pristine reconciliation baseline. It retains all

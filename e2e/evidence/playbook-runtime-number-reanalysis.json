@@ -1,0 +1,63 @@
+{
+  "schema": "horch/playbook-artifact-reanalysis/v1",
+  "kind": "independent_read_only_native_and_artifact_audit",
+  "scenario": "runtime-forensics",
+  "original_receipt_unchanged": true,
+  "original_receipt_sha256": "5a4109dbb14981c014219120dbe1d4dba34bd9cd888c56619971d523e62867a5",
+  "original_workflow_verdict": "fail",
+  "original_checks_passed": 75,
+  "original_checks_total": 76,
+  "source_revision": "82c1ee74c05d6c8b23a2c515a2dbf268f6bd7318",
+  "native_transcript_sha256": "33e7c749f92481bcc8866fb3bfefd10255e8dc82cb5cbd23d85660f7e8cc2451",
+  "profile_sha256": "f398e2a1a8ad62b6c9c6ade876581fae2e667de0ee4e19965c0695c40f8dd1b3",
+  "reduction_sha256": "8e07f9f8bf8c8b0db9dd9673f66e807245e3493c28b3971edfafb1705a8d1c52",
+  "protocol_sha256": "76fd69f738c0c30b12e757f3c499e9e4125e1a133c710c95992adc7e83556f37",
+  "evaluator_findings": [
+    "The checker required the final counter as a contiguous decimal substring, rejecting the correct canonical comma-grouped integer in ordinary prose."
+  ],
+  "manual_observations": {
+    "original_numbered_stages_witnessed": 5,
+    "native_tool_calls": 33,
+    "failed_tool_calls": 0,
+    "fixed_probe_operations": 5,
+    "original_checklist_preserved": true,
+    "final_completion_after_all_observations": true,
+    "samples": 1705,
+    "profile_duration_us": 1816708,
+    "reduction_replayed_exactly": true,
+    "selected_self_counts": {
+      "lookupReference": 451,
+      "scheduledReconciliation": 149,
+      "idle": 1100
+    },
+    "matched_requests": 19,
+    "matched_responses": 19,
+    "protocol_errors": 0,
+    "one_persistent_execution_context": true,
+    "raw_profiler_response_equals_retained_profile": true,
+    "existing_function_instrumented_without_invoking_work": true,
+    "counter_before": 995309,
+    "counter_after": 1127037,
+    "observed_calls": 131728,
+    "ticks_before": 2130,
+    "ticks_after": 2152,
+    "observed_ticks": 22,
+    "http_requests": 0,
+    "reconciliation_result": 958008,
+    "live_source_equals_frozen_source": true,
+    "hot_definition_line": 9,
+    "timer_line": 32,
+    "valid_bound_artifact_and_source_citations": true,
+    "one_checkpoint_line": true,
+    "source_hashes_unchanged": 202,
+    "configuration_unchanged": true,
+    "owned_processes_reaped": true,
+    "owned_pane_closed": true
+  },
+  "limitations": [
+    "The original receipt remains failed. This separate read-only audit does not replace a fresh passing automated run.",
+    "The counter and completed-tick samples can interrupt work mid-callback; no fixed calls-per-tick ratio is inferred.",
+    "Only the owned synthetic diagnostic workload is covered, without saturation, throughput, speedup, fix, PR, cloud or full-inventory claims.",
+    "Raw sessions, source paths, captures and protocol payloads remain private."
+  ]
+}

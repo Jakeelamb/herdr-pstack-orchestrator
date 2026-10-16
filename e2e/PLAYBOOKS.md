@@ -463,6 +463,19 @@ The reviewed forward repair validates the exact nonce-bound Horch suffix and
 inspects the complete authored prefix, with no shell-grammar relaxation or
 new live pass.
 
+The Design driver now uses a private same-file wait/audit entry point for
+all slots. It keeps raw horch waits private and releases only metadata and
+declared output paths after done/closed delivery and native scope validation.
+Its reviewed contract binds a captured working Pi UUID, role/model/cwd, exact
+authored brief plus nonce-bound Horch suffix, declared inputs, hidden rubric
+separation and all tool attempts. CommentSicko's original native bootstrap,
+first output and scope observations are checked before forwarding. Independent
+final validation checks the matching PASS before worker-output reads, reads
+or execution of source owned by implementation tasks, content-producing Git
+operations and dependent launches.
+The first Feature FAIL stays unchanged. This contract still needs new live
+evidence; it does not establish a sandbox or credential containment.
+
 The [first Babysit Check receipt](evidence/playbook-babysit-grammar.json) retains
 its preparation FAIL: 34 of 35 checks passed, without executing the watcher or
 creating before/after forge snapshots. Its

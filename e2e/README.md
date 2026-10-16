@@ -115,6 +115,14 @@ The workflow still retains FAIL: whole-object triage equality rejected a truthfu
 reason, and a later reply check required undeclared exact strings. The reviewed
 contract accepts only the known optional reason and declares exact private
 evidence footer lines. This repair still needs a fresh Check receipt.
+Feature/Refactoring now has a private same-file wait/audit gate for every
+worker. Its reviewed contract requires a captured working session to pass
+tool, path, input, result and original CommentSicko native checks before the
+lead consumes a delivery.
+Final lead auditing independently binds each gate to actual consumption and
+dependent launches, including source reads, content-producing Git and oracle
+execution. Hidden rubrics are restricted to their judges. This is E2E evidence
+checking with pending live validation, not a sandbox or credential boundary.
 Named-agent briefs now require tool-only loading of the original agent and
 required skill before any assistant text. The original instructions and exact
 output rules remain unchanged; this forward repair needs fresh live evidence.

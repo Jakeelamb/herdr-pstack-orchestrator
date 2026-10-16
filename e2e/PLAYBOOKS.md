@@ -82,6 +82,8 @@ Read the measured results and each fresh receipt before reporting coverage.
 | `perf_loop.py` | Fresh profiles, separate unprofiled alternating CLI timings, one-function fix and a ready private child PR |
 | `authoring_loop.py` | Actual skill-authoring guidance, existing validator, two independently traced usage cases and a ready private child PR |
 | `runtime_loop.py` | Owned live Node Inspector process, CPU capture, benign instrumentation and source-attributed diagnosis; no fix or PR |
+| `hillclimb_loop.py` | Attended measured attempts, both original decision-log formats, different-family trail review and a ready private child PR |
+| `babysit_loop.py` | One read-only Check pass over an explicit real private PR chain; no drive, background wake or merge |
 
 For continuity:
 
@@ -95,7 +97,7 @@ The current continuity fixture establishes its originating Feature workstream
 in session A. Session B recovers that context from the actual prior trail, uses
 neutral verdict choices and names the numbered original resume step. Earlier
 Feature grounding/design and later PR/review are outside this fixture's coverage.
-This refined reporting contract awaits a fresh live run.
+The fresh receipt below verifies this refined reporting contract.
 
 Prepare portable fixture files without Git, credentials, Herdr or model calls:
 
@@ -120,6 +122,21 @@ built-in WebSocket support. Its live V8 frames and shutdown remain unverified.
 Bug fix, Feature, Refactoring, Perf issue, Authoring and live-runtime model
 workflows remain unrun.
 
+Hillclimb uses the pristine reconciliation baseline and an explicit configured
+`--trail-reviewer` from a different model family. Its declared stop condition
+combines the improvement target with at least three distinct measured attempts.
+Every candidate is retained, and decisions are independently replayed; neither
+kept nor reverted counts are predetermined. Attended iteration does not prove
+durable wake or unattended execution.
+
+Babysit requires `--stack-prs` as at least two real PR numbers in bottom-to-top
+base-chain order. It executes the original watcher once and binds its actual
+`STATUS` rows to separate forge snapshots. Its private copied bootstrap may
+install locked Bun dependencies at execution time. Unsupported Origin selection,
+unavailable checks or a changing forge snapshot remain unresolved. Even a pass
+would cover bounded Check only, not the entire Babysit playbook. Both new live
+workflows remain unrun.
+
 ## Interpret evidence
 
 The printed `evidence.json` is authoritative. Its private parent directory also
@@ -130,9 +147,9 @@ the sanitized receipt is a candidate for publication.
 - `stage_coverage` covers declared stages and their native evidence.
 - `workflow_verdict` additionally requires full workflow eligibility and ordered
   native evidence. Measured core-workflow passes cover fixed-direction Prototype
-  and bounded paired-capture Trace forensics. The continuity receipt separately
-  records a completed Pause phase; its Pickup phase remains failed. Investigation
-  remains failed.
+  and bounded paired-capture Trace forensics. The fresh continuity receipt records
+  completed Pause and Pickup phases. Its earlier failed attempts and Investigation
+  remain failed.
 - `inventory` accounts for every playbook. `not_run` is not a pass.
 - `full_inventory_verdict` cannot pass from one scenario.
 
@@ -207,6 +224,17 @@ the inherited state and executed all six pending CLI cases without repeating
 the money probe. The evaluator instead demanded Feature. Its original failure
 remains unchanged; the refined fixture above does not retroactively promote it.
 
+The [fresh continuity receipt](evidence/playbook-continuity.json) passes all four
+Pause and five Pickup stages in 577.374 seconds, with 93 passing check records.
+Independent review confirms that B was not supplied the expected Feature route
+or step. It recovered them from the actual note/trail and Git state, then ran all
+six pending CLI cases without repeating the money probe or dispatching a task.
+Four rejected imports exited 2, preserved exact store bytes and left no pending
+file. The successful six-row store totals 3751 cents and exports in sorted order.
+All six independent CLI replays agree. Session identities, source/config hashes,
+the inherited WIP, clean tree and owned cleanup match. This covers the bounded
+local continuation, not earlier Feature design or later PR/review stages.
+
 The [fresh live-replacement receipt](evidence/hot-swap.json) verifies two real
 Pi tasks using distinct configured models. Both were held working while the
 private alias was changed and removed. A dispatch after removal failed without
@@ -238,7 +266,7 @@ observations; those do not replace a passing independent replay.
 
 ## Complete inventory
 
-Three bounded scenarios have complete core-workflow evidence. The remaining 20
+Four bounded scenarios have complete core-workflow evidence. The remaining 19
 playbooks are unresolved, as are untested branches of the passing scenarios.
 
 | Playbook | Scenario or remaining requirement |
@@ -249,7 +277,7 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 | Refactoring | Reviewed `design_loop.py`; live frozen baseline, equivalence and real PR still unrun |
 | Prototype | [PASS: fixed-direction behavioral core workflow](evidence/playbook-prototype.json); open visual design search unverified |
 | Perf issue | Reviewed `perf_loop.py`; portable baseline passes, live measurements/fix/PR unrun |
-| Hillclimb | Sensitive harness, metric and stop predicate, kept/reverted attempts |
+| Hillclimb | Reviewed `hillclimb_loop.py`; live sensitivity, measured attempts, independent decisions and PR unrun; unattended wake unavailable |
 | Runtime forensics | Reviewed `runtime_loop.py`; live Node signal/instrumentation/diagnosis unrun |
 | Trace forensics | [PASS: bounded paired-capture core workflow](evidence/playbook-trace.json); large-capture delegation unverified |
 | Visual parity | Untouched screenshots, real migration, zero pixel diff, real PR |
@@ -257,14 +285,14 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 | Eval | Scoped Pi transcripts are accessible in principle; current global skill catalog violates strict blinding under unchanged settings |
 | Multi-phase plan | Validator exists; executable cloud lanes and configured swarm role are unavailable |
 | Opening a PR | Real forge branch and ready PR with ordered verified commits |
-| Babysit | Read-only check can use real private PRs; drive/background wake mechanism unavailable |
+| Babysit | Reviewed `babysit_loop.py`; live bounded Check unrun; drive/background wake mechanism unavailable |
 | Shipping | Cloud verifier unavailable; no authorization to merge test PRs |
 | Autonomous run | Required wake mechanism unavailable |
 | Orchestrate | Cloud execution and durable wake mechanism unavailable |
 | Autopilot-full | Cloud owners/verifiers and wake mechanism unavailable; no merge authorization |
 | Autopilot-stack | Cloud owners and wake mechanism unavailable; no STACK-READY evidence |
-| Pause safely | [PASS: bounded local four-stage stop](evidence/playbook-continuity-route.json); its later Pickup phase failed |
-| Session pickup | [FAIL: ambiguous originating workstream](evidence/playbook-continuity-route.json); refined fixture awaits fresh run |
+| Pause safely | [PASS: bounded local four-stage stop](evidence/playbook-continuity.json); original checkpoint, WIP and off-context note |
+| Session pickup | [PASS: five-stage local continuation](evidence/playbook-continuity.json); distinct session, recovered route and real pending CLI verification |
 | Worktree cleanup | Owned worktrees, justified removals and active-work protection |
 
 Cloud execution and `/loop` are not supplied by the current adapter. Gate-only

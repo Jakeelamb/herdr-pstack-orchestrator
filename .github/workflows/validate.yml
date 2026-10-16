@@ -42,6 +42,8 @@ jobs:
           python e2e/perf_loop.py --help
           python e2e/authoring_loop.py --help
           python e2e/runtime_loop.py --help
+          python e2e/hillclimb_loop.py --help
+          python e2e/babysit_loop.py --help
           python e2e/caller_context.py --help
           python e2e/caller_identity.py --help
           python e2e/skill_catalogs.py --help

@@ -39,9 +39,9 @@ python3 e2e/pause_pickup.py --controller <configured-pi-worker> \
 
 It retains a WIP checkpoint, original note/trail, distinct session identities,
 real persisted CLI observations and replay instructions. Read each phase's
-inventory verdict: the published attempt passes Pause but fails Pickup's
-ambiguous fixture contract. A refined originating-workstream contract awaits
-a fresh run. Existing Git identity, hooks and signing stay in force through
+inventory verdict: the fresh attempt passes both bounded phases, including six
+actual CLI cases and independent replay; earlier ambiguous fixtures remain
+failed. Existing Git identity, hooks and signing stay in force through
 the isolated environment's original-global-config includes.
 
 See the inventory's [writable workflow procedures](../../../../e2e/PLAYBOOKS.md#continuity-and-writable-workflows)
@@ -53,6 +53,14 @@ are not yet measured. Authoring additionally needs existing creator guidance
 and its validator dependencies; Runtime uses `runtime_loop.py` with Node
 Inspector and built-in WebSocket support. Preserve failed receipts and disclose
 unsupported native capture or forge paths.
+
+`hillclimb_loop.py` additionally requires an explicit configured different-family
+`--trail-reviewer` and the pristine reconciliation baseline. It retains all
+measured attempts and both original log formats; the run is attended.
+`babysit_loop.py` requires a real bottom-to-top `--stack-prs` base chain and
+existing Bun. It runs one original watcher Check with private locked dependencies
+and independent forge snapshots. Neither driver has live evidence yet. Check
+does not establish drive/background or a complete Babysit workflow.
 
 Inspect retained worktrees under `handoff/<run>/worktree`, then remove only the
 exact owned worktree with Git. Preserve the external receipt and diagnostics.

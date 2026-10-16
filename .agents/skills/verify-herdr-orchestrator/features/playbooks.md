@@ -186,6 +186,17 @@ verbatim preservation, including escapes and whitespace; the checker is intact.
 Use a new immutable source/run to verify it. No full Refactoring or PR follows
 from the three bounded deliveries.
 
+The second Hillclimb run separately verified How, three scoped source changes,
+both original logs and retained final full-CLI timings (71.3% reduction).
+The simplification attempt was 0.7% slower within its declared allowance.
+Three recorder errors remain; no evaluation or final measurement was rerun.
+The overall receipt remains FAIL: the trail reviewer issued five explicitly
+excluded shell listings. The lead consumed its report and started Comment
+before the driver's native audit. All trail and derived review bodies remain
+unread by independent reviewers. There was no push or PR. This is a real
+pre-forwarding gate gap, not automatic quarantine; retained measurement
+reduction does not complete Hillclimb or replace independent fresh timings.
+
 The third Check retains FAIL on lowercase-only cloud gap matching, despite
 correct exact footer lines and an independently verified real status flow.
 The reviewed repair casefolds ordinary-language gap terms only; protocol and

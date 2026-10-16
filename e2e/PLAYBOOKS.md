@@ -622,7 +622,7 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 | Refactoring | [Second FAIL with partial audit](evidence/playbook-refactor-preservation-audit.json): three How deliveries and baseline verified; manual stop on undeclared literal preservation, forward prompt repaired; equivalence and PR unresolved |
 | Prototype | [PASS: fixed-direction behavioral core workflow](evidence/playbook-prototype.json); open visual design search unverified |
 | Perf issue | [Fourth FAIL with independent behavior audit](evidence/playbook-perf-comment-audit.json): 70.2% native / 70.0% replay reduction; original output rule and review unresolved |
-| Hillclimb | [First FAIL](evidence/playbook-hillclimb-shell.json): manual stop on explicitly excluded How shell listings; measured attempts and PR unresolved; unattended wake unavailable |
+| Hillclimb | [Second FAIL/audit](evidence/playbook-hillclimb-trail-audit.json): How, three scoped changes/logs and retained 71.3% reduction verified; trail shell breach was forwarded before manual stop; real delivery barrier, final review/PR and unattended wake unresolved |
 | Runtime forensics | [PASS: five-stage owned-process diagnosis](evidence/playbook-runtime.json); raw Inspector/profile/source independently checked; large-artifact delegation unverified |
 | Trace forensics | [PASS: bounded paired-capture core workflow](evidence/playbook-trace.json); large-capture delegation unverified |
 | Visual parity | Local browser/diff tools available; UI fixture, untouched baseline, real migration, zero pixel diff and PR unrun; required `/loop` unavailable |

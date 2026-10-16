@@ -100,6 +100,17 @@ reader. No report, measured attempt or PR followed. Its original FAIL remains
 unchanged, alongside a separate unreached brief-heading parser mismatch. Its
 reviewed repair strips only the exact Horch suffix; shell restrictions remain
 unchanged and no new live Hillclimb pass is established.
+The [second Hillclimb receipt](evidence/playbook-hillclimb-trail.json) also
+remains failed. Its [independent audit](evidence/playbook-hillclimb-trail-audit.json)
+verifies How, three distinct scoped changes, both logs and a retained 71.3%
+full-CLI reduction. The third change is a declared simplification keep despite
+a 0.7% slowdown; three exact-number recorder errors remain recorded, with no
+measurement reruns. Five forbidden trail-reviewer shell listings exposed a
+missing delivery barrier: the lead consumed that report and launched Comment
+before the driver's native audit. This was a manual stop after forwarding, with no push
+or PR. Trail payloads and all derived review/documentation bodies stay unread
+by independent reviewers. The retained timings are arithmetic/provenance
+evidence, without a fresh independent timing replay or complete workflow pass.
 The [first Babysit Check receipt](evidence/playbook-babysit-grammar.json) stopped
 in preparation before any watcher or PR snapshot. Its
 [independent audit](evidence/playbook-babysit-grammar-audit.json) identifies an

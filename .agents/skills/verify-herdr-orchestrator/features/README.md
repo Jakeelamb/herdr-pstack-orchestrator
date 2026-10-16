@@ -5,6 +5,7 @@ Commands run from the repository root, using `repo` and `proof` from [Launch](..
 | Feature | Driver | Preconditions and scope |
 |---|---|---|
 | [Skill installation and discovery](discovery.md) | `skill_catalogs.py` | Bundled skills, npm, Pi, Codex; no models |
+| [Practical delivery and removal](../../../../e2e/ADOPTION.md) | Existing `horch.py`, fixture generator and CLI oracle | Two configured workers, authorized private fixture/parent PR; complete project removal preserves an unrelated skill |
 | [Worker review loop](workers.md) | `review_loop.py` | Authenticated workers, two free slots; six real tasks |
 | [Worker setup checks](workers.md#worker-setup-checks) | `check_workers.py` | At least two authenticated configured workers, owned workspace, one-slot batching and injected exit |
 | [Workspace worker limits](workers.md#workspace-worker-limits) | `workspace_limits.py` | One authenticated worker, two owned workspaces, shared isolated task store |

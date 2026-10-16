@@ -4,6 +4,12 @@ For agent-driven verification, use the project-local [verify-herdr-orchestrator 
 
 These files are repository tooling, outside the installed skills.
 
+The current release scope is [adoption evidence](../docs/RELEASE-EVIDENCE.md):
+reversible project setup, configured role routing, worker replacement and one
+practical implementation/review/private-PR workflow. Full original-playbook
+conformance is a later milestone. Existing passing evidence is reused; failures
+remain published, and missing cloud/scheduling capabilities stay **blocked**.
+
 ## Original playbooks and worker replacement
 
 The [23-playbook inventory](PLAYBOOKS.md) separates native stage evidence,
@@ -142,6 +148,17 @@ oracle, fixture HEAD/status and owned-pane cleanup witnesses remain intact.
 The next run must supply readable, immutable per-slot protocol files and bind
 their complete native reads before worker-brief writes. This failure remains
 unchanged and does not complete Feature.
+
+The [fifth Feature receipt](evidence/playbook-feature-deferred.json) and
+[scope-stop audit](evidence/playbook-feature-deferred-audit.json) retain a
+user-directed stop, rather than another runtime defect. The controller reads
+the entire actual 29,313-byte main brief in one native result. The before pin
+passes 11 observations/13 checks. One explorer starts and is cleaned up without
+completed delivery; its unfinished payload bodies remain unread. All 37
+recorded prefix/integrity/cleanup checks pass, but no complete original phase,
+implementation or PR is claimed. The user explicitly deferred 23-playbook
+conformance in favor of the narrower release scope; no further full-conformance
+rerun follows this stop.
 
 The contradiction also led to an actual two-flow baseline characterization:
 [complete synthetic inputs and expected observations](evidence/playbook-feature-post-replace-case.json)

@@ -1,5 +1,11 @@
 # Original playbook verification
 
+Full 23-playbook conformance is a later milestone. The current release scope
+is [reversible setup and a practical delivery workflow](../docs/RELEASE-EVIDENCE.md).
+This inventory preserves original outcomes; those failures do not become passes
+when a distinct practical workflow succeeds. Missing runtime prerequisites are
+marked **blocked** below.
+
 Skill discovery, a correct application result, and execution of an original
 playbook are separate claims. This inventory covers all 23 files in
 [`poteto-mode/playbooks`](../skills/poteto-mode/playbooks/). Unavailable stages
@@ -618,7 +624,7 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 |---|---|
 | Investigation | [FAIL](evidence/playbook-investigation-concat.json): native grammar gap and unresolved synthesis; correct stop does not satisfy successful presentation |
 | Bug fix | Original live-query [scope failure](evidence/playbook-forge-scope-audit.json) and later [snapshot quarantine](evidence/playbook-forge-quarantine-audit.json); full workflow unresolved |
-| Feature | [Fourth FAIL/audit](evidence/playbook-feature-capacity-audit.json): oversized controller-input line prevents complete read before delegation; no workers or repaired replay exercised. Separate third-run accepted explorers, unresolved synthesis gate, accuracy caveats and actual post-replace baseline fault remain retained; no design/implementation/PR |
+| Feature | [Fifth, user-deferred FAIL/audit](evidence/playbook-feature-deferred-audit.json): complete main input now reads successfully; full original conformance stopped at the user's direction. One unfinished explorer's payloads remain unread. Earlier gate/capacity failures, accepted partial evidence and source-accuracy caveats remain retained |
 | Refactoring | [Third FAIL/audit](evidence/playbook-refactor-comment-audit.json): eight deliveries, exact How preservation, design selection, source-grounded reader review and actual before/after equivalence verified; Comment first-output breach automatically withheld; no commit/PR |
 | Prototype | [PASS: fixed-direction behavioral core workflow](evidence/playbook-prototype.json); open visual design search unverified |
 | Perf issue | [Fourth FAIL with independent behavior audit](evidence/playbook-perf-comment-audit.json): 70.2% native / 70.0% replay reduction; original output rule and review unresolved |
@@ -628,14 +634,14 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 | Visual parity | Local browser/diff tools available; UI fixture, untouched baseline, real migration, zero pixel diff and PR unrun; required `/loop` unavailable |
 | Authoring a skill | [Second FAIL with independent audit](evidence/playbook-authoring-review-audit.json); usage and correct review stop verified, deeper work and complete integrated pass unresolved |
 | Eval | Scoped Pi transcripts are accessible in principle; current global skill catalog violates strict blinding under unchanged settings |
-| Multi-phase plan | Validator exists; executable cloud lanes and configured swarm role are unavailable |
+| Multi-phase plan | **blocked**: executable cloud lanes and configured swarm role are unavailable; a validator alone does not execute the plan |
 | Opening a PR | [Earlier eligibility withdrawn](evidence/playbook-opening-pr-correction.json): ready PR facts verified, mandatory Comment Sicko review omitted |
 | Babysit | [Fourth FAIL/blocked](evidence/playbook-babysit-overlap-audit.json): ambiguous visible launch needs a supervisor witness; earlier status-flow evidence remains partial; durable wake unavailable |
-| Shipping | Cloud verifier unavailable; no authorization to merge test PRs |
-| Autonomous run | Required wake mechanism unavailable |
-| Orchestrate | Cloud execution and durable wake mechanism unavailable |
-| Autopilot-full | Cloud owners/verifiers and wake mechanism unavailable; no merge authorization |
-| Autopilot-stack | Cloud owners and wake mechanism unavailable; no STACK-READY evidence |
+| Shipping | **blocked**: cloud verifier unavailable; no authorization to merge test PRs |
+| Autonomous run | **blocked**: required wake mechanism unavailable |
+| Orchestrate | **blocked**: cloud execution and durable wake mechanism unavailable |
+| Autopilot-full | **blocked**: cloud owners/verifiers and wake mechanism unavailable; no merge authorization |
+| Autopilot-stack | **blocked**: cloud owners and wake mechanism unavailable; no STACK-READY evidence |
 | Pause safely | [PASS: bounded local four-stage stop](evidence/playbook-continuity.json); original checkpoint, WIP and off-context note |
 | Session pickup | [PASS: five-stage local continuation](evidence/playbook-continuity.json); distinct session, recovered route and real pending CLI verification |
 | Worktree cleanup | Pinned and active-chat metadata unavailable; owned E2E teardown does not verify this playbook's deletion gates |

@@ -1,5 +1,10 @@
 # Original playbook scenarios
 
+Full 23-playbook conformance is a later milestone. Use the
+[practical adoption procedure](../../../../e2e/ADOPTION.md) for the current
+release scope; do not restart full original scenarios solely to clear exact
+greeting, shell spelling or prose-preservation differences.
+
 Read the [complete inventory and evidence contract](../../../../e2e/PLAYBOOKS.md)
 before making any coverage claim. This is a maintained E2E driver for a distinct
 feature, not an ad-hoc helper or a replacement for the invoice controller loop.

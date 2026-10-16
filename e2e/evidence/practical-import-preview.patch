@@ -1,0 +1,44 @@
+diff --git a/cli.py b/cli.py
+index 8f2e2d7..102e58b 100644
+--- a/cli.py
++++ b/cli.py
+@@ -7,8 +7,13 @@ from storage import apply_batch
+ def main():
+     command, store, *files = sys.argv[1:]
+     if command == "import":
++        dry_run = store == "--dry-run"
++        if dry_run:
++            store, *files = files
+         try:
+-            result = apply_batch(store, [json.loads(Path(p).read_text()) for p in files])
++            result = apply_batch(
++                store, [json.loads(Path(p).read_text()) for p in files],
++                dry_run=dry_run)
+         except ValueError as error:
+             print(json.dumps({"error": str(error)}))
+             return 2
+diff --git a/storage.py b/storage.py
+index 5ec57a2..35b9247 100644
+--- a/storage.py
++++ b/storage.py
+@@ -4,7 +4,7 @@ from pathlib import Path
+ from money import line_total
+ 
+ 
+-def apply_batch(store, batches):
++def apply_batch(store, batches, *, dry_run=False):
+     path = Path(store)
+     current = json.loads(path.read_text()) if path.exists() else []
+     seen = {row["id"] for row in current}
+@@ -21,7 +21,8 @@ def apply_batch(store, batches):
+             seen.add(row["id"])
+             staged.append(dict(row, total_cents=line_total(
+                 row["quantity"], row["unit_price_cents"], row["discount_bp"])))
+-    temporary = path.with_suffix(".pending")
+-    temporary.write_text(json.dumps(staged, sort_keys=True))
+-    os.replace(temporary, path)
++    if not dry_run:
++        temporary = path.with_suffix(".pending")
++        temporary.write_text(json.dumps(staged, sort_keys=True))
++        os.replace(temporary, path)
+     return {"count": len(staged), "total_cents": sum(r["total_cents"] for r in staged)}

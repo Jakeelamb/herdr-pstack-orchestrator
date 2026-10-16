@@ -1,5 +1,9 @@
 # Skill installation and discovery
 
+Complete project removal has a separate [adoption procedure](../../../../e2e/ADOPTION.md#verify-complete-project-removal)
+and [passing receipt](../../../../e2e/evidence/project-removal.json). Deleting a
+temporary installation source, as below, is not uninstalling installed skills.
+
 ## Sub-features
 
 Install the committed bundle into a disposable project, remove the temporary installation source, and verify all files plus described commands in Pi's native catalog and enabled, described entries in Codex's native catalog. Explicit-only skills still belong in both catalogs; Pi's model-visible skill list is a separate surface.

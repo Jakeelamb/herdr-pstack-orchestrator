@@ -42,9 +42,11 @@ running across a definition change and removal, with correct independently
 replayed results and unchanged user configuration. This covers worker
 definitions; role selection and skill loading remain controller responsibilities.
 
-For current limits and rerunnable original-workflow scenarios, see the
-[complete playbook evidence inventory](e2e/PLAYBOOKS.md). A successful worker
-task or package installation does not establish a complete playbook pass.
+Release readiness focuses on reversible setup, configured role routing, worker
+replacement and a practical implementation/review/private-PR workflow. See the
+[adoption evidence](docs/RELEASE-EVIDENCE.md). Full compatibility with all 23
+original playbooks is a later milestone; the [inventory](e2e/PLAYBOOKS.md)
+retains failures and blocked capabilities separately.
 
 ## Requirements
 
@@ -56,19 +58,32 @@ task or package installation does not establish a complete playbook pass.
 
 ## Install
 
-Install pstack and both Herdr adapters together:
+Start with the core delegation skill:
+
+```bash
+npx skills@1.7.1 add conscientiousness/herdr-pstack-orchestrator -s herdr-orchestrator
+```
+
+For original pstack guidance and both Herdr adapters, install the full bundle:
 
 ```bash
 npx skills@1.7.1 add https://github.com/conscientiousness/herdr-pstack-orchestrator/tree/main/skills --skill '*'
 ```
 
-Choose harnesses and installation scope, review skill-name conflicts, then open a new agent session inside Herdr. The command installs the whole bundle from this repository's `main`; no upstream clone is needed, and v0.2.0 predates this layout.
+Choose harnesses and installation scope, review skill-name conflicts, then open a new agent session inside Herdr. The commands use this repository's `main`; no upstream clone is needed, and v0.2.0 predates the bundle layout.
 
-For delegation without pstack, install only the core skill:
+To remove the core skill from a project:
 
 ```bash
-npx skills@1.7.1 add conscientiousness/herdr-pstack-orchestrator -s herdr-orchestrator
+npx skills@1.7.1 remove herdr-orchestrator -y
 ```
+
+For a full bundle, run `npx skills@1.7.1 remove` and select its entries while
+keeping unrelated skills. Omit `-a` for complete project removal: selecting
+agents can leave shared `.agents/skills` copies. The [removal receipt](e2e/evidence/project-removal.json)
+verifies all 56 named entries disappear from a disposable project while an
+unrelated skill and application files remain. Empty directories and installer
+lock metadata may remain; fresh sessions observe the updated catalogs.
 
 Or clone and run directly:
 
@@ -221,6 +236,14 @@ A single role names one worker; a panel lists one worker per task. Same-model re
 Cursor modes, hooks, `/loop`, cloud execution, and unavailable MCP or app-driving tools are not supplied; a workflow requiring one stops at that step. For the pinned source, adaptations, exclusions, discovery behavior, and the maintainer sync procedure, see the [selection and compatibility notes](skills/pstack-herdr/references/compatibility.md).
 
 ## Verification
+
+The [practical delivery receipt](e2e/evidence/practical-private-pr.json) completes
+one requirement-to-implementation-to-independent-review-to-ready-private-PR
+workflow. Its reviewed change passes 20 real CLI observations, preserves all
+11 baseline normal observations and passes private Python 3.11/3.14 CI. This is
+ordinary functionality review; original playbook eligibility remains separate.
+The [adoption evidence page](docs/RELEASE-EVIDENCE.md) collects this workflow,
+reversible installation, role routing and live worker replacement.
 
 Runtime checks run on Linux with real Pi workers. Real Codex and Claude Code controller runs are also recorded. The verified set covers worker setup, the implementation and review loop, a controller-level run, workspace limits, invalid record handling, and Pi preflight. The 0.15.25 bundle passed a local installation check and native discovery in the Pi and Codex catalogs. A receipt for each verified claim is linked in [evidence and source attribution](e2e/README.md#evidence-and-source-attribution).
 

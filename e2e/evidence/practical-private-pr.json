@@ -1,0 +1,170 @@
+{
+  "schema": "horch/practical-private-pr-e2e/v1",
+  "verdict": "pass",
+  "recorded_at": "2026-10-16T15:03:35.795096+00:00",
+  "source_revision": "222df2eb4f602af72a8ce8205ebc2b13925e7b7f",
+  "claim": "One attended requirement-to-implementation-to-independent-review-to-ready-private-PR workflow through ordinary horch dispatch.",
+  "original_playbook_conformance": "not_claimed",
+  "controller": {
+    "harness": "codex",
+    "mode": "attended conversation",
+    "routing": "Controller selects configured roles, then supplies the explicit worker name to horch."
+  },
+  "requirement": "Add import --dry-run STORE BATCH... with identical validation/counts/totals/errors and no ledger or pending-file writes; preserve normal behavior.",
+  "workers": [
+    {
+      "phase": "implementation",
+      "role": "feature, refactoring",
+      "matches_current_role_map": true,
+      "task_id_sha256": "94eed35679d5e0a70327cc0d5852575411a9e8b6188a56c2f563b0d94e87657e",
+      "harness": "pi",
+      "provider": "openai",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "launch_snapshot_matches_current_config": true,
+      "state": "done",
+      "closed_before_cleanup": true,
+      "nonce_validated": true,
+      "brief_sha256": "8676e2a172eb92582358aee9f041cb9ebf2a1870f10f004af4b2f245175e8aa1",
+      "result_sha256": "89188c438c3a0f038cd2389448d6b8c0f8a7d7ed185aaa58384ba5a514ce5484",
+      "report_sha256": "2ff9da2e473258f7003421d620033492209b4e3e744fda452a6d753805713fa9",
+      "behavior_observation_sha256": "a3b30991406e6a41a2cd7260818a35f3df871cc881717f6df00cfdd4a76f9257",
+      "behavior_records": 20,
+      "behavior_checks": 23
+    },
+    {
+      "phase": "review",
+      "role": "judgment and prose",
+      "matches_current_role_map": true,
+      "task_id_sha256": "73f5ebc0c7bed1b8d5de738065b71756994ea6fe621587b032b9d7ecb9fb827e",
+      "harness": "pi",
+      "provider": "zai",
+      "model": "glm-5.3",
+      "effort": "max",
+      "launch_snapshot_matches_current_config": true,
+      "state": "done",
+      "closed_before_cleanup": true,
+      "nonce_validated": true,
+      "brief_sha256": "faf7dd6efbee9c03a557d6113ea5056d7ff760093a48200e5a8ff462d276c227",
+      "result_sha256": "25a51eb96f05f2ac402c9bd5dad624f27329bc59ed76a6e44075fea9c4700b85",
+      "report_sha256": "ea34c82b198bf64acab690a90de0438b53c311b4a6dcd484a60ec661c22ddd50",
+      "behavior_observation_sha256": "a3b30991406e6a41a2cd7260818a35f3df871cc881717f6df00cfdd4a76f9257",
+      "behavior_records": 20,
+      "behavior_checks": 23
+    }
+  ],
+  "behavior": {
+    "oracle_source": "e2e/design_loop.py:ORACLE",
+    "oracle_sha256": "303be7bd89e9ae9593dc38eaf9f748fdd429642b532bab492e20eedb76a9fe84",
+    "before_receipt": "practical-before.json",
+    "before_sha256": "85e0f3d21f6072af5168f8449cc72be2f6d6980863c34c230994429ac1b0bd3d",
+    "before_records": 11,
+    "before_checks": 13,
+    "final_receipt": "practical-after.json",
+    "final_sha256": "a3b30991406e6a41a2cd7260818a35f3df871cc881717f6df00cfdd4a76f9257",
+    "final_records": 20,
+    "final_checks": 23,
+    "all_11_normal_records_equal_before": true,
+    "missing_field_status_preserved": true,
+    "original_suite_flows": 7,
+    "original_suite_checks": 8,
+    "original_suite_verdict": "pass",
+    "observed_success": {
+      "count": 6,
+      "total_cents": 994
+    }
+  },
+  "change": {
+    "only_modified_files": [
+      "cli.py",
+      "storage.py"
+    ],
+    "baseline_sha256": {
+      "money.py": "7fa0c12b3b374830ed93c7777570ffcb23416394ff6b60e47a4c436b600373ac",
+      "storage.py": "c32037b76d52e28908e2a46b40e77bf46be109fdb7fb25afd702070e7d74bfc2",
+      "cli.py": "4dedfc1da14792f2f28b7aa59db358cab589bd3a5985185466884861e750ae22",
+      "e2e_import.py": "5791d79542ebcb9468e421e9cdeb8bea3898e1d745876ff6898f69a1775da137"
+    },
+    "final_sha256": {
+      "cli.py": "c6c137d858bb80adb386c641019eb69127d2b99c860a38957df785ed698fb07a",
+      "e2e_import.py": "5791d79542ebcb9468e421e9cdeb8bea3898e1d745876ff6898f69a1775da137",
+      "money.py": "7fa0c12b3b374830ed93c7777570ffcb23416394ff6b60e47a4c436b600373ac",
+      "storage.py": "976f8eb4bc22a75d21a160a26a3363ae5b5d20285faba57ed16ad243a9465eca"
+    },
+    "patch": "practical-import-preview.patch",
+    "patch_sha256": "729bb919888cd1c9e3467825dab8145c2af824fcc38d4a53a7588f6140cf0572",
+    "published_patch_replays_to_exact_reviewed_sources": true,
+    "reviewed_commit_sha256": "4d2a06b8bb927ddfcb3d85e9d4d1ac77e4704bed64f8bd9a6cbcdc8aeb6e1d86"
+  },
+  "review": {
+    "verdict": "pass",
+    "findings": [],
+    "same_exact_commit": true,
+    "source_unchanged_during_review": true,
+    "quality_note": "An overview sentence groups summary computation with pre-write validation. Its later detailed discussion and the actual source correctly place normal summary after replacement; controller checks retain that error-path ordering. This report imprecision is not an implementation finding."
+  },
+  "forge": {
+    "repository_private": true,
+    "head_matches_reviewed_commit_and_remote": true,
+    "explicit_existing_parent_base": true,
+    "state": "OPEN",
+    "draft": false,
+    "auto_merge": false,
+    "child_and_parent_unmerged": true,
+    "parent_head_unchanged": true,
+    "changed_files_match_reviewed_scope": true,
+    "checks": [
+      {
+        "bucket": "pass",
+        "name": "import (3.11)",
+        "state": "SUCCESS"
+      },
+      {
+        "bucket": "pass",
+        "name": "import (3.14)",
+        "state": "SUCCESS"
+      }
+    ],
+    "private_pr_url_sha256": "817e09438995d4e82816b7611e9e45919734d6cc05629edaeb65932c1a91f212",
+    "private_head_sha256": "5a8285903176ba45aba13f15c199c8be8633f06e8a0a0453a3651a6c85188629",
+    "private_base_sha256": "10fa7de2c43c4ec8c20ee5cc8e601c0c45e480e56459e76dfd1f9e63f86bef90",
+    "private_repo_sha256": "d3208131593d75d80e70a252c0df76a73d9133dd86103507f149dd906dd85b7f"
+  },
+  "integrity": {
+    "worker_config_unchanged": true,
+    "pi_settings_unchanged": true,
+    "original_fixture_head_and_full_status_unchanged": true,
+    "reviewed_checkout_clean": true,
+    "owned_worker_panes_absent": true
+  },
+  "checks": {
+    "actual_configured_implementation_and_independent_review": true,
+    "both_nonce_bound_deliveries_done_and_closed": true,
+    "real_cli_behavior_and_normal_preservation": true,
+    "review_accepts_exact_unchanged_source": true,
+    "only_declared_application_files_change": true,
+    "ready_private_pr_read_back": true,
+    "private_pr_ci_passes": true,
+    "explicit_parent_and_owned_head_verified": true,
+    "no_merge_or_auto_merge": true,
+    "existing_config_and_original_checkout_preserved": true,
+    "owned_worker_panes_absent": true,
+    "published_patch_recovers_exact_accepted_source": true
+  },
+  "reproduction": {
+    "procedure": "e2e/ADOPTION.md",
+    "implementation_brief": "e2e/evidence/practical-implementation-task.md",
+    "review_brief": "e2e/evidence/practical-review-task.md",
+    "fixture_command": "python3 e2e/forge_loop.py --prepare-fixture <new-fixture>",
+    "oracle": "Reuse the existing design_loop.ORACLE in characterize and feature modes; retain before/after observations.",
+    "models": "Use explicitly configured roles; the recorded workers are not a requirement for every installation."
+  },
+  "limitations": [
+    "This is an ordinary functionality review and private-PR workflow, not full original Feature, CommentSicko or Opening-a-PR conformance. Earlier failures remain unchanged.",
+    "Role selection is performed by the controller; horch has no global automatic playbook or role router.",
+    "Evidence is from Linux with an attended Codex conversation and two configured Pi workers. It does not establish every controller/worker combination or macOS.",
+    "Worker briefs and normal harness permissions set scope; no sandbox, credential containment or exhaustive native-tool grammar audit is claimed.",
+    "The reviewer reported additional scratch checks; those are not included in independently verified CLI counts.",
+    "Private fixture identity, URLs, worktrees, configuration and full worker transcripts remain private. Source patch and normalized behavior observations are public."
+  ]
+}

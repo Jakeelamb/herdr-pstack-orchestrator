@@ -122,8 +122,8 @@ bootstrap checks are not native playbook executions.
 Skill authoring needs existing creator guidance and its validator's PyYAML
 dependency; it never installs that dependency. Explicit forward use does not
 prove automatic discovery. Runtime forensics needs Node with Inspector and
-built-in WebSocket support. Four live receipts failed on checker contracts;
-the separate manual audits below support the actual runtime observations.
+built-in WebSocket support. A fresh live run passes all five stages after four
+retained checker-contract failures; the independent audits below distinguish them.
 Feature, Refactoring and Authoring model workflows remain unrun. The first Perf
 attempt retains a failed native-audit receipt, described below.
 The first live Bug fix investigation was stopped for an actual
@@ -304,7 +304,7 @@ all five observed stages, exact reduction, raw Inspector bindings, source identi
 and cleanup. The checker now accepts either the operation record or its raw
 artifact for the signal and reduction, while retaining independent raw-data
 checks. The prompt declares those citation groups and the literal shell grammar.
-A fresh passing automated run is still required.
+Those repairs did not promote either failed receipt.
 
 The [third Runtime receipt](evidence/playbook-runtime-planning.json) preserves a
 further ordering failure. Before capture, the controller appended explicitly
@@ -315,14 +315,24 @@ treated every checklist edit as completion. The
 supports all five stages, exact profile reduction, raw Inspector bindings,
 source identity and cleanup. Chronological edit replay now permits earlier
 planning while requiring final completion after all operations and source reads.
-The original receipt remains failed; a fresh automated pass is still required.
+The original receipt remains failed.
 
 The [fourth Runtime receipt](evidence/playbook-runtime-number.json) also remains
 failed: its correct counter `1,127,037` did not match a hidden ungrouped-decimal
 substring requirement. Its [independent audit](evidence/playbook-runtime-number-reanalysis.json)
 verified all five stages and raw protocol/source bindings. The checker now accepts
 the exact plain or canonical comma-grouped integer, including prose punctuation;
-the prompt declares both forms. A fresh automated pass is still required.
+the prompt declares both forms. Its original verdict remains failed.
+
+The [fresh Runtime receipt](evidence/playbook-runtime.json) passes all five stages
+in 244.849 seconds, with 401 passing check records. Independent review reproduces
+1,705 profile samples and all 19 Inspector request/response pairs on one context.
+The existing-function counter grew from 800318 to 926318 during later natural
+callbacks, with zero HTTP requests and the correct total 958008. Native stage
+anchors, preserved checklist, source mapping, all 202 source hashes, configuration
+and owned cleanup agree. Four earlier receipts retain their failures. This covers
+the bounded diagnostic fixture, without a throughput, saturation, speedup, fix,
+PR, cloud or large-artifact delegation claim.
 
 The [first Perf receipt](evidence/playbook-perf-copy.json) remains failed after
 the native auditor rejected a literal copy of an already delivered and read How
@@ -375,7 +385,7 @@ observations; those do not replace a passing independent replay.
 
 ## Complete inventory
 
-Four bounded scenarios have complete core-workflow evidence. The remaining 19
+Five bounded scenarios have complete core-workflow evidence. The remaining 18
 playbooks are unresolved, as are untested branches of the passing scenarios.
 
 | Playbook | Scenario or remaining requirement |
@@ -387,7 +397,7 @@ playbooks are unresolved, as are untested branches of the passing scenarios.
 | Prototype | [PASS: fixed-direction behavioral core workflow](evidence/playbook-prototype.json); open visual design search unverified |
 | Perf issue | [FAIL: report-copy grammar](evidence/playbook-perf-copy.json); measurements/fix/ready PR independently audited; no complete automated pass |
 | Hillclimb | Reviewed `hillclimb_loop.py`; live sensitivity, measured attempts, independent decisions and PR unrun; unattended wake unavailable |
-| Runtime forensics | [FAIL: counter format](evidence/playbook-runtime-number.json); all four attempts separately audited; fresh corrected run pending |
+| Runtime forensics | [PASS: five-stage owned-process diagnosis](evidence/playbook-runtime.json); raw Inspector/profile/source independently checked; large-artifact delegation unverified |
 | Trace forensics | [PASS: bounded paired-capture core workflow](evidence/playbook-trace.json); large-capture delegation unverified |
 | Visual parity | Untouched screenshots, real migration, zero pixel diff, real PR |
 | Authoring a skill | Reviewed `authoring_loop.py`; live authored skill, structural usage cases and real PR unrun; automatic discovery separate |

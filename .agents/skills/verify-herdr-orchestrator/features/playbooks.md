@@ -70,11 +70,15 @@ either record or raw artifact, retaining the independent raw/CDP checks. Both
 attempts have separate manual audits. A third failed receipt exposed a planning
 edit incorrectly classified as completion. Its independent raw-evidence audit
 supports all five stages; the checker now replays all edits chronologically and
-requires final completion after observations and source reads. A fresh automated
-pass is still needed. A fourth receipt rejects a correct comma-grouped counter;
+requires final completion after observations and source reads. A fourth receipt
+rejects a correct comma-grouped counter;
 its separate raw-evidence audit supports all five stages. The declared counter
 witness now accepts plain or canonical comma-grouped integers with normal prose
-punctuation. Preserve that fourth failure too.
+punctuation. Preserve that fourth failure too. The fifth, fresh Runtime run passes
+all five stages with 401 check records. Independent review checked the 1,705
+profile samples, 19 Inspector pairs, natural counter growth, exact reduction,
+source identity and cleanup. This is a bounded diagnostic result; large-artifact
+delegation and fixes remain unverified.
 The first Bug fix investigation was manually stopped after a worker queried
 outside the assigned repository. Its failed receipt and redacted scope audit
 remain published. Do not repeat that profile with broad forge access. The new

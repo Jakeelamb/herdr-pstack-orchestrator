@@ -85,6 +85,7 @@ e2e/evidence/*
 !e2e/evidence/playbook-perf-copy-reanalysis.json
 !e2e/evidence/playbook-runtime-number.json
 !e2e/evidence/playbook-runtime-number-reanalysis.json
+!e2e/evidence/playbook-runtime.json
 !e2e/evidence/playbook-forge-quarantine.json
 !e2e/evidence/playbook-forge-quarantine-audit.json
 !e2e/evidence/playbook-investigation-concat.json

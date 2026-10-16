@@ -16,7 +16,9 @@ The [fixed-direction Prototype receipt](evidence/playbook-prototype.json) and
 six-stage core workflow passes. The [fresh continuity receipt](evidence/playbook-continuity.json)
 records all four Pause and five Pickup stages with distinct sessions, six actual
 CLI cases and independent replay. Its earlier ambiguous fixture remains failed.
-The other 19
+The [owned-process Runtime receipt](evidence/playbook-runtime.json) passes all
+five stages, including raw Inspector bindings, natural later observations and
+independently verified source/reduction. The other 18
 playbooks remain unresolved. Investigation preserves both an earlier explanation
 rewrite and a later erroneous synthesis that the controller correctly withheld.
 Separate artifact checks do not promote either failed workflow.
@@ -24,8 +26,8 @@ Separate artifact checks do not promote either failed workflow.
 The inventory also documents the reviewed continuity, private-PR, design,
 performance, Hillclimb, skill-authoring, bounded Babysit Check and live-runtime
 drivers. Portable invoice and
-reconciliation baselines passed their real CLI oracles. The new writable and
-runtime model workflows still require passing live receipts; implementation and syntax
+reconciliation baselines passed their real CLI oracles. The writable model
+workflows still require passing live receipts; implementation and syntax
 checks do not establish those passes. The live Bug fix investigation was
 [manually halted for a repository-scope violation](evidence/playbook-forge-scope-audit.json).
 No fix or new PR resulted, and unrelated query content remains private.

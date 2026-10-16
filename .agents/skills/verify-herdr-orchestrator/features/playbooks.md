@@ -62,8 +62,11 @@ unchanged and disclose this separate judgment; owned-path search does not prove
 pre-dispatch containment. Its earlier standalone Opening a PR eligibility is
 withdrawn: ready child/commit/body/ref facts are verified, but the mandatory
 Comment Sicko review was omitted. Reading no-comments is not applying it.
-Require an actual fresh configured Comment Sicko task and accepted delivered
-report before commit; a bounded task-count rule cannot waive this child skill.
+The current Perf and Authoring drivers require an actual fresh configured
+Comment Sicko task and accepted delivered report before final review/commit;
+a bounded task-count rule cannot waive this child skill. Their independent
+code reviews do not replace fresh passing live receipts. Perf additionally
+requires live worker UUIDs and all-attempt native scope audits.
 Authoring additionally needs existing creator guidance
 and its validator dependencies; Runtime uses `runtime_loop.py` with Node
 Inspector and built-in WebSocket support. Preserve failed receipts and disclose

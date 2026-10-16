@@ -40,11 +40,40 @@ READS = ('poteto-mode/SKILL.md', 'pstack-herdr/SKILL.md',
          'poteto-mode/playbooks/authoring-a-skill.md',
          'poteto-mode/playbooks/opening-a-pr.md', 'deslop/SKILL.md',
          'no-comments/SKILL.md', 'technical-writing/SKILL.md', 'unslop/SKILL.md',
-         'principle-sequence-verifiable-units/SKILL.md')
+         'principle-sequence-verifiable-units/SKILL.md',
+         'pstack-herdr/references/agents/comment-sicko.md')
 PROTOCOL = '''Use only direct native read, bash, write, edit, grep, find and ls.
 Do not use codemode or another tool wrapper: nested results are unauditable.
 Do not delegate, use native subagents, change configuration, answer trust dialogs,
 substitute models, retry a failed operation or run a whole playbook.'''
+LEAD_PROTOCOL = '''Use only direct native read, bash, write, edit, grep, find and ls.
+Do not use codemode or another tool wrapper: nested results are unauditable.
+Delegate only the two specified forward-use tasks and one mandatory CommentSicko
+review through horch. No native subagents, extra tasks, configuration changes,
+trust answers, model substitutions, retries or whole-playbook worker assignments.
+All three workers remain bounded and must not delegate.'''
+
+
+def patch_headers(value):
+    """Normalize only known Git mnemonic headers for these exact authored files."""
+    lines = value.splitlines(keepends=True)
+    header = None
+    for index, line in enumerate(lines):
+        text = line.rstrip('\r\n')
+        if text.startswith('diff --git '):
+            header = next((name for name in AUTHORED if text in (
+                f'diff --git c/{name} i/{name}', f'diff --git a/{name} b/{name}')), None)
+        elif text.startswith(('@@', 'GIT binary patch')):
+            header = None
+        for name in AUTHORED:
+            if header != name:
+                continue
+            for old, new in ((f'diff --git c/{name} i/{name}', f'diff --git a/{name} b/{name}'),
+                             (f'--- c/{name}', f'--- a/{name}'),
+                             (f'+++ i/{name}', f'+++ b/{name}')):
+                if text == old:
+                    lines[index] = new + line[len(old):]
+    return ''.join(lines)
 
 
 def fingerprint(root):
@@ -125,7 +154,12 @@ class Run(core.Run):
         self.spec = self.config['workers'].get(self.args.controller, {})
         self.check('controller_pi', self.spec.get('harness') == 'pi')
         self.selected = {'success': self.args.success_worker, 'rollback': self.args.rollback_worker}
-        for label, name in self.selected.items():
+        selection = self.config.get('roles', {}).get('judgment and prose')
+        reviewers = selection if isinstance(selection, list) else [selection]
+        self.check('single_configured_comment_review_role', len(reviewers) == 1
+                   and reviewers[0] in self.config['workers'])
+        self.comment_worker = reviewers[0]
+        for label, name in {**self.selected, 'comment-review': self.comment_worker}.items():
             worker = self.config['workers'].get(name, {})
             self.check('configured_forward_worker_' + label, worker.get('harness') == 'pi')
             overrides = ('--session', '--session-dir', '--session-id', '--no-session', '--continue', '--resume', '-c', '-r')
@@ -266,9 +300,38 @@ create-skill guidance; its complete original resources were copied privately.
 Read that guide in full before authoring. Do not change guidance or validators.
 No mandatory initialization, UI metadata, implicit-disable policy or extra files.
 
-{PROTOCOL}
-This protocol applies to every forward-use worker too. Preserve original worker
+{LEAD_PROTOCOL}
+Every worker uses the bounded protocol in its exact brief. Preserve original worker
 harness/model/effort/permission args, user configuration and Mise/Git settings.
+Controller Bash contract: ONE standalone literal command per native bash call.
+Never include newline, ; | & > < backtick, dollar sign or backslash ANYWHERE,
+even inside quoted arguments. No pipelines, composition, redirection, environment
+expansion, inline interpreters, printf/test wrappers or shell filesystem commands.
+Use native ls/read/grep/find for filesystem inspection and local link targets.
+The actual isolated unchanged worker configuration is directly readable at
+{self.directory / 'config/herdr-orchestrator/workers.toml'}; do not discover it
+through printf, XDG variables or a shell. Use native write for multiline PR bodies
+and pass --body-file; do not embed newlines in a bash command.
+Accepted controller command grammar (all other commands fail proof):
+- python or python3, optional -B, then exactly
+  {self.guidance / 'scripts/quick_validate.py'} {self.worktree / SKILL};
+  or the bundled horch.py with run/wait/list/close/stats/detect and literal args.
+- git in the lead cwd, optionally -C {self.worktree}, with status/diff/show/log/
+  blame/rev-parse/rev-list/diff-tree/ls-files/ls-remote (no --output option);
+  add with only the one or two authored relative paths (optional --);
+  commit with normal hooks/signing (no -n, --no-verify or --no-gpg-sign);
+  push [-u|--set-upstream] origin {self.branch}; branch --show-current;
+  or remote get-url origin. No other Git write operation.
+- Only for the owned case cwds {json.dumps([str(case['cwd']) for case in self.cases.values()])},
+  git -C ABSOLUTE_CASE_CWD status with optional --short and/or --branch, each at
+  most once. No other case Git operation or relative case cwd is accepted.
+- gh or origin repo view, pr list, pr view, or pr create. PR creation uses exact
+  base {self.args.base_ref}, head {self.branch}, repository {self.args.forge_repo}
+  and ready status; preserve the forge-selection and readback requirements below.
+- sha256sum followed by exactly one or two authored file paths; cat ONE_FILE
+  without flags; pwd; command -v origin; or which origin.
+This is the controller grammar; forward workers retain their narrower standalone
+real-CLI/cat grammar below. Never bypass these restrictions with a wrapper.
 Author only {self.worktree / AUTHORED[0]} and {self.worktree / AUTHORED[1]}.
 No application/source changes. The project skill should guide invoice CLI
 import/export: per-line half-up money, multi-file atomic rollback, structured
@@ -325,6 +388,35 @@ reviewing. Wait closes successful tasks. No new role or worker config changes.
 The evaluator captures each working Pi session and audits its exact default
 cwd directory plus UUID. Overridden/unavailable traces remain unresolved.
 
+After BOTH forward tasks are delivered/closed and all their result/report files
+are fully read, perform no-comments' mandatory fresh CommentSicko review BEFORE
+commit or PR. This is the third and final task, using the unchanged single
+configured judgment and prose worker {self.comment_worker}, cwd {self.worktree}.
+Write the exact following brief body to {self.artifacts / 'comment-brief.md'} and
+pass that file to horch run (no extra hints or restated agent rules):
+--- BEGIN EXACT COMMENT BRIEF ---
+{self.comment_brief()}--- END EXACT COMMENT BRIEF ---
+Read both no-comments and CommentSicko guidance yourself before dispatch.
+Stage exactly the two authored paths before this review so its complete cached
+diff includes both new files; do not commit yet.
+Wait until done/closed, then full-read result.json and ALL listed artifacts before
+assessing findings. Write {self.artifacts / 'comment-review.json'} with task_id,
+report_sha256, decision ('accept' or 'unresolved'), summary, findings_assessment,
+deletion_count, restored_comments, reruns, architect_sketch, fixes, encoding_offers,
+encodings, unenforced_constraints, skips and open_work. Use actual report facts;
+All these fields are arrays except task_id/report_sha256/decision/summary strings
+and deletion_count integer. With no accepted revision, findings_assessment,
+reruns, architect_sketch, fixes and encodings are empty arrays, not prose/null.
+do not invent zero findings or waive the review. Explain accepted/rejected findings
+against original no-comments exceptions and scoped evidence. A proposed revision,
+rerun, deeper hunt or encoding approval after frozen forward use is unresolved:
+STOP before commit/PR, retain artifacts, no retries or frozen-file changes. The
+bounded lane can proceed only when the real report requires no scope revision
+and no unresolved comment flags/constraints remain. Include its disposition and
+all no-comments summary fields in the final reply by preserving the complete
+comment-review.json content verbatim under a No-comments heading. This task has no
+permission to edit skill/application files or perform forge operations.
+
 Worktree branch {self.branch}, exact base {self.base}; existing ready parent PR
 {self.args.parent_pr} at {self.args.base_ref} stays unchanged and unmerged.
 You may push ONLY {self.branch} to origin and create ONE ready child PR on
@@ -337,7 +429,8 @@ Read actual Opening a PR and deslop/no-comments/technical-writing/unslop/sequenc
 sources before diff review and commit. Review the complete actual git diff,
 including untracked authored files (git add names both paths explicitly first),
 and write {self.artifacts / 'review.json'} with actual findings/decision after
-all forward reports. Keep exactly one reviewed skill commit, conventional title.
+all forward reports AND the CommentSicko report/disposition. Keep exactly one
+reviewed skill commit, conventional title.
 No Git hook/signature bypass. Create ready, then actual pr view JSON includes
 headRefName,headRefOid,baseRefName,isDraft. Origin create uses --status open last.
 Write {self.artifacts / 'reply.md'} only after actual ready PR readback, with
@@ -551,6 +644,144 @@ No Git, forge, configuration or other external writes. Do not infer permission
 from a successful check. Complete this request yourself without further delegation.
 '''
 
+    def comment_brief(self):
+        return f'''Role: judgment and prose
+Agent: CommentSicko
+Worker: {self.comment_worker}
+Reason: configured judgment and prose role fits this bounded comment/prose audit.
+{PROTOCOL}
+Read the complete bundled instructions, without restating or replacing them:
+{self.bundle / 'skills/no-comments/SKILL.md'}
+{self.bundle / 'skills/pstack-herdr/references/agents/comment-sicko.md'}
+{self.bundle / 'skills/pstack-herdr/references/agents/poteto-agent.md'}
+{self.bundle / 'skills/poteto-mode/SKILL.md'}
+Your first nonempty assistant text block must be exactly the agent's required
+greeting, with no extra prose: Yes... Ha ha ha... Yes!
+Scope: only {self.worktree / AUTHORED[0]} and {self.worktree / AUTHORED[1]}.
+Base: {self.base}; checkout: {self.worktree}. Full-read both actual authored files
+and inspect the complete actual scoped staged diff with this literal command:
+git -C {self.worktree} diff --cached -- {' '.join(AUTHORED)}
+This is a report-only review after frozen forward use. Do not edit skill,
+application, ledger, input, configuration or other files. No Git writes, forge,
+CLI execution, nested delegation, wrappers or retries. Bash is limited to that
+exact diff command and literal cat of one declared guide or scoped file.
+Native reads/grep/find/ls are limited to the declared guides, scoped skill
+directory and your own task directory. Write only report.md, review.json and
+result.json in your own actual horch task directory; list report.md and
+review.json in result.files, question null, normal actual task nonce.
+Apply the original report-only agent to this Markdown skill scope. Report real
+findings, including no applicable comments when supported; never invent flags.
+report.md gives the original touched files, deletion count, MUST KILL flags and
+skips, with reasons grounded in the actual scope. Also write review.json with:
+inspections: one object per scoped relative path, with path, excerpt (a verbatim
+nonempty passage at least 20 characters) and conclusion explaining actual review;
+findings: actual objects with path, excerpt, reason and action; deletion_count:
+actual nonnegative integer; restored_comments, must_kill, skips, encoding_offers,
+unenforced_constraints and open_work: arrays. Record all recommended work rather
+than applying it. This bounded worker cannot run deeper How/Why/Architect or seek
+approval: report those needs as open_work. Complete this review yourself.
+'''
+
+    def audit_comment(self, task):
+        worker = self.config['workers'][self.comment_worker]
+        directory = Path(task['task_dir']).resolve()
+        self.check('comment_configured_role_settings_scope', task.get('worker') == self.comment_worker
+                   and task.get('cwd') == str(self.worktree) and task.get('harness') == 'pi'
+                   and task.get('model') == worker['model'] and task.get('workspace_id') == self.caller['workspace_id']
+                   and task.get('argv') == horch.launch_args(worker, directory)
+                   and Path(task['result_path']).resolve() == directory / 'result.json')
+        expected = self.comment_brief().rstrip('\n') + '\n\n' + horch.WORKER_RULES.format(
+            result_path=Path(task['result_path']), task_id=task['task_id'], nonce=task['nonce'])
+        self.check('comment_exact_bounded_role_brief', Path(task['brief_path']).read_text() == expected)
+        result = core.read_json(Path(task['result_path']))
+        self.check('comment_valid_completed_nonce', horch.validate_result(result, task) == 'valid'
+                   and result.get('status') == 'completed' and result.get('question') is None
+                   and isinstance(result.get('files'), list) and len(result['files']) == 2
+                   and all(isinstance(name, str) for name in result['files'])
+                   and set(result['files']) == {'report.md', 'review.json'})
+        source = self.scoped_session(task)
+        saved = self.directory / 'comment-review-native.jsonl'
+        shutil.copy2(source, saved)
+        guides = [self.bundle / 'skills' / name for name in (
+            'no-comments/SKILL.md', 'pstack-herdr/references/agents/comment-sicko.md',
+            'pstack-herdr/references/agents/poteto-agent.md', 'poteto-mode/SKILL.md')]
+        audit = core.audit_pi(source, self.worker_sessions[task['task_id']], self.worktree,
+                              core.stamp(task['created_at']), worker, guides, [], [], self.bundle)
+        self.check('comment_native_identity_model_effort_guides', all(item['ok'] for item in audit['checks'])
+                   and core.sha(saved) == audit['sha256'])
+        texts = [block.get('text', '') for line in saved.read_text().splitlines() if line.strip()
+                 for row in [json.loads(line)] if row.get('message', {}).get('role') == 'assistant'
+                 for block in row['message'].get('content', []) if block.get('type') == 'text'
+                 and block.get('text', '').strip()]
+        self.check('comment_original_agent_first_output', bool(texts)
+                   and texts[0].strip() == 'Yes... Ha ha ha... Yes!')
+        all_events = self.native_events(saved, include_errors=True)
+        events = [event for event in all_events if event['successful']]
+        outputs = {directory / name for name in ('report.md', 'review.json', 'result.json')}
+        scoped = {self.worktree / name for name in AUTHORED}
+        allowed = {*guides, *scoped, directory / 'brief.md', directory / 'task.json', *outputs}
+        diff_argv = ['git', '-C', str(self.worktree), 'diff', '--cached', '--', *AUTHORED]
+        diffs = []
+        for event in all_events:
+            args = event['args']
+            if event['name'] in ('write', 'edit'):
+                self.check('comment_report_only_writes', isinstance(args.get('path'), str)
+                           and (self.worktree / args['path']).resolve() in outputs)
+            elif event['name'] in ('read', 'grep', 'find', 'ls'):
+                raw = args.get('path', '.')
+                self.check('comment_read_path_known', isinstance(raw, str))
+                target = (self.worktree / raw).resolve()
+                self.check('comment_owned_read_scope', target in allowed or target == self.worktree / SKILL
+                           or self.worktree / SKILL in target.parents or target == directory or directory in target.parents)
+            elif event['name'] == 'bash':
+                argv = support.literal(args.get('command', ''))
+                self.check('comment_literal_read_only_commands', argv == diff_argv
+                           or len(argv) == 2 and argv[0] == 'cat' and (self.worktree / argv[1]).resolve() in allowed)
+                if argv == diff_argv and event['successful']:
+                    self.check('comment_complete_actual_diff', patch_headers(event['output']).strip()
+                               == patch_headers(self.git('diff', self.base, 'HEAD')).strip())
+                    diffs.append(event)
+        self.check('comment_actual_diff_inspected', bool(diffs))
+        writes = []
+        for name in ('report.md', 'review.json'):
+            native = core.workflow_writes(events, self.worktree, directory / name, final=True)
+            self.check('comment_native_full_report_' + name, len(native) == 1
+                       and native[0]['args']['content'] == (directory / name).read_text())
+            writes.append(native[0])
+        report_start = min(event['call_row'] for event in writes)
+        for path in [*guides, *scoped]:
+            self.check('comment_full_scope_read_' + path.name, bool(core.workflow_reads(
+                events, self.worktree, path, before=report_start)))
+        self.check('comment_diff_before_report', diffs[0]['result_row'] < report_start)
+        facts = core.read_json(directory / 'review.json')
+        inspections = facts.get('inspections', [])
+        self.check('comment_actual_scope_review_evidence', isinstance(inspections, list) and len(inspections) == 2
+                   and {item.get('path') for item in inspections if isinstance(item, dict)} == set(AUTHORED)
+                   and all(isinstance(item.get('excerpt'), str) and len(item['excerpt']) >= 20
+                           and item['excerpt'] in (self.worktree / item['path']).read_text()
+                           and isinstance(item.get('conclusion'), str) and bool(item['conclusion'].strip())
+                           for item in inspections))
+        report = (directory / 'report.md').read_text()
+        self.check('comment_original_report_scope', all(name in report for name in AUTHORED)
+                   and all(word in report.lower() for word in ('deletion', 'must kill', 'skip')))
+        self.check('comment_typed_report_summary', type(facts.get('deletion_count')) is int
+                   and facts['deletion_count'] >= 0 and all(isinstance(facts.get(key), list) for key in (
+                       'findings', 'restored_comments', 'must_kill', 'skips', 'encoding_offers',
+                       'unenforced_constraints', 'open_work')))
+        self.check('comment_no_frozen_revision_or_open_flags', facts['deletion_count'] == 0
+                   and all(not facts[key] for key in ('findings', 'restored_comments', 'must_kill',
+                                                     'encoding_offers', 'unenforced_constraints', 'open_work')))
+        self.check('comment_frozen_skill_unchanged', {name: core.sha(self.worktree / name) for name in AUTHORED} == self.skill_hashes)
+        self.worker_native['comment-review'] = dict(audit, audit_completed=True, report_only=True,
+                                                    reviewed_file_count=len(inspections))
+        self.task_facts.append({'case': 'comment-review', 'role': 'judgment and prose',
+                                'task_id_sha256': text_sha(task['task_id']), 'model': worker['model'],
+                                'effort': worker.get('effort'), 'harness': worker['harness'],
+                                'argv_sha256': text_sha(json.dumps(task['argv'])),
+                                'result_sha256': core.sha(Path(task['result_path'])),
+                                'nonce_validated': True, 'working_session_captured': True})
+        return facts
+
     def command_allowed(self, command):
         argv = support.literal(command)
         if not argv or any(word in ('--no-verify', '--no-gpg-sign') for word in argv):
@@ -569,7 +800,13 @@ from a successful check. Complete this request yourself without further delegati
         if binary == 'git':
             words = argv[1:]
             if words[:1] == ['-C'] and len(words) > 2:
-                if Path(words[1]).resolve() != self.worktree:
+                target = Path(words[1])
+                if target.is_absolute() and target.resolve() in {case['cwd'] for case in self.cases.values()}:
+                    status = words[2:]
+                    return (bool(status) and status[0] == 'status'
+                            and len(status[1:]) == len(set(status[1:]))
+                            and set(status[1:]) <= {'--short', '--branch'})
+                if target.resolve() != self.worktree:
                     return False
                 words = words[2:]
             if not words:
@@ -598,9 +835,12 @@ from a successful check. Complete this request yourself without further delegati
 
     def verify(self):
         rows = self.scan()
-        self.check('two_fresh_delivered_closed_forward_tasks', len(rows) == 2
+        self.check('three_fresh_delivered_closed_tasks', len(rows) == 3
                    and all(state.get('state') == 'done' and state.get('closed') is True for _, state in rows))
         tasks = [task for task, _ in rows]
+        forward_tasks = [task for task in tasks if task.get('cwd') in {str(case['cwd']) for case in self.cases.values()}]
+        comment_tasks = [task for task in tasks if task.get('cwd') == str(self.worktree)]
+        self.check('exact_two_usage_one_comment_review', len(forward_tasks) == 2 and len(comment_tasks) == 1)
         paths = list((self.directory / 'native-sessions').glob('*.jsonl'))
         self.check('one_controller_native_session', len(paths) == 1)
         self.native = core.audit_pi(paths[0], self.session, self.worktree, self.wall_started, self.spec,
@@ -658,7 +898,7 @@ from a successful check. Complete this request yourself without further delegati
         self.stage('authoring_1_guidance_voice', [checklist, creator_reads[0], *authored])
         self.stage('authoring_2_validation', [validations[0], frozen, *authored_reads])
         used, report_reads = set(), []
-        for task in tasks:
+        for task in forward_tasks:
             label = next((name for name, case in self.cases.items() if task.get('cwd') == str(case['cwd'])), None)
             self.check('unique_forward_case_assignment', label is not None and label not in used)
             used.add(label)
@@ -675,8 +915,36 @@ from a successful check. Complete this request yourself without further delegati
                 report_reads.append(reads[0])
             self.audit_forward(task, label)
         self.check('both_fresh_forward_cases', used == set(self.cases))
-        self.stage('authoring_3_real_forward_usage', [*launches.values(), *deliveries.values(), *report_reads])
-        self.verify_pr(events, all_events, max(e['result_row'] for e in report_reads))
+        self.stage('authoring_3_real_forward_usage', [*(launches[t['task_id']] for t in forward_tasks),
+                   *(deliveries[t['task_id']] for t in forward_tasks), *report_reads])
+        comment = comment_tasks[0]
+        launch, delivery = launches[comment['task_id']], deliveries[comment['task_id']]
+        self.check('comment_review_after_both_forward_deliveries_reads',
+                   max(event['result_row'] for event in report_reads) < launch['call_row'])
+        for resource in ('no-comments/SKILL.md', 'pstack-herdr/references/agents/comment-sicko.md'):
+            self.check('comment_lead_guidance_before_delegation_' + resource, bool(core.workflow_reads(
+                events, self.worktree, self.bundle / 'skills' / resource, before=launch['call_row'])))
+        comment_reads = []
+        for name in ('result.json', 'report.md', 'review.json'):
+            reads = core.workflow_reads(events, self.worktree, Path(comment['task_dir']) / name,
+                                        after=delivery['result_row'])
+            self.check('comment_lead_complete_delivered_read_' + name, bool(reads))
+            comment_reads.append(reads[0])
+        facts = self.audit_comment(comment)
+        disposition = self.written(events, 'comment-review.json', after=max(event['result_row'] for event in comment_reads))
+        resolved = json.loads(disposition['args']['content'])
+        self.check('comment_lead_actual_disposition', resolved.get('task_id') == comment['task_id']
+                   and resolved.get('report_sha256') == core.sha(Path(comment['task_dir']) / 'report.md')
+                   and resolved.get('decision') == 'accept' and isinstance(resolved.get('summary'), str)
+                   and bool(resolved['summary'].strip()) and isinstance(resolved.get('findings_assessment'), list)
+                   and not resolved['findings_assessment']
+                   and all(resolved.get(key) == facts[key] for key in (
+                       'deletion_count', 'restored_comments', 'skips', 'encoding_offers',
+                       'unenforced_constraints', 'open_work'))
+                   and all(resolved.get(key) == [] for key in ('reruns', 'architect_sketch', 'fixes', 'encodings')))
+        self.comment_disposition = disposition['args']['content']
+        self.stage('no_comments_fresh_review', [launch, delivery, *comment_reads, disposition])
+        self.verify_pr(events, all_events, disposition['result_row'])
 
     def verify_pr(self, events, all_events, reports_done):
         self.check('clean_owned_integration_branch', not self.git('status', '--porcelain=v1', '--untracked-files=all')
@@ -712,7 +980,7 @@ from a successful check. Complete this request yourself without further delegati
             argv = support.literal(event['args'].get('command', '')) if event['name'] == 'bash' else []
             if len(argv) > 3 and argv[:2] == ['git', '-C'] and Path(argv[2]).resolve() == self.worktree:
                 argv = ['git', *argv[3:]]
-            if (argv[:2] == ['git', 'diff'] and event['output'].strip() == diff.strip()
+            if (argv[:2] == ['git', 'diff'] and patch_headers(event['output']).strip() == patch_headers(diff).strip()
                     and reports_done < event['call_row'] and event['result_row'] < review['call_row']):
                 diffs.append(event)
         self.check('native_full_diff_review', bool(diffs))
@@ -754,6 +1022,8 @@ from a successful check. Complete this request yourself without further delegati
         self.check('original_parent_pr_unchanged', parent == self.parent_pr)
         reply = self.written(events, 'reply.md', after=readback[-1]['result_row'])
         self.check('reply_links_verified_real_pr', self.pr['url'] in reply['args']['content'])
+        self.check('reply_preserves_actual_no_comments_summary', 'No-comments' in reply['args']['content']
+                   and self.comment_disposition in reply['args']['content'])
         self.stage('opening_a_pr', [review, forge_choice, commit, push, create, *readback, reply])
         self.stage('authoring_4_opening_a_pr', [create, *readback, reply])
 
@@ -850,6 +1120,7 @@ from a successful check. Complete this request yourself without further delegati
             'outcomes': {'creator_guidance_applied': 'authoring_1_guidance_voice' in self.stage_proof,
                          'creator_validation_verified': 'authoring_2_validation' in self.stage_proof,
                          'independent_forward_usage_verified': 'authoring_3_real_forward_usage' in self.stage_proof,
+                         'mandatory_comment_sicko_review_verified': 'no_comments_fresh_review' in self.stage_proof,
                          'automatic_skill_discovery_verified': False,
                          'authoring_complete': passed, 'ready_child_pr_verified': passed and self.pr is not None},
             'failure_categories': self.categories, 'last_phase': self.phase,
@@ -861,6 +1132,7 @@ from a successful check. Complete this request yourself without further delegati
                 'Only default Pi cwd-scoped session storage and captured canonical UUIDs are supported; overrides or unavailable traces remain unresolved.',
                 'The creator validator checks structure, not authoring quality; the real CLI cases supply separate behavior evidence.',
                 'Authored skill revisions after forward use require a new explicitly initiated run; no failed run is promoted.',
+                'One configured judgment and prose worker supplies the mandatory report-only CommentSicko review; any required frozen-file revision or deeper follow-up leaves this bounded run unresolved.',
                 'Private artifacts, owned worktrees/branch and ready PR are retained; merges and auto-merge are never authorized.',
             ],
         }

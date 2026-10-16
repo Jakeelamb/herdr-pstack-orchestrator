@@ -64,7 +64,7 @@ Command text mentioning a tool is only a hint.
 
 Required child skills are part of workflow eligibility. Reading `no-comments`
 does not apply it: its fresh Comment Sicko task must actually deliver and be
-reviewed before commit. An evaluator's task-count restriction cannot silently
+reviewed before final PR review. An evaluator's task-count restriction cannot silently
 waive that stage; the original workflow stays unresolved.
 
 The Investigation fixture uses a narrower presentation protocol than How's
@@ -397,6 +397,11 @@ but the required `no-comments` skill unconditionally spawns Comment Sicko. That
 task was omitted; reading the guidance and reviewing locally do not substitute
 for it. Neither full Perf nor Opening a PR is eligible. The machine receipt and
 earlier independent audit remain unchanged beside this correction.
+The current Perf and Authoring drivers require a third configured Comment Sicko
+task, live native evidence, full scoped review and lead disposition before their
+final review/commit. Perf also audits every worker tool attempt and records
+before/after reader-tree evidence. These repairs have independent code review;
+a fresh complete live pass is still required.
 
 The [fresh live-replacement receipt](evidence/hot-swap.json) verifies two real
 Pi tasks using distinct configured models. Both were held working while the

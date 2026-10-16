@@ -1177,7 +1177,8 @@ in full after its write and before framing that task; freeze it through final
 verification. Candidates implement and verify independently in disjoint worktrees,
 no integration writes, and report actual changes and rejected alternatives. This
 conservative driver requires every implementation candidate to pass the real
-Feature CLI oracle; a failed candidate leaves the run unresolved. Cross-judge
+Feature CLI oracle AND preserve all nine frozen-before normal observations and
+missing-field status exactly; a failed candidate leaves the run unresolved. Cross-judge
 starts after all are done. Read every candidate source file in full after delivery.
 Assess every loser honestly even when no graft is worthwhile.
 
@@ -1191,20 +1192,26 @@ native edit oldText/newText, in manifest order. No invented implementation code,
 no general rewrite; if a necessary coherent adaptation cannot fit this protocol,
 report synthesis unresolved. Refactoring has NO controller source-write permission.
 
-Run final oracle yourself on same CLI after implementation. Refactoring must
-normalize-and-compare its record with frozen before (exit/stdout/stderr, every
-ledger byte and pending state), including missing-field when baseline fixed.
-Then reader-load slot uses configured how explainer read-only to compare actual
-baseline/final source; it returns reader_load.json with worth_keeping boolean,
-improvements (concrete list), regressions (list), citations [{{side: before|after,
-path: storage.py, line: integer, text: exact source line}}]. It must explain reader
-load at named boundaries, not count files. Revert/report unresolved if no gain.
+Run final oracle yourself on same CLI after implementation. Both scenarios must
+preserve every frozen-before normal CLI observation exactly by its original
+record label: normalized exit/stdout/stderr, full ledger bytes and pending state,
+including malformed/rejected inputs and the actual late missing-field outcome.
+Feature's new dry-run observations are additional; all nine original non-dry
+observations must still equal frozen before. Feature has no reader-load slot.
+Refactoring additionally compares its complete record and missing-field status.
+For Refactoring ONLY, then run the reader-load slot using configured how explainer
+read-only to compare actual baseline/final source; it returns reader_load.json
+with worth_keeping boolean, improvements (concrete list), regressions (list),
+citations [{{side: before|after, path: storage.py, line: integer, text: exact source
+line}}]. It must explain reader load at named boundaries, not count files.
+Refactoring must revert/report unresolved if this assessment shows no gain.
 
 Write {self.artifacts / 'scrap.json'} after implementation with required boolean,
 observations list and reason. If repeated architecture friction requires Scrap,
 stop unresolved: this bounded run does not silently accept it or auto-retry.
 Write {self.artifacts / 'review.json'} with scope, decision and actual diff findings
-after the reader-load assessment and any formal review, before committing.
+after the Refactoring-only reader-load assessment (none for Feature) and any
+formal review, before committing.
 If design remains contested, run FULL configured interrogate reviewers in all
 review slots, read the actual interrogate skill/rubric/lenses, use one common
 intent/revision/rubric (interrogate-task.md, including exact baseline SHA and
@@ -1912,6 +1919,8 @@ nested delegation. Follow the original CommentSicko scope and report honestly.
             self.check('native_exact_cli_equivalence', final['record'] == self.before['record'] and final['missing_field_fixed'] == self.before['missing_field_fixed'])
             self.verify_reader_load(records['reader-load'], events, after)
             self.verify_staging_shape()
+        else:
+            self.verify_feature_normal_observations(final, 'final')
         self.stage('implementation_verify', [throughput, after] + [r['launch'] for r in implementations])
         scrap = self.written(events, 'scrap.json', after=after['result_row'])
         scrap_data = json.loads(scrap['args']['content'])
@@ -1924,6 +1933,18 @@ nested delegation. Follow the original CommentSicko scope and report honestly.
         self.verify_commits(events, commits, final_sources, after, mode)
         self.verify_opening(events, all_events, commits[-1], after)
         self.check('oracle_and_baseline_integrity', core.sha(self.probe) == self.probe_hash)
+
+    def verify_feature_normal_observations(self, observation, scope):
+        normal_before = self.before['record']
+        labels = [row['label'] for row in normal_before]
+        self.check('feature_' + scope + '_pinned_nine_normal_cli_observations', len(normal_before) == 9
+                   and len(set(labels)) == len(labels))
+        for original in normal_before:
+            observed = [row for row in observation['record'] if row.get('label') == original['label']]
+            self.check('feature_' + scope + '_normal_cli_equivalence_' + original['label'],
+                       len(observed) == 1 and observed[0] == original)
+        self.check('feature_' + scope + '_normal_missing_field_status_preserved',
+                   observation['missing_field_fixed'] == self.before['missing_field_fixed'])
 
     def verify_worktrees(self, records):
         for slot, record in records.items():
@@ -1943,12 +1964,14 @@ nested delegation. Follow the original CommentSicko scope and report honestly.
                 if not hasattr(self, 'candidate_outcomes'):
                     self.candidate_outcomes = {}
                 self.candidate_outcomes[slot] = {
-                    'verdict': 'pass' if observation.get('verdict') == 'pass' and matches_source else 'fail',
+                    'verdict': 'fail',
                     'source_sha256': observation.get('source_sha256'),
                     'observation_sha256': core.sha(self.directory / ('independent-' + slot) / 'observation.json'),
                 }
                 self.check('candidate_real_cli_pass_' + slot, observation.get('mode') == 'feature'
                            and observation.get('verdict') == 'pass' and matches_source)
+                self.verify_feature_normal_observations(observation, 'candidate_' + slot)
+                self.candidate_outcomes[slot]['verdict'] = 'pass'
 
     def verify_reader_load(self, record, events, after):
         self.check('reader_load_reviews_actual_final', record['launch']['call_row'] > after['result_row']

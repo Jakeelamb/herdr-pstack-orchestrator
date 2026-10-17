@@ -111,6 +111,48 @@ Commands are `run`, `wait`, `list`, `close`, `detect`, `check`, and `stats`. `de
 
 `horch stats` summarizes stored worker performance without Herdr calls or writes; see [worker statistics](skills/herdr-orchestrator/references/stats.md).
 
+## Update
+
+Updates are manual. The [install commands](#install) track `main`, so they
+receive changes before a tagged release.
+
+For a project installation, run this from the project where you installed the skills:
+
+```bash
+npx skills@1.7.1 update -p
+```
+
+For a global installation:
+
+```bash
+npx skills@1.7.1 update -g
+```
+
+These commands update all installed skills in that scope, including skills from
+other repositories. To update only the core skill, add `herdr-orchestrator`
+after `update`. See the [skills CLI update options](https://github.com/vercel-labs/skills/blob/v1.7.1/README.md#skills-update).
+
+To include newly added bundle skills, rerun the full bundle install command:
+
+```bash
+npx skills@1.7.1 add https://github.com/conscientiousness/herdr-pstack-orchestrator/tree/main/skills --skill '*'
+```
+
+Choose the same agents and scope as before. Add `-g` for a global installation.
+If the updater cannot track an older installation, rerun its [install command](#install).
+
+For a manual clone, run this in the clone on `main`:
+
+```bash
+git pull --ff-only
+```
+
+Symlinked skills use the updated files. If you copied skills by hand, copy them
+again after pulling. Keep your existing `workers.toml`; copying the example
+configuration again would overwrite your worker settings.
+
+After updating, open a new controller session inside Herdr to load the updated skills.
+
 ## Quickstart
 
 Paste this to your agent inside Herdr:

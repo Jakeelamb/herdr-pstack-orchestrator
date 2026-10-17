@@ -116,30 +116,25 @@ Commands are `run`, `wait`, `list`, `close`, `detect`, `check`, and `stats`. `de
 Updates are manual. The [install commands](#install) track `main`, so they
 receive changes before a tagged release.
 
-For a project installation, run this from the project where you installed the skills:
+To update skills from this repository, rerun the matching install command.
+For a project installation, run it from the project where you installed the skills.
+
+For the core skill:
 
 ```bash
-npx skills@1.7.1 update -p
+npx skills@1.7.1 add conscientiousness/herdr-pstack-orchestrator -s herdr-orchestrator
 ```
 
-For a global installation:
-
-```bash
-npx skills@1.7.1 update -g
-```
-
-These commands update all installed skills in that scope, including skills from
-other repositories. To update only the core skill, add `herdr-orchestrator`
-after `update`. See the [skills CLI update options](https://github.com/vercel-labs/skills/blob/v1.7.1/README.md#skills-update).
-
-To include newly added bundle skills, rerun the full bundle install command:
+For the full bundle, including newly added skills:
 
 ```bash
 npx skills@1.7.1 add https://github.com/conscientiousness/herdr-pstack-orchestrator/tree/main/skills --skill '*'
 ```
 
 Choose the same agents and scope as before. Add `-g` for a global installation.
-If the updater cannot track an older installation, rerun its [install command](#install).
+Review same-name skill conflicts before confirming replacement.
+Avoid an unfiltered `skills update -p` or `skills update -g` when updating this
+repository, since those commands also update skills from other repositories.
 
 For a manual clone, run this in the clone on `main`:
 

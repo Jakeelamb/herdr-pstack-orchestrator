@@ -1,6 +1,6 @@
 {
   "repository": "https://github.com/cursor/plugins.git",
-  "revision": "e5136d82418d2db3165ea1050d17577cd618cc05",
+  "revision": "101b274dd991f694e1f7024be2157e5f3adf07de",
   "version": "0.15.25",
   "excluded_skills": {
     "make-bot-ui": "Requires unavailable Cursor Routines and secret-request tools; no coding workflow depends on it.",
@@ -180,7 +180,7 @@
       "name": "principle-migrate-callers-then-delete-legacy-apis",
       "adapted": false,
       "source": "pstack/skills/principle-migrate-callers-then-delete-legacy-apis/SKILL.md",
-      "source_sha256": "09978915a4a11990cf0a9a02d9c08cc59e0b7a04c5c24b83aa560fbe4146f75b"
+      "source_sha256": "580ad9bb1a0994ecb924321ba49efc38a2f85c64e22c76fb133f57a78272a2e6"
     },
     {
       "name": "principle-minimize-reader-load",
@@ -246,7 +246,7 @@
       "name": "principle-type-system-discipline",
       "adapted": false,
       "source": "pstack/skills/principle-type-system-discipline/SKILL.md",
-      "source_sha256": "2e492cef34bb25a20b9115df61f9ef3a9837e3fda144ffda8079e5f45a1b72e8"
+      "source_sha256": "5cdaf79785e3c12b2592b9469ee8c272143eb86ab7a18d8382197cea5fd30106"
     },
     {
       "name": "recall",
@@ -276,7 +276,7 @@
       "name": "swarm",
       "adapted": true,
       "source": "pstack/skills/swarm/SKILL.md",
-      "source_sha256": "c8fe1b28282e7a051a4041a146a11f076e0fd95252bb010106a58209805303d5"
+      "source_sha256": "031657cb81e490f9aed5c75d6ff2a4fda35ccafbaf72be604e59481cc4080cdc"
     },
     {
       "name": "tdd",

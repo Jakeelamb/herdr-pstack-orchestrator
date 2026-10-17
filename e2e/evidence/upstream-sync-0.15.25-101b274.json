@@ -1,0 +1,129 @@
+{
+  "verdict": "pass",
+  "recorded_at": "2026-10-17T15:45:29.578058+00:00",
+  "source_base_revision": "dd92a42c99c3176147dc3d5e4dd6441b36576fef",
+  "source_skills_git_tree": "ec9c416464691591a1db807eb093a6cf38191dfd",
+  "source_attribution": "Installed from a working tree based on source_base_revision. source_skills_git_tree identifies the exact tested skills tree.",
+  "upstream": {
+    "repository": "https://github.com/cursor/plugins.git",
+    "revision": "101b274dd991f694e1f7024be2157e5f3adf07de",
+    "version": "0.15.25"
+  },
+  "previous_upstream": {
+    "revision": "e5136d82418d2db3165ea1050d17577cd618cc05",
+    "version": "0.15.25"
+  },
+  "scope": "installation_and_catalogs",
+  "driver_sha256": "32b9b7eabe38429a421ec0de0d92bdef8ac1e37c374db4a2acb3c5c8562e469f",
+  "original_receipt_sha256": "5789586e6afa066cae5b21c5122b6e95e75a76a5c67d13b382638c76e604ab46",
+  "checks": {
+    "installed_catalog": true,
+    "all_files_preserved": true,
+    "claude_entries": true,
+    "pi_catalog": true,
+    "codex_catalog": true,
+    "codex_no_errors": true
+  },
+  "installed_skills": 56,
+  "installed_files": 198,
+  "file_differences": [],
+  "installed_tree_sha256": "49bff5a61f202362c02ec92d63efd56a5037decf62170d3ac205d2ab06acad08",
+  "native_catalogs": {
+    "pi": {
+      "discovered_skills": 56,
+      "new_skills_discovered": []
+    },
+    "codex": {
+      "discovered_skills": 56,
+      "new_skills_discovered": []
+    }
+  },
+  "reviewed_changes": {
+    "comparison": "https://github.com/cursor/plugins/compare/e5136d82418d2db3165ea1050d17577cd618cc05...101b274dd991f694e1f7024be2157e5f3adf07de",
+    "version_unchanged": true,
+    "direct_sync": [
+      "pstack/skills/interrogate/references/lead-judgment.md",
+      "pstack/skills/principle-migrate-callers-then-delete-legacy-apis/SKILL.md",
+      "pstack/skills/principle-type-system-discipline/SKILL.md"
+    ],
+    "sync_with_existing_herdr_preamble": [
+      "pstack/skills/swarm/SKILL.md"
+    ],
+    "new_adaptations": [],
+    "upstream_distribution_not_bundled": [
+      "pstack/README.md",
+      "pstack/docs/harness/claude-code.md",
+      "harness/pstack/claude-code",
+      ".claude-plugin/marketplace.json"
+    ],
+    "distribution_decision": "Continue using original pstack skills and agents with the existing Herdr mapping, rather than the new generated Claude Code plugin and native-agent adapter.",
+    "source_caveat": "Upstream swarm removes the explicit N-selection instruction and leaves Phase A numbered 1, 2, 4, 5. The bundled original text is preserved.",
+    "changed_skills_added_or_removed": false
+  },
+  "installation": {
+    "method": "Installed a temporary copy of the complete skills tree into a disposable project, deleted the source, then verified all installed files and native Pi/Codex catalogs.",
+    "command": [
+      "npx",
+      "--yes",
+      "skills@1.7.1",
+      "add",
+      "<temporary-source>",
+      "-s",
+      "*",
+      "-a",
+      "codex",
+      "-a",
+      "claude-code",
+      "-a",
+      "pi",
+      "-y"
+    ],
+    "global_install": false,
+    "temporary_source_removed_before_catalog_check": true,
+    "versions": {
+      "python": "Python 3.14.7",
+      "npx": "11.20.0",
+      "pi": "1.2.0",
+      "codex": "codex-cli 0.163.0",
+      "git": "git version 2.55.0"
+    }
+  },
+  "regeneration": {
+    "verdict": "pass",
+    "full_skills_tree_matches": true,
+    "driver_sha256": "d43c82640bb8f1f571f3fc3c05d77112cab6379ca295ba473492906038f56187"
+  },
+  "upstream_check": {
+    "status": "current",
+    "compared_paths": [
+      "pstack/",
+      "cursor-team-kit/"
+    ],
+    "repository": "https://github.com/cursor/plugins.git",
+    "pinned_revision": "101b274dd991f694e1f7024be2157e5f3adf07de",
+    "pinned_version": "0.15.25",
+    "default_branch": "main",
+    "upstream_revision": "101b274dd991f694e1f7024be2157e5f3adf07de",
+    "compare_url": "https://github.com/cursor/plugins/compare/101b274dd991f694e1f7024be2157e5f3adf07de...101b274dd991f694e1f7024be2157e5f3adf07de",
+    "upstream_version": "0.15.25",
+    "changed_files": []
+  },
+  "reproduction": {
+    "procedure": ".agents/skills/verify-herdr-orchestrator/features/discovery.md",
+    "catalog_command": "python3 e2e/skill_catalogs.py <disposable-consumer>",
+    "regeneration_command": "python3 scripts/prepare_pstack.py --source <clean-pinned-source> --output <new-package-directory>",
+    "regeneration_comparison": "diff -r --exclude=__pycache__ skills <new-package-directory>/skills",
+    "upstream_command": "python3 scripts/check_upstream.py --output <artifact-directory>/upstream.json"
+  },
+  "scope_limits": [
+    "No authenticated model workflow was run; the changed guidance remains runtime unverified.",
+    "Claude Code installation was checked; native Claude Code discovery was not measured.",
+    "Installation used a local source copy, not a remote GitHub URL.",
+    "The upstream generated Claude Code plugin was source-reviewed, not installed or executed.",
+    "Historical receipts retain their original source attribution."
+  ],
+  "cleanup": {
+    "owned_install_directories_removed": true,
+    "receipts_retained": true
+  }
+}

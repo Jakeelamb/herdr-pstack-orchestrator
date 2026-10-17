@@ -1,0 +1,38 @@
+{
+  "schema": "horch/project-bundle-removal-e2e/v1",
+  "verdict": "fail",
+  "source_revision": "222df2eb4f602af72a8ce8205ebc2b13925e7b7f",
+  "scope": "Attempted complete project uninstall using explicit agent selections.",
+  "installer_version": "skills@1.7.1",
+  "checks": {
+    "installation_succeeded": true,
+    "before_native_catalogs_match_57": true,
+    "removal_process_exit_zero": true,
+    "all_bundle_paths_absent": false
+  },
+  "remaining_bundle_paths_by_agent_root": {
+    ".agents/skills": 56,
+    ".claude/skills": 0,
+    ".pi/skills": 0
+  },
+  "observation": "The selected-agent removal reports success and removes Claude/Pi entries, but all56 shared .agents/skills entries remain. This command does not establish complete project uninstall.",
+  "command": [
+    "npx",
+    "--yes",
+    "skills@1.7.1",
+    "remove",
+    "<56-bundle-names>",
+    "-a",
+    "codex",
+    "-a",
+    "claude-code",
+    "-a",
+    "pi",
+    "-y"
+  ],
+  "next_step": "Verify the documented all-agent default by omitting agent selections in a fresh disposable project.",
+  "limitations": [
+    "No third-party CLI defect is inferred; this may be selected-agent versus shared catalog behavior.",
+    "Original command output and remaining installed tree are retained unchanged."
+  ]
+}

@@ -1,0 +1,326 @@
+{
+  "schema": "horch/design-comment-audit/v1",
+  "kind": "Independent retained-evidence review",
+  "scenario": "third Refactoring attempt",
+  "original_receipt": "playbook-refactor-comment.json",
+  "original_receipt_sha256": "bc7bf22043b008fe4d0b5c4539677149a8fa732d8bf1101fcc6b0aa5995ca477",
+  "original_receipt_unchanged": true,
+  "original_workflow_verdict": "fail",
+  "source_revision": "02492a263187df3f1d88a25f03b384d4c585efa5",
+  "driver_sha256": "44fcb04cf6443ab963fd312d5515f8c3707844f87ccf5ba5a6d0ba5ef8ef3602",
+  "failure_category": "worker_gate_quarantined_stop",
+  "seconds": 2637.461,
+  "recorded_checks": {
+    "passed": 108,
+    "total": 108,
+    "meaning": "Runtime prefix/input provenance plus integrity and cleanup; final native stage verification did not execute."
+  },
+  "tasks": {
+    "actual_launches": 9,
+    "live_working_bindings": 9,
+    "done_and_closed": 9,
+    "original_gate_passes": 8,
+    "original_gate_failures": 1,
+    "final_audited_stages": 0,
+    "commits": 0
+  },
+  "accepted_native_scope": {
+    "workers": 8,
+    "tool_attempts": 165,
+    "successful_calls": 164,
+    "errors": 1,
+    "pending": 0,
+    "retained_error": "An explorer attempted to read its own report before creation; the owned-path error remains recorded.",
+    "tool_counts": {
+      "read": 94,
+      "bash": 37,
+      "ffgrep": 9,
+      "fffind": 2,
+      "write": 22,
+      "edit": 1
+    }
+  },
+  "how": {
+    "explorers": {
+      "native_rows": [
+        45,
+        43
+      ],
+      "tool_attempts": [
+        28,
+        28
+      ],
+      "original_guides_and_full_nonce_briefs_received": true,
+      "reader_tree_entries": 11,
+      "symlinks": 0,
+      "trees_unchanged": true
+    },
+    "explainer": {
+      "native_rows": 30,
+      "tool_attempts": 17,
+      "errors_or_pending": 0,
+      "report_bytes": 18326,
+      "complete_explorer_brief_bytes": 34262,
+      "report_sha256": "dadfaac1464f80f48673cd4b3370ecc781742faca00cdf4754ad08d0b0e86d7a",
+      "grounding_byte_identical_to_complete_report": true,
+      "grounding_preserves_whitespace_and_mermaid_escapes": true,
+      "gate_sha256": "6c115eafc0445824d2f3768b68bf56d8ca8016b664235f64abb74e439e8de4c1",
+      "native_sha256": "359723b310db961f6e373ab1b869a7db541395daad4c1f95f25abc61ef4e20f3"
+    },
+    "lead_order_zero_based": {
+      "safe_delivery": [
+        131,
+        132
+      ],
+      "full_result": [
+        133,
+        134
+      ],
+      "full_report": [
+        135,
+        136
+      ],
+      "native_before_oracle": [
+        137,
+        138
+      ],
+      "full_pin_read": [
+        139,
+        140
+      ],
+      "exact_grounding_write": [
+        141,
+        142
+      ]
+    },
+    "semantic_corrections": "The synthesis correctly distinguishes missing-key KeyError/exit 1 from caught ValueError/exit 2, and narrows non-string-ID TypeError to duplicate-message construction."
+  },
+  "behavior": {
+    "verification": "Independent reduction of retained inputs, CLI stdout/stderr, exits, Decimal arithmetic, ledger bytes and pending state; no new execution by the reviewer.",
+    "before_roots": 2,
+    "pinned_cli_observations_per_root": 9,
+    "pin_checks_per_root": 11,
+    "original_cli_flows_per_root": 7,
+    "original_suite_checks_per_root": 8,
+    "seed_cents": 98,
+    "final_rows": 6,
+    "final_cents": 994,
+    "decimal_row_totals": [
+      98,
+      51,
+      444,
+      401,
+      0,
+      0
+    ],
+    "ledger_bytes": 578,
+    "validation_rejections": 4,
+    "validation_exit_status": 2,
+    "validation_error_json_and_empty_stderr_verified": true,
+    "late_missing_discount": {
+      "exit_status": 1,
+      "empty_stdout": true,
+      "traceback_key": "discount_bp",
+      "exception": "KeyError"
+    },
+    "rejection_ledger_bytes_unchanged_and_pending_absent": true,
+    "exports_match_complete_sorted_expected_ledger": true,
+    "native_after_checks": 11,
+    "native_after_normalized_records_identical_to_before": true,
+    "native_after_original_suite_passes": true,
+    "before_observation_sha256": "960813616f70072eeaa56accda53e4737d94dcbf3607b6fb7d098919cc74b039",
+    "after_observation_sha256": "306ba7e1e4f9fb1eb0b91f95b1ad148c1793b226b4f10a00e8c8e5ebf0014d63",
+    "before_source_sha256": {
+      "money.py": "7fa0c12b3b374830ed93c7777570ffcb23416394ff6b60e47a4c436b600373ac",
+      "storage.py": "c32037b76d52e28908e2a46b40e77bf46be109fdb7fb25afd702070e7d74bfc2",
+      "cli.py": "4dedfc1da14792f2f28b7aa59db358cab589bd3a5985185466884861e750ae22",
+      "e2e_import.py": "5791d79542ebcb9468e421e9cdeb8bea3898e1d745876ff6898f69a1775da137"
+    },
+    "after_storage_sha256": "e1b7760444a3f374cc6b3e19b73b32de246d0dcb029eeb4d7cb5265e48c34f4d"
+  },
+  "architecture": {
+    "native_calls": [
+      24,
+      19
+    ],
+    "errors_or_pending": 0,
+    "declared_guides_per_candidate": 6,
+    "full_grounding_and_common_task_received": true,
+    "source_and_reader_trees_unchanged": true,
+    "sketches_have_only_placeholder_bodies": true,
+    "alternatives": [
+      "An eager materializer returning the complete ordered ledger list.",
+      "A row stream requiring the shell to drain it fully before persistence."
+    ],
+    "hidden_rubric_not_read_by_candidates": true,
+    "lead_scores": [
+      20,
+      17
+    ],
+    "judge_scores": [
+      20,
+      19
+    ],
+    "combined_scores": [
+      40,
+      36
+    ],
+    "selection": "eager materializer",
+    "independent_judge": {
+      "native_rows": 35,
+      "native_calls": 21,
+      "errors_or_pending": 0,
+      "bound_inputs": 9,
+      "native_sha256": "2c7cd877cbf079c63a685a2fdafa774de08e42ed151c793d3e3a08e780c4aab0",
+      "gate_sha256": "07b388d2d607b8d731673dbb566c08ffcbe81ab2ac886432a8532b5d88a9e585"
+    },
+    "lead_scores_frozen_before_judge_payloads": true,
+    "score_severity_differences_disclosed": true,
+    "contested_false_supported": true,
+    "no_current_scrap_or_extra_design_interrogate_trigger": true
+  },
+  "implementation": {
+    "native_rows": 32,
+    "native_calls": 13,
+    "tool_counts": {
+      "read": 7,
+      "bash": 3,
+      "edit": 1,
+      "write": 2
+    },
+    "errors_or_pending": 0,
+    "scope": "Only storage.py; original staging AST moved unchanged into _stage_rows, followed by return staged; one eager helper call replaces the original region.",
+    "public_signature_imports_load_pending_serialization_replace_summary_unchanged": true,
+    "other_three_source_blobs_unchanged": true,
+    "worker_runtime_claim": "Inspection only, accurately disclosed.",
+    "grounding_provenance": "The assigned rationale carries accepted How grounding; no direct How report read was assigned or established.",
+    "native_sha256": "0f1f9062eadc0065970ff97ca75efdfc3562ff0194d926d7fcdef30cddff8cbd",
+    "gate_sha256": "2fc1cfdbd26e3d85faec07eb539d1f5c9508a7555462faff0003b1ada6e43900",
+    "lead_order_zero_based": {
+      "gate": [
+        211,
+        212
+      ],
+      "full_result_and_report": [
+        213,
+        216
+      ],
+      "actual_after_oracle": [
+        219,
+        220
+      ],
+      "full_after_receipt": [
+        221,
+        222
+      ]
+    }
+  },
+  "reader_load": {
+    "role": "reader-load reviewer, not a second implementation or Arena alternative",
+    "native_rows": 28,
+    "native_calls": 15,
+    "errors_or_pending": 0,
+    "worth_keeping": true,
+    "exact_source_citations": 13,
+    "before_citations": 6,
+    "after_citations": 7,
+    "tradeoff": "Mutable staging state leaves persistence; the eager return avoids a drain protocol. The review acknowledges an extra call/function hop and wider span for post-replace summary faults.",
+    "thirty_second_language_is_a_heuristic_not_measured_usability": true,
+    "native_sha256": "3bb78ad328bec1dc0692fd503c39b9d3c71f6ec42ea05c0a68902ce27a357853",
+    "gate_sha256": "5f61c08f536dc3a06d208192b7a80cae7ef27062f777aad9240559b318dcc984",
+    "reader_json_sha256": "521b72c46e58b5765f9277021bba45eb4d89a2b22a9444d5320c9f7a7522b246",
+    "lead_gate_rows_zero_based": [
+      235,
+      236
+    ],
+    "lead_full_output_read_rows_zero_based": [
+      237,
+      242
+    ],
+    "no_scrap_disposition": "Written after the successful oracle and before reader review; its implementation-friction reasons do not pretend to incorporate later findings."
+  },
+  "comment_rejection": {
+    "original_rule": "The complete first nonempty natural-text block must equal the greeting specified by the original agent.",
+    "original_guide_lines": [
+      8,
+      10
+    ],
+    "frozen_checker_line": 274,
+    "actual_brief_requires_original_guide_loading_before_text": true,
+    "expected_first_block_bytes": 23,
+    "actual_first_block_bytes": 403,
+    "actual_first_block_row_zero_based": 16,
+    "starts_with_expected": true,
+    "exact_match": false,
+    "actual_first_block_sha256": "d97c75d85d5afa1c12ef6cf887ee02f52ea5ef58d918cc9ba523d6f9ff530235",
+    "genuine_original_protocol_violation": true,
+    "undeclared_checker_restriction": false,
+    "exact_first_thrown_predicate_proven": false,
+    "scope_limit": "The signature predicate conclusively rejects. Earlier result/body checks were not replayed because their quarantined bodies remain unread; the fixed exception category does not expose exact first throw.",
+    "native_rows": 22,
+    "native_calls": 11,
+    "tool_counts": {
+      "read": 6,
+      "bash": 2,
+      "write": 3
+    },
+    "errors_or_pending": 0,
+    "configured_identity_working_binding_and_nonce_match": true,
+    "original_guides_complete_before_first_natural_text": true,
+    "report_review_writes_precede_separate_result_write": true,
+    "native_sha256": "d687160bc04be1038a88f33a057b5fe35e157ed2c35bb3054c50313ea9e95043",
+    "gate_sha256": "0851c39caf345ae4d57a3412e2ab738705316a846cbe4ea44cb8532989535e01",
+    "report_result_native_output_and_write_edit_bodies_unread": true
+  },
+  "lead": {
+    "native_rows": 249,
+    "tool_attempts": 122,
+    "successful_calls": 121,
+    "retained_errors": 1,
+    "pending": 0,
+    "native_sha256": "318145d242d5c12a0848788b82c93fba207e3b0e5f831c4068bbd7fbc083dfba",
+    "last_call_zero_based": [
+      247,
+      248
+    ],
+    "last_response": "Exact fixed safe quarantine metadata; no model output paths or body forwarded.",
+    "comment_payload_reads": 0,
+    "subsequent_launches": 0,
+    "commits": 0,
+    "pushes": 0,
+    "pr_calls": 0,
+    "automatic_pre_forward_rejection": true
+  },
+  "retained_accuracy_caveats": [
+    "Explorer A incorrectly groups missing money keys with caught ValueError/exit 2 in one table; its later text and the synthesis identify KeyError correctly. Its AGENTS.md read claim has no explicit native read; startup-context delivery was not established.",
+    "Explorer B overgeneralizes non-string IDs as always TypeError; the synthesis correctly narrows this. Its listing was co-issued with guides; guide delivery before source analysis is proved, before that listing is not.",
+    "The explainer calls all exit-2 table rows observed by the original E2E. Malformed JSON and invalid money type/negative rows were source-traced, not exercised by those seven flows. The later pin separately observes one missing-discount fault.",
+    "The GLM Architect example count 5/total 98 has no defined input fixture and is not baseline evidence. Its plain principle names occur in fully read guides; no separate principle-leaf loading is claimed or proved.",
+    "The design judge calls a stored-missing-total write-then-fail case observed; it is source-traced and absent from this pin."
+  ],
+  "integrity": {
+    "source_identities": 217,
+    "bundled_resources": 198,
+    "source_head_status_and_hashes_intact": true,
+    "original_and_copied_configuration_intact": true,
+    "original_fixture_untouched": true,
+    "owned_panes_absent": true
+  },
+  "reproduction": {
+    "driver": "e2e/design_loop.py",
+    "scenario": "refactoring",
+    "original_source_revision": "02492a263187df3f1d88a25f03b384d4c585efa5",
+    "parameters": {
+      "max_seconds": 5400
+    },
+    "prerequisites": "Existing configured Pi controller, pristine private invoice fixture, ready non-default parent PR and verified Herdr caller pane.",
+    "artifacts": "Private original receipt, nine lifecycle/binding records, eight accepted gates and source/report artifacts, the rejected safe gate, baseline/after CLI inputs/stdout/stderr, source snapshots and native sessions remain retained."
+  },
+  "limitations": [
+    "The original automatic FAIL remains unchanged. Eight accepted deliveries and actual behavior equivalence do not complete Refactoring or Opening a PR.",
+    "No quarantined Comment report/result/native-output/write/edit body or derived copy was consumed by independent reviewers; no Comment semantic finding is asserted.",
+    "No general behavior beyond the observed CLI cases or source-preservation reasoning is promoted to runtime evidence.",
+    "The prospective output-boundary clarification retains original guide reads and exact validators; only a new immutable live run can verify it.",
+    "Post-execution delivery auditing is not containment. Cloud execution and durable wake were not run."
+  ]
+}

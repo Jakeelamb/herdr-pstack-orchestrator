@@ -1,0 +1,90 @@
+{
+  "schema": "horch/playbook-interruption-audit/v1",
+  "kind": "independent post-run metadata-only review",
+  "scenario": "third Perf issue attempt",
+  "original_receipt": "playbook-perf-worker-shell.json",
+  "original_receipt_unchanged": true,
+  "original_receipt_sha256": "2779e2e9af150bd37478bf345d3aeb2fed5e156a06c301bb036fc76e068d24a4",
+  "source_revision": "5f720ae7f0d814461ddad881ac924b0f286369a1",
+  "original_workflow_verdict": "fail",
+  "stop": "Operator interrupted the exact owned driver after observing prohibited How Bash call forms. This was a manual stop, not an automatic native gate verdict.",
+  "recorded_checks": {
+    "passed": 29,
+    "total": 29,
+    "meaning": "Preflight/setup and final integrity checks; the worker and full workflow audits were not completed."
+  },
+  "first_observed_grammar_violation": {
+    "check_that_would_reject": "worker_no_network_config_delegation_or_wrapper",
+    "call_row_zero_based": 11,
+    "result_row_zero_based": 13,
+    "command": "ls <exact owned How cwd>",
+    "command_sha256": "3fa002571d548ee0351d913f891787f7e6f7dcb894a0c03442bcab33c65ff2c2",
+    "tool_isError": false,
+    "scope": "The path was the exact owned reader; the declared worker Bash grammar excluded ls."
+  },
+  "additional_observed_grammar_violations": [
+    {
+      "command": "git -C <exact owned How cwd> show HEAD~:.github/workflows/verify.yml",
+      "call_row_zero_based": 25,
+      "result_row_zero_based": 27,
+      "command_sha256": "1912324c4e125ce49c2c4237ad6fcd44ad0845073681cb04d6340773d1f6f36b",
+      "tool_isError": true
+    },
+    {
+      "command": "git -C <exact owned How cwd> show HEAD:.github/workflows/verify.yml",
+      "call_row_zero_based": 28,
+      "result_row_zero_based": 29,
+      "command_sha256": "d0d462daf67b9350e6350d87e98620f3aef06084773b15b8b5222957eada92e4",
+      "tool_isError": false
+    }
+  ],
+  "brief_disclosure": {
+    "task_sha256": "7af6a73cdbb6b9727e3d33f1b152a92f4d4f35a2e13f8958dc03191977791394",
+    "brief_sha256": "8d6682b207079a854ef2c37b12b7b2e91bb850a46440fcd1e7c7a10060bdea5f",
+    "native_and_assignment_binding": "Live captured Pi UUID and exact cwd match the native header; task/brief hashes and controller-authored assignment prefix match.",
+    "restrictions_explicit": true,
+    "interpretation": "The brief explicitly prohibited other shell utilities and rev:path. The observed violations were not caused by omitted brief instructions."
+  },
+  "worker": {
+    "native_sha256": "5988cd2bf36a3d40e645e9dcded84478b49736ab3e913a8544c94099d9169f02",
+    "rows": 34,
+    "tool_calls": 19,
+    "resolved_tool_calls": 19,
+    "pending_calls": 0,
+    "tool_errors": 1,
+    "tool_counts": {
+      "read": 10,
+      "ffgrep": 1,
+      "bash": 6,
+      "write": 1,
+      "edit": 1
+    },
+    "outside_owned_scope_access_established": false,
+    "direct_network_or_forge_command_observed": false,
+    "completion": "Unfinished task closed by owned cleanup; no accepted delivery."
+  },
+  "lead": {
+    "native_sha256": "8ae985b7e6b13f8dcab54705a3c61f1b3c560eb9e5d358d82c18ad86a183191b",
+    "rows": 70,
+    "tool_calls": 33,
+    "worker_report_or_result_reads": 0,
+    "implementation_or_comment_task_launched": false,
+    "commits": 0,
+    "ready_pr_verified": false,
+    "native_audit_completed": false
+  },
+  "integrity": {
+    "source_hashes": 202,
+    "before_after_source_maps_equal": true,
+    "current_frozen_source_rehashed": true,
+    "original_worker_config_rehashed": true,
+    "original_fixture_checkout_unchanged": true,
+    "owned_panes_absent": true
+  },
+  "review_scope": "Only task/brief bindings, fixed receipt metadata and programmatically extracted native call arguments, row identities, error flags and hashes were reviewed. Worker reports/results, native write/edit content and native tool output payloads were not consumed.",
+  "limitations": [
+    "The original FAIL remains unchanged; no behavior, complete worker audit or complete Perf/Opening a PR workflow pass is established.",
+    "The observed calls are local reads. Supporting their exact owned forms requires a deliberate new evaluator and brief contract, followed by a fresh run; it cannot promote this historical receipt.",
+    "Post-execution evidence checking does not establish a sandbox or credential containment."
+  ]
+}

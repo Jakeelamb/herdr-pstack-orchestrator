@@ -1,0 +1,78 @@
+{
+  "schema": "horch/project-bundle-removal-e2e/v1",
+  "verdict": "pass",
+  "recorded_at": "2026-10-16T14:56:14.277395+00:00",
+  "source_revision": "222df2eb4f602af72a8ce8205ebc2b13925e7b7f",
+  "source_skills_git_tree": "fe66ceb966713896d9ff5d722bfcea9bac7b39d4",
+  "catalog_driver_sha256": "32b9b7eabe38429a421ec0de0d92bdef8ac1e37c374db4a2acb3c5c8562e469f",
+  "installer_version": "skills@1.7.1",
+  "scope": "Fresh disposable project install and complete named bundle removal through the all-agent default, using native Pi/Codex catalogs; no models.",
+  "checks": {
+    "install_succeeded": true,
+    "all_installed_files_equal_source": true,
+    "application_files_preserved_during_install": true,
+    "native_catalogs_before_match_bundle_plus_unrelated": true,
+    "named_all_agent_removal_succeeded": true,
+    "bundle_files_and_links_absent": true,
+    "unrelated_skill_and_links_preserved": true,
+    "application_files_preserved_after_removal": true,
+    "fresh_pi_catalog_only_unrelated": true,
+    "fresh_codex_catalog_only_unrelated": true,
+    "codex_no_errors": true
+  },
+  "installed_and_removed_skills": 56,
+  "installed_files": 198,
+  "agent_roots_checked": [
+    ".agents/skills",
+    ".claude/skills",
+    ".pi/skills"
+  ],
+  "native_catalogs": {
+    "before": {
+      "pi": 57,
+      "codex": 57
+    },
+    "after": {
+      "pi": 1,
+      "codex": 1
+    }
+  },
+  "removal": {
+    "method": "Explicit bundle skill names, default all-agent removal; no wildcard, --all or -a, preserving unrelated installed skills.",
+    "command": [
+      "npx",
+      "--yes",
+      "skills@1.7.1",
+      "remove",
+      "<all-56-bundle-skill-names>",
+      "-y"
+    ],
+    "global": false
+  },
+  "application_file_sha256": {
+    "README.md": "76457b617a393b6e6b5889684e5d5b4f7088b288cf2a0dcee782d4a901daf432",
+    "src/application.txt": "9608668d3c824420af2978bba6ea8e555fd98e0892fee64f533bebcd043e925d"
+  },
+  "unrelated_skill_sha256": "d09592d1c09d0e424a97a9fc38b5a70477ff7789e4bcca407153d3b7b335a97b",
+  "remaining_project_entries": [
+    ".agents",
+    ".claude",
+    ".pi",
+    "README.md",
+    "skills-lock.json",
+    "src"
+  ],
+  "earlier_agent_selected_attempt": {
+    "verdict": "fail",
+    "original_receipt_sha256": "71f7581b76e5f0fac8d593a60d8c2ece1de43e4fc3b22b71e3a13a9f1733daf5",
+    "observation": "Agent-selected removal returned zero but retained shared canonical skills; the fresh supported command omits agent selection.",
+    "unchanged": true
+  },
+  "limitations": [
+    "Installation uses a local source, not a new remote-download check.",
+    "Native Claude Code discovery is not measured; its project file/link paths are checked.",
+    "Fresh catalog processes are used; live-session reload and global installation/removal remain unverified.",
+    "The unrelated skill is introduced after installation and before removal; installation preservation covers existing application files only.",
+    "Package-created empty directories and lock metadata remain; named removal does not promise zero filesystem residue."
+  ]
+}

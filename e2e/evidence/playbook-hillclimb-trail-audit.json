@@ -1,0 +1,258 @@
+{
+  "schema": "horch/hillclimb-trail-audit/v1",
+  "kind": "independent retained-evidence review",
+  "scenario": "second attended Hillclimb attempt",
+  "original_receipt": "playbook-hillclimb-trail.json",
+  "original_receipt_sha256": "95f77758b1cbc01a117c5ccb925c37be436f92ce78388e40fdafd072018ab298",
+  "original_receipt_unchanged": true,
+  "original_workflow_verdict": "fail",
+  "source_revision": "d08bee777730cfcc224051af6447863cea329497",
+  "driver_sha256": "3de2a02e386661109e70786f5be295da991cad2cce5ff648a067685e52494df7",
+  "failure_category": "operator_interrupted",
+  "seconds": 2303.468,
+  "recorded_checks": {
+    "passed": 28,
+    "total": 28,
+    "meaning": "Setup and final integrity/cleanup checks; no completed final native stage or audited commit is recorded."
+  },
+  "stop": "Manual interruption after the lead had consumed the violating trail delivery and launched Comment review. This did not demonstrate automatic quarantine or successful manual withholding.",
+  "operator_stop_record_sha256": "9158d9b03e2f83724f65bd0896af2a9857ee467995a0c6fdbf55791cfae0ddcd",
+  "how_and_implementation": {
+    "separately_accepted_done_closed_workers": 4,
+    "successful_native_tool_calls": 86,
+    "native_errors_or_pending_calls": 0,
+    "actual_working_observations": "Independent paired agent/pane observations supplement the original driver's session captures; the driver did not require WORKING status.",
+    "how": {
+      "native_sha256": "8c7f6e9dfc4a9f48685969f63d2e3c025d48af330eb41e47cf6fb171061fd279",
+      "report_sha256": "195ff7aabc5ccfcc60bcd8960f378ab57ab9b415256902545e1e3a9e37dcc6dd",
+      "working_witness_sha256": "7819fcf42ca88a7455de29fa52ab7e99b7ace6984975d6c1d8debcb49c341b9f",
+      "typed_owned_fff_calls": 1,
+      "reader_tree_stable_and_symlink_free": true,
+      "explanation_preserved_verbatim": true,
+      "retained_caveat": "The report first calls a missing-key exception ValueError, then immediately identifies KeyError correctly; the source actually raises KeyError. Historical performance observations are explicitly distinguished from this run."
+    },
+    "attempts": [
+      {
+        "id": 1,
+        "mechanism": "Per-invocation lazy lookup cache, retaining first-match precedence and zero-valued cache hits.",
+        "native_sha256": "36ff86cd361eabb3d17ab21ce51eaef7d694e13398b0c3ff51f6b4ff3797de61",
+        "report_sha256": "74a6e554e15daf4009b62150848ab69c48a6aaa50dd83163a0308f99475bdb5f",
+        "working_witness_sha256": "5de3304044becaa09ec14be03637c94acded690ffc84d36b2c053531b6ff90e9",
+        "source_sha256": "f8a9772edf3a7638048362c51ce897c6d109f43a3f37ec93d16c824b13f23c25",
+        "commit": "c2d9099c25bc1531c3a9e2e5d3e6717a6e38f456"
+      },
+      {
+        "id": 2,
+        "mechanism": "Eager first-wins reference index; the report discloses the eager traversal limitation.",
+        "native_sha256": "4ba4de4078352916c90e1614faa8130bd8a252b1893503b5b3dc653aa8c1b848",
+        "report_sha256": "6da1a1a251b9748ac6b126c399a3eb48e2fefa6663046e0ce07912f781724db2",
+        "working_witness_sha256": "c19a8f9c02300e9c70ff4aecf3bcfa20c64a8ea3c06a3e9f43ee8ac75dec1ec0",
+        "source_sha256": "200e039f8a063598f46ee3f85a0b24483eccf74fa4aa2f1b5d8fe354143ad646",
+        "commit": "6a73c476cae49f0f3c1108fdf39094fd3955fd68"
+      },
+      {
+        "id": 3,
+        "mechanism": "Replace the explicit first-wins construction loop with dict(reversed(references)); the list-input boundary is disclosed.",
+        "native_sha256": "dbfc91275af1d6c48f07f93efba9c5048e8d297d91176fc33178e39eed603376",
+        "report_sha256": "cfe708a1eebd6a97d1dd4e73d8f02579120249ab8d199fc67b41ce0ad8e217bf",
+        "working_witness_sha256": "6408e5437e651b429c34451c95e9522e41b61de9b181dbd87999d8e784b384b8",
+        "source_sha256": "2cf48cf2e4b15daf4e29a5f0501b470f88e18beb7c8a690aa5792df773699b8b",
+        "commit": "aa0e130330d7a3a1c73a8b063bc5c449bfdc9e74"
+      }
+    ],
+    "scope": "Each independently audited writer changed only reconcile_linear. Every accepted Git object changes only reconcile.py and matches all five retained snapshot blobs. No writer claimed to have measured a speedup itself."
+  },
+  "retained_measurements": {
+    "independent_fresh_timing_run": false,
+    "measurement_scope": "Retained full-CLI alternating timings, separate raw profiles, CLI receipts, source objects and arithmetic were independently reduced without rerunning the application or benchmark.",
+    "samples_per_side": 5,
+    "baseline_aa_medians_ms": [
+      130.646724,
+      128.332924
+    ],
+    "sensitivity_small_and_target_medians_ms": [
+      33.389648,
+      127.875229
+    ],
+    "attempts": [
+      {
+        "id": 1,
+        "before_ms": 128.736855,
+        "after_ms": 76.146679,
+        "reduction_percent": 40.8509094,
+        "ranges_fully_separated": true
+      },
+      {
+        "id": 2,
+        "before_ms": 76.793889,
+        "after_ms": 37.062877,
+        "reduction_percent": 51.7372053,
+        "ranges_fully_separated": true
+      },
+      {
+        "id": 3,
+        "before_ms": 36.893856,
+        "after_ms": 37.151667,
+        "regression_percent": 0.698791,
+        "keep_reason": "Declared simplification exception: whole-file AST nodes 81 to 69, overlapping ranges, and median loss below 2%."
+      }
+    ],
+    "final": {
+      "before_ms": 129.614162,
+      "after_ms": 37.204739,
+      "reduction_percent": 71.2957763057,
+      "target_reduction_percent": 50,
+      "attempt_floor": 3,
+      "recorded_arithmetic_meets_target_and_floor": true,
+      "observation_sha256": "068785e1bab250629728a273bea137a0423aca50ac7d690c26dc7289fa9e0cad",
+      "final_json_sha256": "b3b24bdc9d7669da52631325026836bbe35d52374af134e6006343123d32febb"
+    },
+    "attempt2_attempt3_final_audit": {
+      "retained_timing_samples": 30,
+      "raw_profiles": 6,
+      "profile_frames": 3408,
+      "timing_and_profile_stdout_stderr_pairs": 36,
+      "cli_flows": 18,
+      "workload": {
+        "references": 2500,
+        "payments": 6000,
+        "result": 958008,
+        "errors": 0
+      },
+      "expected_negative_cli_exit_status": 2
+    },
+    "retained_recorder_errors": [
+      {
+        "attempt": 1,
+        "failures": 1,
+        "delta_sequence": [
+          -52.590176,
+          -52.590175999999985
+        ]
+      },
+      {
+        "attempt": 2,
+        "failures": 2,
+        "delta_sequence": [
+          -39.731012,
+          -39.73101200000001,
+          -39.73101199999999
+        ]
+      }
+    ],
+    "recorder_error_interpretation": "Exact-float metadata corrections only. Each evaluation and final measurement occurred once; failed recorder calls remain in the original native chain.",
+    "both_original_logs_bind_all_three_decisions": true,
+    "hill_ledger_sha256": "5fccd86a7d5d045a6c7781366ef2ef687c5bb4cc95a8bd32502b533b608c8341",
+    "trail_ledger_sha256": "eff4d0e14c1a92fe96ee9feed60bb7165a07e967fc16ab7842dca01b05cf31a6"
+  },
+  "trail_worker": {
+    "native_sha256": "48788d2423b85bcfe873e51dbd3ada26d3ceca41bc7f9a99b7121fb50728c97b",
+    "working_witness_sha256": "401f24474fe4ec1f59b40b1a03dbeef224a304f36dc505c960251f3902ea7c14",
+    "done_and_closed": true,
+    "native_rows": 110,
+    "successful_calls": 71,
+    "tool_counts": {
+      "read": 54,
+      "bash": 15,
+      "write": 2
+    },
+    "errors_or_pending_calls": 0,
+    "actual_brief_and_nonce_suffix_bound": true,
+    "explicit_contract_breach": "Five successful Bash ls calls; the actual brief explicitly excluded Bash ls. Four distinct operands resolve inside the assigned proof without symlink components.",
+    "forbidden_calls": [
+      {
+        "operand": "owned bundle",
+        "call_row_zero_based": 10,
+        "result_row_zero_based": 11,
+        "command": "ls <owned bundle>",
+        "command_sha256": "d05425a7339691f00b574429ef63e7816bc6f31a819357fe15c04a5aabe418fb"
+      },
+      {
+        "operand": "owned bundle skills directory",
+        "call_row_zero_based": 10,
+        "result_row_zero_based": 12,
+        "command": "ls <owned bundle skills directory>",
+        "command_sha256": "10b5ddb44f75d8958fb9636f575560a9c3fb9fa185e8f42860b5ca1fac557af8"
+      },
+      {
+        "operand": "owned proof root",
+        "call_row_zero_based": 10,
+        "result_row_zero_based": 13,
+        "command": "ls <owned proof root>",
+        "command_sha256": "50629f0470cd12362f6a440ba0ecf1c09e176e5f2136dae98d9475ace23ea5eb"
+      },
+      {
+        "operand": "own task directory",
+        "call_row_zero_based": 87,
+        "result_row_zero_based": 89,
+        "command": "ls <own task directory>",
+        "command_sha256": "f58d0a48016dd3ea5244cbc719fa9cf942968acf168cb0cacdc6749f18dbb474"
+      },
+      {
+        "operand": "own task directory",
+        "call_row_zero_based": 106,
+        "result_row_zero_based": 108,
+        "command": "ls <own task directory>",
+        "command_sha256": "f58d0a48016dd3ea5244cbc719fa9cf942968acf168cb0cacdc6749f18dbb474"
+      }
+    ],
+    "report_result_native_output_and_write_edit_bodies_unread_by_independent_reviewers": true
+  },
+  "lead": {
+    "native_sha256": "1b0d2c20c34bfd023cf4aa42ca8d41418950c102e9bd9e4107ec065c10e5e918",
+    "native_rows": 310,
+    "tool_attempts": 153,
+    "successful_calls": 149,
+    "retained_recorder_errors": 3,
+    "pending_comment_waits": 1,
+    "actual_worker_launches": 6,
+    "done_closed_workers": 5,
+    "unfinished_comment_closed_by_cleanup": true,
+    "trail_result_read_rows": [
+      271,
+      272
+    ],
+    "trail_report_read_rows": [
+      273,
+      274
+    ],
+    "comment_launch_rows": [
+      307,
+      308
+    ],
+    "comment_native_read_calls": 14,
+    "comment_native_writes": 0,
+    "successful_local_source_checkpoint_commits": 3,
+    "push_or_pr_calls": 0,
+    "automatic_delivery_gate_present": false,
+    "gap": "The frozen driver requested raw wait and payload reads; its final verifier parsed the report before native auditing. A real pre-forwarding audit barrier is required.",
+    "derived_payloads_withheld_from_review": "All trail output bodies and copies in lead outputs, attention, PERFORMANCE, PR-body/Comment inputs and new Comment output bodies remain unread. Earlier independently accepted How and implementation artifacts were reviewed separately."
+  },
+  "integrity": {
+    "source_identities": 203,
+    "bundled_resources": 198,
+    "source_head_status_and_hashes_intact": true,
+    "original_and_copied_configuration_intact": true,
+    "original_fixture_untouched": true,
+    "owned_panes_absent": true
+  },
+  "reproduction": {
+    "driver": "e2e/hillclimb_loop.py",
+    "original_source_revision": "d08bee777730cfcc224051af6447863cea329497",
+    "prerequisites": "Existing configured Pi controller, unchanged worker definitions, a different-family trail reviewer, pristine private reconciliation fixture, explicit non-default base/ready parent PR, and verified Herdr caller pane.",
+    "parameters": {
+      "target_reduction": 50,
+      "attempt_floor": 3,
+      "max_attempts": 6,
+      "max_seconds": 5400
+    },
+    "artifacts": "Private immutable original receipt, native sessions, working witnesses, accepted source snapshots, measurements, profiles, CLI stdout/stderr and both ledgers remain available locally. No raw transcript or private path is published."
+  },
+  "limitations": [
+    "The original FAIL remains unchanged. Partial native scope and measurement evidence does not complete Hillclimb, Opening a PR or the 23-playbook inventory.",
+    "No independent fresh performance replay, final Comment review or PR handoff was completed.",
+    "The final numeric target was met only by retained observations; trail semantics and all downstream payload semantics were deliberately not assessed.",
+    "Any future owned-directory listing exception must be declared prospectively and paired with a real delivery gate; it cannot validate this run.",
+    "Attended local evidence does not verify cloud execution, durable wake or unattended operation. Post-execution auditing is not containment."
+  ]
+}

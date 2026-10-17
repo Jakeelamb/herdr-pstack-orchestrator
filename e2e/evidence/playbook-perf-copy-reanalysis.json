@@ -1,0 +1,135 @@
+{
+  "schema": "horch/playbook-artifact-reanalysis/v1",
+  "kind": "independent_read_only_native_artifact_and_remote_audit",
+  "scenario": "perf-issue",
+  "original_receipt_unchanged": true,
+  "original_receipt_sha256": "5573b13e19e298444b338a1a790495d14827c72d2e0c5714203f22c9bace1c50",
+  "original_workflow_verdict": "fail",
+  "original_checks_passed": 31,
+  "original_checks_total": 31,
+  "source_revision": "eb84b919f4c53dfd3c40068dc0ce275140e511cb",
+  "native_transcript_sha256": "cea0ce92856f3d2043d2a485296f6471932caf74aff0a75ff3fe0a92e97e89e2",
+  "native_comparison_sha256": "60f62112c0b8ce484135030e7bf5bd26e35c5c7b07f5c5760745c278447aef3f",
+  "independent_comparison_sha256": "36f7f9a2531b352eee967d3f0a262962c16ddaa3a672556f3459a3d11270af34",
+  "independent_command_sha256": "35632d6617e217bf6a18fed5dcff98f54556c01af41c2a2bcd594430a78c27fc",
+  "independent_pr_readback_sha256": "29dd29f015f2367f2303102257ec597090bf82aed7236ceaee56676ad3548b39",
+  "independent_remote_integrity_sha256": "219c2ce91d85bc09a33d7d3e45c9e8d88e6e7c689648b6d60a4f98be4efc7a43",
+  "immutable_probe_sha256": "9e2d4cfe8c3c09b443380e04d2d9401bdfda421683f2556ee680a147f49a42a7",
+  "worker_native_sha256": {
+    "how": "23195741c69815d60d03ced1d27581b9fb48e84e3a91c259c230a63db7c04ea7",
+    "implementation": "cd3907d0b8c949426bd29ffe6f024f30743e5f80e78ed29a591d33a3b5d8be28"
+  },
+  "evaluator_findings": [
+    "The shared native auditor and Perf witness reject a legitimate exact delivered-report copy.",
+    "The literal grammar excludes the retained CLI E2E command, a two-observation sha256sum and detached-reader status.",
+    "The mantra constant contains shortened labels instead of the requested full original strings.",
+    "The diff and clean-state gates reject complete staged diff and a clean branch-header status form.",
+    "The PR readback requires an undisclosed headRefOid field, and the reply requires an undisclosed exact primary-number string."
+  ],
+  "manual_observations": {
+    "numbered_perf_stages_witnessed": 6,
+    "native_rows": 160,
+    "native_tool_calls": 77,
+    "successful_native_calls": 76,
+    "expected_missing_origin_discovery_calls": 1,
+    "configured_workers_delivered_before_consumption": 2,
+    "how_preserved_verbatim": true,
+    "implementation_attempts": 1,
+    "source_changes_only_selected_function": true,
+    "commit_count": 1,
+    "commit_revision": "1379c7b55bde14d1bcf631dd447e27762d78f58a",
+    "tracked_files": [
+      "reconcile.py",
+      "PERFORMANCE.md"
+    ],
+    "committed_measured_blobs_match": 5,
+    "native_timings": {
+      "before": {
+        "median_ms": 131.402894,
+        "minimum_ms": 128.726551,
+        "maximum_ms": 132.987283,
+        "samples_ms": [
+          128.726551,
+          132.987283,
+          131.402894,
+          131.017929,
+          131.569432
+        ],
+        "runs": 5
+      },
+      "after": {
+        "median_ms": 37.984634,
+        "minimum_ms": 37.871197,
+        "maximum_ms": 38.597956,
+        "samples_ms": [
+          38.337869,
+          37.984634,
+          38.597956,
+          37.871197,
+          37.963974
+        ],
+        "runs": 5
+      }
+    },
+    "native_reduction_fraction": 0.7109300043269975,
+    "independent_timings": {
+      "before": {
+        "median_ms": 130.795108,
+        "minimum_ms": 129.940425,
+        "maximum_ms": 132.122384,
+        "samples_ms": [
+          130.106402,
+          132.122384,
+          131.025477,
+          129.940425,
+          130.795108
+        ],
+        "runs": 5
+      },
+      "after": {
+        "median_ms": 38.116708,
+        "minimum_ms": 37.288454,
+        "maximum_ms": 38.555957,
+        "samples_ms": [
+          37.288454,
+          38.116708,
+          38.356846,
+          38.555957,
+          38.022157
+        ],
+        "runs": 5
+      }
+    },
+    "independent_reduction_fraction": 0.708576959927278,
+    "alternating_pairs_per_comparison": 5,
+    "ranges_do_not_overlap": true,
+    "profiling_separate_from_reported_timings": true,
+    "binary_profiles_reduced_exactly": 6,
+    "measurement_stdout_results_verified": 36,
+    "references": 2500,
+    "payments": 6000,
+    "total_units": 958008,
+    "measurement_errors": 0,
+    "actual_cli_cases": 6,
+    "expected_exit_2_rejections": 3,
+    "portable_report_matches_comparison": true,
+    "ready_unmerged_child_pr_verified": true,
+    "child_head_and_base_verified": true,
+    "auto_merge_disabled": true,
+    "successful_remote_checks": 2,
+    "remote_body_exactly_matches_local_file": true,
+    "only_owned_branch_and_pr_added": true,
+    "original_parents_ready_and_unmerged": true,
+    "source_hashes_unchanged": 202,
+    "configuration_bundle_and_probe_unchanged": true,
+    "original_fixture_unchanged": true,
+    "owned_panes_closed": true
+  },
+  "limitations": [
+    "The original receipt remains failed: its true recorded checks precede the stopped native auditor. This separate audit does not replace a fresh passing automated run.",
+    "Worker identity was retrospectively matched within each exact owned cwd to one session with matching brief, nonce, time, model and effort; no live worker-actor UUID binding was retained.",
+    "These measurements cover one deterministic workload on one host, with process startup and warm filesystem effects included. They establish no production ceiling or general speedup guarantee.",
+    "The simple How route and one index optimization do not verify Hillclimb, other design branches, cloud execution, wake mechanisms or the full playbook inventory.",
+    "Raw native sessions, configuration, binary profiles, private forge identities and worktrees remain private."
+  ]
+}

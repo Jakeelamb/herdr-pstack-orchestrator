@@ -1,0 +1,98 @@
+{
+  "schema": "horch/babysit-check-independent-audit/v1",
+  "kind": "independent post-run contract and native-sequence review",
+  "original_receipt": "playbook-babysit-grammar.json",
+  "original_receipt_sha256": "4968daa7a1e1289dff7d68a6ec72299a2e40a2d2629b69771b3a54d1f78e438d",
+  "original_receipt_unchanged": true,
+  "source_revision": "ac05f6f26933d21133101de54976da366b6c759e",
+  "original_verdict": "fail",
+  "original_workflow_verdict": "blocked",
+  "recorded_checks": {
+    "passed": 34,
+    "total": 35,
+    "first_failed": "all_native_bash_attempts_readonly_literal"
+  },
+  "seconds": 228.583,
+  "native_sha256": "da3730c8c28deb74e013b98fd093dfeaaf4f75f941acb6ff88ab94390833b31c",
+  "tool_attempts": 31,
+  "recorded_successful_native_tool_calls": 29,
+  "diagnosis": "The checker rejected required or brief-directed read-only Herdr inspection commands that the preparation brief did not exclude with a complete Bash grammar. This is a concrete evaluator-contract gap, without an observed model, merge or source-write violation.",
+  "rejected_calls_zero_based": [
+    {
+      "call_row": 51,
+      "result_row": 52,
+      "command": "test \"${HERDR_ENV:-}\" = 1",
+      "successful": true,
+      "basis": "Required verbatim by the fully read installed Herdr skill at native row 37."
+    },
+    {
+      "call_row": 53,
+      "result_row": 54,
+      "command": "herdr --help",
+      "successful": true,
+      "basis": "Herdr skill requires installed CLI discovery."
+    },
+    {
+      "call_row": 55,
+      "result_row": 56,
+      "command": "herdr agent",
+      "successful": false,
+      "expected_help_exit_code": 2,
+      "basis": "Herdr skill requires relevant command-group help; the nonzero help result is retained."
+    },
+    {
+      "call_row": 61,
+      "result_row": 62,
+      "command": "herdr agent read <unique previously listed caller-workspace actor> --source visible",
+      "successful": true,
+      "basis": "The brief directs inspection of known live actors; the target matches exactly one listed actor in the verified caller workspace."
+    }
+  ],
+  "actor_binding": {
+    "list_call_row": 57,
+    "list_result_row": 58,
+    "exact_json_write_call_row": 59,
+    "exact_json_write_result_row": 60,
+    "visible_read_call_row": 61,
+    "visible_read_result_row": 62,
+    "snapshot_sha256": "cf7ee88a79323a6ff0ebdf96e8018838382ccb924a195e66a9b44c69efaee7c2",
+    "unique_prior_target_match": true,
+    "verified_caller_workspace_match": true,
+    "visible_output_type": "plain text, not a structured identity response",
+    "global_exclusivity_established": false
+  },
+  "observed_scope": {
+    "mode": "check",
+    "queue_count": 2,
+    "original_nine_stage_checklist_preserved": true,
+    "watcher_executed": false,
+    "before_snapshot_present": false,
+    "after_snapshot_present": false,
+    "source_writes_observed": false,
+    "forge_mutations_observed": false,
+    "check_pass_established": false,
+    "full_babysit_pass_established": false
+  },
+  "integrity": {
+    "source_hashes": 202,
+    "source_config_bundle_intact": true,
+    "fixture_and_refs_intact": true,
+    "owned_cleanup_passed": true
+  },
+  "forward_repair": {
+    "reviewed_driver_sha256": "3b6405209845b95887ff28c39473a2e7da19d201acbcee80e5a04f413a63a837",
+    "scope": [
+      "Declare complete preparation and continuation Bash grammars.",
+      "Permit only the exact required environment guard as a shell-expansion exception and the observed read-only help forms.",
+      "Permit visible reads only for unique prior-listed caller-workspace actors, after the bound native snapshot write.",
+      "Require one unchanged actor snapshot and retain all-attempt auditing and the generic literal parser."
+    ],
+    "validation": "Compilation, CLI help and independent code review only; new live evidence is required."
+  },
+  "limitations": [
+    "The original failed receipt remains unchanged; no fresh run or retrospective pass is established.",
+    "No watcher status, real queue classification, triage or complete Check flow was executed.",
+    "One future Check pass would not complete Babysit drive/background, cloud, wake, fix/reply, retry or merge paths.",
+    "Visible local actors and a scoped lease do not prove global babysitter exclusivity."
+  ]
+}

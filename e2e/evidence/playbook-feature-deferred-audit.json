@@ -1,0 +1,51 @@
+{
+  "schema": "horch/user-directed-original-playbook-deferral/v1",
+  "kind": "user-directed scope reduction, not a runtime defect or passing workflow",
+  "original_receipt": "playbook-feature-deferred.json",
+  "original_receipt_sha256": "b289ca87d4989956d7c9ef8efb994aeaffe4f4b82efce7a7aea25f5bf4189963",
+  "original_workflow_verdict": "fail",
+  "source_revision": "222df2eb4f602af72a8ce8205ebc2b13925e7b7f",
+  "seconds": 262.963,
+  "recorded_checks": {
+    "total": 37,
+    "passed": 37
+  },
+  "reason": "The user deferred full 23-playbook conformance and narrowed release readiness to reversible installation, role routing, worker replacement and one practical implementation/review/private-PR workflow.",
+  "stop": {
+    "manual": true,
+    "signal": "SIGINT",
+    "exact_owned_pid_argv_cwd_start_ticks_verified": true,
+    "operator_stop_sha256": "115dcd8216901e340a250b482a46f760779989377924197cae2bcf6a865e0489",
+    "worker_tasks_started": 1,
+    "completed_worker_deliveries": 0,
+    "live_working_binding_captured": true,
+    "native_stages": 0,
+    "commits": 0,
+    "pushes": 0,
+    "child_prs": 0
+  },
+  "verified_before_stop": {
+    "main_brief_bytes": 29313,
+    "complete_native_read": {
+      "call_row": 5,
+      "result_row": 6,
+      "bytes_equal_actual_file": true,
+      "is_error": false,
+      "sha256": "a92f15653ca3835766fdbf853a496d66ce5ba88d320427cc3bd9fc306283ab37"
+    },
+    "baseline_records": 11,
+    "baseline_checks": 13,
+    "baseline_verdict": "pass",
+    "input_capacity_repair_exercised": true
+  },
+  "integrity": {
+    "public_source_config_bundle_oracle_integrity": true,
+    "original_fixture_unchanged": true,
+    "owned_panes_absent": true
+  },
+  "limitations": [
+    "The unfinished explorer report/result/native-output/write/edit/raw-wait and copied payload bodies remain unread.",
+    "This is an intentional scope stop and no new worker defect, native mutation replay, complete Feature or Opening-a-PR pass is inferred.",
+    "Full original-playbook conformance is a later milestone. Practical workflow acceptance is a distinct product claim, not a replacement PASS for any original failure."
+  ]
+}

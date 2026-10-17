@@ -1,0 +1,130 @@
+{
+  "schema": "horch/playbook-interruption-audit/v1",
+  "kind": "independent post-run metadata-only review",
+  "scenario": "first Hillclimb attempt",
+  "original_receipt": "playbook-hillclimb-shell.json",
+  "original_receipt_unchanged": true,
+  "original_receipt_sha256": "7dacc810b30e0b23fcd29cee9e09aec4c17f61f209baec99c0e0c1c44dc37167",
+  "source_revision": "ac05f6f26933d21133101de54976da366b6c759e",
+  "original_workflow_verdict": "fail",
+  "stop": "Operator interrupted the exact owned driver after its How worker used explicitly excluded Bash listing commands. No automatic quarantine is established.",
+  "recorded_checks": {
+    "passed": 28,
+    "total": 28,
+    "meaning": "Setup and final integrity/cleanup only; no completed Hillclimb workflow audit."
+  },
+  "seconds": 410.259,
+  "worker": {
+    "role": "how explainer",
+    "worker": "glm",
+    "provider": "zai",
+    "model": "glm-5.3",
+    "effort": "max",
+    "state_after_cleanup": "running",
+    "closed": true,
+    "delivered": false,
+    "report_or_result_file_present": false,
+    "task_sha256": "5ba879b618995d5f20d82101e183b97e3ed65a0debbc5213db7f1212cf698ff5",
+    "brief_sha256": "dc33ed6a2efaadbfa2cde3e56c93284880b97957fdbc01525892d6894b29d0b5",
+    "native_sha256": "8b96c0d0f8bbd57b362e1484189ae5733febd317ff1051e10ec1a74c5da7a777",
+    "native_lines": 27,
+    "tool_calls": 15,
+    "tool_counts": {
+      "read": 11,
+      "bash": 4
+    },
+    "tool_errors": 0,
+    "pending_calls": 0,
+    "captured_working_session_match": true,
+    "capture_sha256": "dde461b0c4794c82ce5854f25dd07848ccae2f319093b6d5a0330bcdf28aad34",
+    "working_observation_sha256": "ca2e0b09e2d6de8d76ad1b51d26324c5635314bfea68d3684955e1ad0b055808"
+  },
+  "declared_protocol": {
+    "actual_brief_explicit": true,
+    "filesystem_inspection": "Use native ls/find; Bash is limited to listed read-only Git/cat/sha256sum/wc/pwd/frozen CLI-oracle/py_compile/json.tool forms. Bash ls/find are excluded."
+  },
+  "violations": [
+    {
+      "command": "ls -la <exact owned How cwd>",
+      "command_sha256": "51f65b931b082518e5423a1a4c807fad4974980d2b166e5786929588ea0cdb2d",
+      "audit_call_row_zero_based": 10,
+      "jsonl_call_line_one_based": 11,
+      "audit_result_row_zero_based": 11,
+      "successful": true
+    },
+    {
+      "command": "find <exact owned How cwd> -type f -not -path <owned Git exclusion>",
+      "command_sha256": "20e142e49be3dc1b416da5220685194b8ec336f84b7fff1f6ac3b5813ced07e8",
+      "audit_call_row_zero_based": 10,
+      "jsonl_call_line_one_based": 11,
+      "audit_result_row_zero_based": 12,
+      "successful": true
+    }
+  ],
+  "observed_scope": "Command operands remained in the owned reader. No outside-source, network, forge or write call was observed; the established violation is the explicit tool grammar.",
+  "separate_unreached_heading_issue": {
+    "actual_required_instructions_present": true,
+    "controller_authored_prefix_sha256": "9d3bffa2d93737cd10cae8d04ea0235f5b6b4721d2e595be75793c736fc4999b",
+    "exact_prefix_plus_horch_suffix_binding": true,
+    "worker_rule_headings": 2,
+    "frozen_checker": "hillclimb_loop.py:726-728 splits before the first heading; this excludes instructions under the controller-authored internal heading.",
+    "caused_original_stop": false,
+    "interpretation": "This is a separate unreached parser/contract mismatch, not evidence that the worker never received instructions. A forward repair must preserve the exact nonce-bound appended suffix and inspect the complete authored prefix. It cannot erase the shell violations."
+  },
+  "lead": {
+    "native_sha256": "59421d37aee81c8e4ccfef2102a2a2632cdb6bf3d9bd81e407c32b90763e18f6",
+    "native_lines": 74,
+    "tool_calls": 35,
+    "tool_counts": {
+      "read": 29,
+      "write": 2,
+      "bash": 4
+    },
+    "resolved_successful_calls": 34,
+    "pending_wait_calls": 1,
+    "native_written_artifacts": [
+      "checklist.md",
+      "How brief"
+    ],
+    "bash_operations": [
+      "one worker dispatch",
+      "uptime",
+      "nproc",
+      "one interrupted wait"
+    ],
+    "worker_report_result_reads": 0,
+    "application_source_reads_writes": 0,
+    "source_diffs": 0,
+    "measurements": 0,
+    "dependent_tasks": 0,
+    "commits": 0,
+    "pushes": 0,
+    "forge_pr_mutations": 0
+  },
+  "integrity": {
+    "source_identities": 203,
+    "bundled_resources": 198,
+    "source_head_status_and_hashes_intact": true,
+    "original_and_copied_configuration_intact": true,
+    "probe_engine_and_session_settings_intact": true,
+    "original_fixture_head_status_and_nonowned_local_refs_intact": true,
+    "owned_panes_absent": true,
+    "fresh_remote_ref_readback_performed": false
+  },
+  "probe_sha256": "d5634a5d9d97502909a848e3139ffa61c8bf8a7781aab6392a1a8df0a1d3c0b5",
+  "engine_sha256": "16b08a09a9468d21847d1efd7c5e7ea36e13bf69f1af15a00ceadc1db2c09c6c",
+  "operator_stop_sha256": "d7c143671b89ee2b4d14d62d85d24383713aa56f5086cd4d6fd5e2801d94409b",
+  "review_scope": "Task/brief/session bindings, receipt metadata, native call arguments, row identities, lifecycle, error flags and hashes only. Worker report/result and native output/write/edit payload bodies remained unread.",
+  "limitations": [
+    "The original FAIL remains unchanged; no Hillclimb, completed How explanation, measured attempt, Opening a PR or full-inventory pass is established.",
+    "No worker-output semantics were assessed. The manual stop does not demonstrate automatic withholding.",
+    "The separate heading mismatch was not reached and did not cause the original stop.",
+    "Post-execution evidence checking does not establish a sandbox or credential containment."
+  ],
+  "forward_parser_repair": {
+    "driver_sha256": "fc1be2523711f27042638ca726f55d2e06535d74d6269209c2da57588e5a0f4b",
+    "change": "Validate and strip only the exact nonce-bound appended Horch suffix; inspect the complete controller-authored prefix and preserve native launch/source binding.",
+    "tool_grammar_unchanged": true,
+    "validation": "Compilation, CLI help and independent code review only; no new live Hillclimb pass."
+  }
+}

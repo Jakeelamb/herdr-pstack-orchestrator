@@ -1,0 +1,106 @@
+{
+  "schema": "horch/independent-feature-input-capacity/v1",
+  "kind": "controller input and native diagnostic audit; not a fresh passing run",
+  "original_receipt": "playbook-feature-capacity.json",
+  "original_receipt_sha256": "cac13aaf887e94e4f6b9625c2015d461f59b13d917110eb10f364386f1fd2f6e",
+  "original_receipt_unchanged": true,
+  "original_workflow_verdict": "fail",
+  "source_revision": "4da011566fa1293b1e6b0c6ddcdb2a696580a502",
+  "driver_sha256": "f37c9eaafbf0df70e13175e9e11cf07a7a7b9ebe7605c76c5f847c8afca536e6",
+  "oracle_sha256": "303be7bd89e9ae9593dc38eaf9f748fdd429642b532bab492e20eedb76a9fe84",
+  "seconds": 49.916,
+  "recorded_checks": {
+    "total": 32,
+    "passed": 31,
+    "failed": [
+      "all_actual_tasks_done_closed"
+    ],
+    "scope": "preparation, runtime prefix, integrity and cleanup; no completed original-workflow stage"
+  },
+  "failure_categories": [
+    "assertion_failed"
+  ],
+  "controller_input": {
+    "sha256": "a7587cba3fcbeacef096d66b52ab07b07012be7f7f8b728fc3eee885da59a4ad",
+    "bytes": 90050,
+    "lines": 375,
+    "maximum_line_bytes": 55799,
+    "maximum_line_number": 73,
+    "defect": "All generated worker evidence-grammar blocks are encoded in one JSON line larger than the native reader's 50 KB per-call output limit."
+  },
+  "native_controller": {
+    "sha256": "b0733f300c17e144b02bcf7d0e06bbb3fc4ca8f682f3a2e9aa4eaecf5e524784",
+    "rows": 14,
+    "full_final_driver_audit_completed": false,
+    "observations": [
+      {
+        "call_row": 5,
+        "result_row": 6,
+        "operation": "native read of complete controller brief without offset or limit",
+        "observed": "Only lines 1-72 returned, followed by the 50 KB truncation marker."
+      },
+      {
+        "call_row": 7,
+        "result_row": 8,
+        "operation": "native read of the original poteto-mode skill",
+        "observed": "The complete original mode is read before further attempted controller-brief recovery."
+      },
+      {
+        "call_row": 9,
+        "result_row": 10,
+        "operation": "native read with offset 73 and limit 100",
+        "observed": "The 54.5 KB line exceeds the 50.0 KB limit; no line content returned.",
+        "tool_result_is_error": false
+      },
+      {
+        "call_row": 11,
+        "result_row": 12,
+        "operation": "literal cat of the complete controller brief",
+        "observed": "The native Bash result includes a 50 KB truncation marker and only lines 74-375."
+      },
+      {
+        "row": 13,
+        "operation": "final controller response",
+        "observed": "Stops before delegation because mandatory full-read input cannot be obtained under the declared command grammar.",
+        "stop_reason": "stop"
+      }
+    ]
+  },
+  "baseline": {
+    "mode": "characterize",
+    "verdict": "pass",
+    "observation_sha256": "85e0f3d21f6072af5168f8449cc72be2f6d6980863c34c230994429ac1b0bd3d",
+    "observations": 11,
+    "checks": 13,
+    "scope": "Unchanged baseline behavior only; no candidate or final comparison."
+  },
+  "outcome": {
+    "manual_stop": false,
+    "worker_tasks": 0,
+    "automatic_worker_quarantines": 0,
+    "native_stages": 0,
+    "commits": 0,
+    "pushes": 0,
+    "child_prs": 0,
+    "candidate_comparisons": 0,
+    "native_artifact_replay_exercised": false
+  },
+  "integrity": {
+    "public_source_config_bundle_oracle_unchanged": true,
+    "original_fixture_head_and_full_git_status_unchanged": true,
+    "owned_panes_absent": true
+  },
+  "forward_repair": {
+    "scope": "Generated private controller input only; preserve exact worker evidence grammar and existing gates.",
+    "required": "Separate immutable per-slot protocol files and exact Comment assignment template, each within native full-read limits; require and verify complete lead reads before corresponding complete native brief writes; bind hashes in delivery and final integrity.",
+    "fresh_live_run_required": true
+  },
+  "limitations": [
+    "This definite input-capacity defect precedes all worker dispatch and does not identify a worker breach, provider failure or automatic worker quarantine.",
+    "The native diagnostic and truncated cat results are tool-level successes; the final receipt fails task completion with zero tasks.",
+    "The failed receipt is unchanged. Its task-completion failure does not establish a successful playbook stage.",
+    "No actual native artifact edit/replay, stricter per-candidate normal preservation, mandatory Comment bootstrap or PR eligibility is verified by this run.",
+    "All earlier rejected or unfinished worker report/result/native-output/write/edit/raw-wait and copied payload bodies remain unread; this run has no workers.",
+    "Private controller input, transcripts, paths and configuration remain private; publication retains structural observations and hashes."
+  ]
+}

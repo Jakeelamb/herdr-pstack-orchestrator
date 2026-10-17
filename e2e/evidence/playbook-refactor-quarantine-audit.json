@@ -1,0 +1,153 @@
+{
+  "schema": "horch/design-quarantine-audit/v1",
+  "kind": "independent post-run metadata-only review",
+  "scenario": "first Refactoring attempt",
+  "original_receipt": "playbook-refactor-quarantine.json",
+  "original_receipt_unchanged": true,
+  "original_receipt_sha256": "004213b372fa536559302930fc6b35c11e1e21401f963bb6924b3dcd469c2b42",
+  "source_revision": "fdc7bfd3517004550f9bc7fb84fe5de25211d7fb",
+  "original_workflow_verdict": "fail",
+  "failure_category": "worker_gate_quarantined_stop",
+  "seconds": 322.11,
+  "recorded_checks": {
+    "passed": 31,
+    "total": 31,
+    "meaning": "Setup and final integrity/cleanup; no completed workflow stage."
+  },
+  "declared_protocol": {
+    "native_tools": [
+      "read",
+      "bash",
+      "write",
+      "edit",
+      "grep",
+      "find",
+      "ls"
+    ],
+    "actual_how_briefs_explicit": true,
+    "fff_or_bash_listing_exception": false,
+    "interpretation": "The automatic rejection is valid under the contract actually declared for this run."
+  },
+  "explorers": [
+    {
+      "slot": "how-a",
+      "state": "done",
+      "closed": true,
+      "live_working_binding_captured": true,
+      "provider": "commandcode",
+      "model": "deepseek/deepseek-v4.1-flash",
+      "effort": "max",
+      "task_sha256": "3e22640f8a5c31477a6019d684609589cbf2c66073c210f27b975b08117e870b",
+      "brief_sha256": "815e968196dc43139fca72d1f15189fc89c1477acde3966ee1286ba1e9bea070",
+      "native_rows": 44,
+      "tool_counts": {
+        "read": 9,
+        "bash": 17,
+        "write": 2
+      },
+      "first_excluded_bash_ls_call_row_zero_based": 11,
+      "additional_excluded_forms": [
+        "Bash ls",
+        "Bash grep"
+      ],
+      "gate_verdict": "fail"
+    },
+    {
+      "slot": "how-b",
+      "state_after_cleanup": "running",
+      "closed": true,
+      "live_working_binding_captured": true,
+      "provider": "commandcode",
+      "model": "deepseek/deepseek-v4.1-flash",
+      "effort": "max",
+      "task_sha256": "30fdb4d2d3348615aa67a620f32ce26323ca4b45cafc805c6150d19d7691114b",
+      "brief_sha256": "e5192de941097193bfb5a98c3ee377236ab88a86fc2c975d5f748cbc48464909",
+      "native_rows": 38,
+      "tool_counts": {
+        "read": 11,
+        "bash": 12,
+        "write": 1
+      },
+      "first_excluded_bash_ls_call_row_zero_based": 11,
+      "excluded_bash_find_call_row_zero_based": 20,
+      "gate_verdict": "not_run"
+    }
+  ],
+  "private_gate": {
+    "raw_wait_sha256": "3eace0be0b1cca4d8f135125305732802204fee810844de3bb16bc8bc145c51c",
+    "raw_wait_exit_code": 0,
+    "raw_wait_stdout_bytes": 723,
+    "raw_wait_stderr_bytes": 0,
+    "quarantine_gate_sha256": "8000a52af2948df0625e909532b09d3d50faa13b0c39eb8403f2a7a174f8e555",
+    "lead_received_only_fixed_safe_metadata": true,
+    "safe_response_field_count": 6,
+    "raw_wait_and_worker_payloads_withheld": true
+  },
+  "lead": {
+    "native_sha256": "11237549a7440e416f558ea8281da9eb996809caed3430e93d58b26ad619d345",
+    "native_rows": 87,
+    "tool_calls": 41,
+    "how_launches": 2,
+    "safe_wait_call_row_zero_based": 85,
+    "safe_wait_result_row_zero_based": 86,
+    "worker_payload_reads": 0,
+    "raw_gate_or_wait_reads": 0,
+    "dependent_launches": 0,
+    "native_rows_after_quarantine_response": 0,
+    "interpretation": "Unlike the first Feature attempt, automatic quarantine stopped delivery before lead consumption or dependent synthesis."
+  },
+  "actual_launch_count": 2,
+  "completed_stages": 0,
+  "commit_count": 0,
+  "new_pr_created": false,
+  "task_accounting": {
+    "final_verification_tasks_count": 0,
+    "discovered_task_lifecycles_count": 2,
+    "meaning": "The early-failure receipt separately accounts for both actual launches and working-session bindings."
+  },
+  "integrity": {
+    "source_hashes": 217,
+    "bundled_resources": 198,
+    "source_maps_equal": true,
+    "copied_config_matches": true,
+    "oracle_unchanged": true,
+    "original_fixture_unchanged": true,
+    "owned_panes_absent": true
+  },
+  "installed_tool_compatibility": {
+    "kind": "Separate current configuration and installed-source inspection; not a historical effective-tool registry.",
+    "pi_version": "1.2.0",
+    "default_tools": [
+      "read",
+      "bash",
+      "edit",
+      "write"
+    ],
+    "current_settings_default_tool_additions": [
+      "codemode"
+    ],
+    "current_settings_sha256": "b2e492dd64f9ad6f9579a90037276bf8fe1eeacbc77abacde8a82b2fa33484a5",
+    "launch_tool_override_observed": false,
+    "optional_builtin_search_tools_not_selected_by_known_defaults": [
+      "grep",
+      "find",
+      "ls"
+    ],
+    "installed_fff_version": "0.11.0",
+    "available_fff_tool_names": [
+      "fffind",
+      "ffgrep"
+    ],
+    "positive_historical_feature_calls_establish_fff_callable_there": true,
+    "interpretation": "Advertising optional builtin discovery tools was a compatibility gap. A deliberately bounded How-only FFF/listing contract requires fresh live evidence without changing startup settings."
+  },
+  "review_scope": "Task/brief/session bindings, fixed receipt and gate metadata, native call arguments, row identities, lifecycle, error flags and hashes only. Worker report/result bodies, raw wait bodies, native tool-output/write/edit payloads remained unread.",
+  "limitations": [
+    "The original FAIL remains unchanged; no Refactoring, Opening a PR or full-inventory pass is established.",
+    "No semantic report assessment or successful delivery is established.",
+    "Both workers were observed within owned local path arguments; no outside-path, network, configuration or forge mutation argument was observed. This is not a payload assessment.",
+    "The unfinished second explorer was closed by owned cleanup; closure does not establish delivery.",
+    "Current global settings and known launch arguments do not prove the full effective tool registry of every historical session.",
+    "Post-execution pre-forwarding evidence checking does not establish a sandbox or credential containment."
+  ]
+}

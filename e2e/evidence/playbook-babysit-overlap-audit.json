@@ -1,0 +1,120 @@
+{
+  "schema": "horch/babysit-overlap-audit/v1",
+  "kind": "independent retained-evidence review",
+  "scenario": "fourth bounded Babysit Check attempt",
+  "original_receipt": "playbook-babysit-overlap.json",
+  "original_receipt_sha256": "c8c8c794bfbdcf45e868819a74314def73db97f73f0c3c0b7be05ea972d8294a",
+  "original_receipt_unchanged": true,
+  "source_revision": "d62023d755f095f425a16088baa8732715ef5d76",
+  "driver_sha256": "89aec6b4937d20fe9649aa55cd686e2c5f4672d01514caeb80779101a0b30890",
+  "verdict": "fail",
+  "workflow_verdict": "blocked",
+  "last_phase": "preparation",
+  "seconds": 235.59,
+  "checks": {
+    "passed": 29,
+    "total": 30
+  },
+  "first_failed_check": "scoped_lease_honest_ownership",
+  "ownership_predicates": {
+    "nonce_matches": true,
+    "lease_scope_matches": true,
+    "global_exclusivity_unproven": true,
+    "limits_present": true,
+    "actor_evidence_matches": true,
+    "visible_conflicts_empty": false
+  },
+  "ownership_sha256": "961fd30bc2da4f6e6250196494acacab644ec2ef5e9a8c63c10a1939445ebe39",
+  "actor_snapshot_sha256": "b87ac023085d1c9a4b5c945251b83715ce033a986521157f065b15677b00468d",
+  "native": {
+    "sha256": "ef3e1e58f0a989d8ff90197262b2b10ff424e35b7288d39ba196a045f45d047b",
+    "rows": 66,
+    "attempted_tool_calls": 30,
+    "successful_tool_calls": 28,
+    "expected_errors": 2,
+    "pending_calls": 0,
+    "tool_counts": {
+      "read": 19,
+      "bash": 6,
+      "write": 5
+    },
+    "provider": "openai",
+    "model": "gpt-6.1-sol",
+    "effort": "medium",
+    "working_binding_command_number": 13,
+    "working_binding_command_sha256": "11a72dc6b86cdb03c6d04618a5db28b50cae9b382aaa527af3265a2f65d8d639",
+    "fresh_identity_model_chain_valid": true,
+    "full_required_instruction_reads": 15,
+    "exact_allowed_note_writes": 5,
+    "actor_snapshot_write_rows_zero_based": [
+      55,
+      56
+    ],
+    "scoped_visible_actor_read_rows_zero_based": [
+      57,
+      58
+    ],
+    "ownership_write_rows_zero_based": [
+      63,
+      64
+    ]
+  },
+  "actor_identity": {
+    "target_is_unique_prior_listed_actual_caller_pane": true,
+    "target_in_caller_workspace": true,
+    "visible_text_matches_source_checkout_and_fixture": true,
+    "visible_proof_path_present": false,
+    "visible_nonce_present": false,
+    "visible_driver_pid_present": false,
+    "visible_queue_caller_deadline_flags_present": false,
+    "retained_pid_ancestry_linkage_present": false,
+    "exact_same_invocation_independently_bound": false,
+    "distinct_dispatcher_established": false,
+    "interpretation": "The observation is consistent with the supervising launch, but cannot distinguish it from another invocation. Same pane, source and repository are insufficient identity evidence."
+  },
+  "stop_assessment": {
+    "actual_brief_requires_stop_on_visible_same_repository_babysitting": true,
+    "controller_conservatively_reported_overlap_and_stopped": true,
+    "missing_nonce_or_ownership_field": false,
+    "checker_format_relaxation_justified": false,
+    "interpretation": "The blocked outcome is supported by the declared conservative protocol. Do not erase the conflict or blindly retry."
+  },
+  "unexecuted_artifacts": [
+    "ready.json",
+    "before.json",
+    "after.json",
+    "continuation-brief.md",
+    "watcher.json",
+    "triage.json",
+    "ci.json",
+    "report.json",
+    "reply.md"
+  ],
+  "watcher_calls": 0,
+  "forge_commands": 0,
+  "network_calls": 0,
+  "delegation_calls": 0,
+  "source_write_calls": 0,
+  "integrity": {
+    "source_files": 202,
+    "bundled_resources": 198,
+    "source_maps_equal": true,
+    "worker_config_unchanged": true,
+    "worker_config_sha256": "4a65fded74b6182f9eef5fbae15c59b677edebfb3b9df692bf6df7acab622dfe",
+    "fixture_head_status_refs_and_tracked_list_unchanged": true,
+    "owned_close_command_number": 247,
+    "owned_close_succeeded": true,
+    "owned_panes_absent": true,
+    "lease_released_with_same_nonce": true,
+    "prior_lease_released_before_start": true,
+    "runtime_binaries_unchanged": true
+  },
+  "review_scope": "Retained local receipt, original briefs, fixed note writes, native call/result ordering, working-session metadata, scoped actor observation and source/config/fixture/cleanup readbacks. No new model, forge, watcher or behavior replay was executed.",
+  "limitations": [
+    "The original FAIL remains unchanged; no bounded Check or full Babysit pass is established.",
+    "No watcher, forge status, before/after snapshot, triage or final-report observation occurred in this attempt. Earlier attempts cannot fill those stages.",
+    "A future fixture needs an independently checkable run-specific supervisor/launch witness. Caller-wide exemptions and unsupported no-conflict claims would invalidate that evidence.",
+    "The scoped lease and visible actor view cannot establish global babysitter exclusivity.",
+    "Cloud execution, durable wake, drive/background modes and merges remain outside this attempt."
+  ]
+}

@@ -12,6 +12,8 @@ import hashlib
 import json
 import os
 import re
+import secrets
+import shlex
 from pathlib import Path
 import subprocess
 import sys
@@ -133,6 +135,8 @@ class Run:
             text += '\n[workers.' + encode(name) + ']\n'
             # The supported worker fields are strings and arrays of strings.
             text += ''.join(f'{encode(k)} = {encode(v)}\n' for k, v in spec.items())
+        if not self.workers:
+            text += '\n[workers]\n'
         self.config.write_text(text, encoding='utf-8')
         parsed = tomllib.loads(self.config.read_text())
         if parsed != {'max_active_workers': limit, 'workers': self.workers}:
@@ -513,13 +517,390 @@ class Run:
         self.assertions.append({'name': 'owned workspace cleanup confirmed', 'ok': ok})
 
 
+class HotSwapRun(Run):
+    """Two real in-flight tasks, one alias changed and removed without retuning."""
+
+    def __init__(self, args, workers):
+        super().__init__(args, workers)
+        self.env.setdefault('MISE_CONFIG_DIR', str(Path(os.environ.get('XDG_CONFIG_HOME', Path.home() / '.config')) / 'mise'))
+        self.env.setdefault('MISE_STATE_DIR', str(Path(os.environ.get('XDG_STATE_HOME', Path.home() / '.local/state')) / 'mise'))
+        self.skipped = False
+        self.checkout_before = None
+        self.source_before = self.skill_hashes()
+        self.alias_specs = []
+        self.owned_tasks = []
+        self.hot_limit = self.started + args.max_seconds
+        self.root_pane = None
+        self.selected_specs = {}
+        self.limitations = []
+
+    @staticmethod
+    def skill_hashes():
+        return {str(p.relative_to(REPO)): sha(p) for p in (REPO / 'skills').rglob('*')
+                if p.is_file() and '__pycache__' not in p.parts and p.suffix != '.pyc'}
+
+    def checkout_signature(self):
+        proc = self.command(['git', 'ls-files', '-z'])
+        head = self.command(['git', 'rev-parse', 'HEAD'])
+        if proc.returncode or head.returncode:
+            raise RuntimeError('hot_swap_checkout_identity_unavailable')
+        paths = proc.stdout.split('\0')
+        manifest = {name: sha(self.args.cwd / name) if (self.args.cwd / name).is_file() else None
+                    for name in paths if name}
+        return {'sha256': hashlib.sha256(json.dumps(manifest, sort_keys=True).encode()).hexdigest(),
+                'tracked_files': len(manifest), 'revision': head.stdout.strip()}
+
+    def remaining(self):
+        remaining = self.hot_limit - time.monotonic()
+        if remaining <= 0:
+            raise RuntimeError('hot_swap_deadline_exceeded')
+        return remaining
+
+    def wait_shell_ready(self):
+        deadline = min(self.hot_limit, time.monotonic() + 30)
+        stable = None
+        while time.monotonic() < deadline:
+            pane = self.herdr('pane', 'get', self.root_pane)['pane']
+            info = self.herdr('pane', 'process-info', '--pane', self.root_pane)['process_info']
+            shell = info.get('shell_pid')
+            foreground = info.get('foreground_processes') or []
+            revision = pane.get('revision')
+            ready = (isinstance(shell, int) and shell > 0
+                     and info.get('foreground_process_group_id') == shell
+                     and any(process.get('pid') == shell for process in foreground)
+                     and isinstance(revision, int) and revision > 0
+                     and not pane.get('agent'))
+            identity = (shell, revision) if ready else None
+            if identity and stable and stable[0] == identity:
+                if time.monotonic() - stable[1] >= .5:
+                    self.observations['owned_shell_readiness'] = {
+                        'shell_owns_foreground': True, 'rendered_revision_positive': True,
+                        'rendered_revision_stable': True}
+                    return
+            else:
+                stable = (identity, time.monotonic()) if identity else None
+            time.sleep(min(.2, max(0, deadline - time.monotonic())))
+        raise RuntimeError('owned_shell_not_ready')
+
+    def hot_cli(self, *argv):
+        """Use the owned shell's real ancestry rather than forge caller context."""
+        self.wait_shell_ready()
+        self.sequence += 1
+        stem = self.diagnostics / f'hot-command-{self.sequence:03d}'
+        out, err, status = (Path(str(stem) + suffix) for suffix in ('.stdout', '.stderr', '.exit'))
+        command = shlex.join([sys.executable, str(HORCH), *[str(a) for a in argv]])
+        # All substituted paths/arguments are shell-quoted; only this fixed wrapper
+        # captures the real process exit code. It does not bypass caller proof.
+        command += (' > ' + shlex.quote(str(out)) + ' 2> ' + shlex.quote(str(err))
+                    + '; hot_swap_status=$?; printf "%s" "$hot_swap_status" > '
+                    + shlex.quote(str(status) + '.tmp') + ' && mv '
+                    + shlex.quote(str(status) + '.tmp') + ' ' + shlex.quote(str(status)))
+        proc = self.command(['herdr', 'pane', 'run', self.root_pane, command])
+        if proc.returncode:
+            raise RuntimeError('owned_pane_run_failed')
+        deadline = min(self.hot_limit, time.monotonic() + 180)
+        while time.monotonic() < deadline:
+            if status.is_file():
+                return subprocess.CompletedProcess(argv, int(status.read_text()),
+                                                   out.read_text(), err.read_text())
+            time.sleep(min(.2, max(0, deadline - time.monotonic())))
+        raise RuntimeError('owned_horch_command_timeout')
+
+    def configure_alias(self, spec, phase):
+        self.workers = {'swap': dict(spec)} if spec is not None else {}
+        self.configure(2)
+        snapshot = self.root / ('workers-' + phase + '.toml')
+        snapshot.write_bytes(self.config.read_bytes())
+        self.alias_specs.append({'phase': phase, 'sha256': sha(snapshot)})
+        actual = tomllib.loads(snapshot.read_text()).get('workers', {})
+        self.check('hot swap isolated alias snapshot ' + phase,
+                   actual == ({'swap': spec} if spec is not None else {}))
+
+    def gate_brief(self, label):
+        from decimal import Decimal, ROUND_HALF_UP
+        directory = self.root / ('calculation-' + label)
+        directory.mkdir()
+        marker = secrets.token_hex(16)
+        events = []
+        seed = 11 if label == 'a' else 29
+        for index in range(720):
+            events.append({'id': f'event-{index:04d}', 'account': f'account-{(index * seed) % 37:02d}',
+                           'kind': 'refund' if index % 7 == 0 else 'sale',
+                           'quantity': (index * 13 + seed) % 9,
+                           'unit_price_cents': (index * 127 + seed * 19) % 15001,
+                           'discount_bp': (index * 271 + seed) % 10001})
+        batches = []
+        for batch in range(9):
+            chunk = events[batch * 80:(batch + 1) * 80]
+            retries = events[max(0, batch * 80 - 17):batch * 80]
+            batches.append(chunk + retries)
+        (directory / 'input.json').write_text(json.dumps({'batches': batches}))
+        balances = {}
+        for event in events:
+            amount = int((Decimal(event['quantity']) * event['unit_price_cents']
+                          * (10000 - event['discount_bp']) / 10000).quantize(Decimal(1), rounding=ROUND_HALF_UP))
+            if event['kind'] == 'refund':
+                amount = -amount
+            balances[event['account']] = balances.get(event['account'], 0) + amount
+        expected = {'unique_events': len(events),
+                    'duplicate_events': sum(map(len, batches)) - len(events),
+                    'net_total_cents': sum(balances.values()),
+                    'balances': balances,
+                    'top_accounts': [account for account in sorted(balances, key=lambda a: (-balances[a], a))[:5]],
+                    'checksum': sum((index + 1) * balances[account]
+                                    for index, account in enumerate(sorted(balances)))}
+        brief = directory / 'brief.md'
+        brief.write_text(f"""Implement and execute a real reconciliation calculation, without editing the checkout.
+Read input batches from {directory / 'input.json'}. Each event has a global id;
+ignore exact duplicate retries across all batches. For each unique event compute
+quantity * unit_price_cents * (10000-discount_bp) / 10000, rounded half-up to a
+whole cent PER EVENT. A refund negates this rounded amount; a sale adds it.
+Aggregate signed cents by account, including accounts whose balance is zero.
+Write solution.py and answer.json beside your result.json. Answer must have exactly
+unique_events, duplicate_events, net_total_cents, balances (account to integer),
+top_accounts (five account strings, descending balance, ties ascending name),
+and checksum (sum of sorted-account 1-based index times signed account balance).
+The independently rerunnable solution.py must perform the calculation itself
+when invoked with Python with no command-line arguments.
+IMPORTANT: first have the running solution.py write the exact text {marker}
+to {directory / 'ready'}, then block inside that SAME process waiting for
+{directory / 'release'} to exist (poll every 0.2 seconds, bounded to
+{self.args.max_seconds} seconds). Do not produce answer.json or result.json before
+release. Keep the native bash invocation running while blocked, with a timeout
+long enough for this gate. After release compute, write answer.json, and exit.
+Then publish the standard nonce-bound completed result. No subagents, Herdr,
+horch, configuration changes, model changes or trust/approval answers.
+""")
+        return directory, marker, brief, expected
+
+    def start_gated(self, label):
+        directory, marker, brief, expected = self.gate_brief(label)
+        before = set(self.records())
+        proc = self.hot_cli('run', 'swap', '--brief', brief, '--cwd', self.args.cwd,
+                            '--caller-pane', self.root_pane)
+        rows = self.rows('hot_start_' + label, proc)
+        self.check('hot swap task starts ' + label, proc.returncode == 0 and len(rows) == 1
+                   and rows[0].get('state') == 'running')
+        task_id = rows[0]['task_id']
+        self.check('hot swap one allocation ' + label, set(self.records()) - before == {task_id})
+        task = self.records()[task_id]
+        self.owned_tasks.append(task)
+        while self.remaining() > 0:
+            entry = self.herdr('agent', 'get', task['agent'])['agent']
+            status = entry.get('agent_status')
+            if status == 'blocked':
+                raise RuntimeError('hot_swap_worker_blocked')
+            ready = (directory / 'ready').read_text() if (directory / 'ready').is_file() else ''
+            if ready:
+                self.check('hot swap readiness identity ' + label, ready == marker)
+                self.check('hot swap acknowledged working gate ' + label,
+                           status == 'working' and not (Path(task['task_dir']) / 'result.json').exists())
+                break
+            if status in ('idle', 'done'):
+                raise RuntimeError('hot_swap_worker_settled_before_gate')
+            time.sleep(min(.5, self.remaining()))
+        self.check('hot swap native session capture owns task pane ' + label,
+                   entry.get('pane_id') == task['pane_id'])
+        native_capture = {'task_id': task_id, 'agent': task['agent'],
+                          'pane_id': task['pane_id'], 'observed_at': time.time(),
+                          'session': entry.get('agent_session') or {}}
+        (directory / 'native-session.json').write_text(json.dumps(native_capture, indent=2) + '\n')
+        return {'task': task, 'directory': directory, 'expected': expected,
+                'native_capture': native_capture,
+                'record_sha256': sha(Path(task['task_dir']) / 'task.json')}
+
+    def check_gates(self, gates, phase):
+        for gate in gates:
+            task = gate['task']
+            entry = self.herdr('agent', 'get', task['agent'])['agent']
+            self.check('hot swap running task preserved ' + phase + ' ' + task['task_id'],
+                       entry.get('agent_status') == 'working'
+                       and sha(Path(task['task_dir']) / 'task.json') == gate['record_sha256']
+                       and not (Path(task['task_dir']) / 'result.json').exists())
+
+    @staticmethod
+    def normalized(spec):
+        return dict({'provider': None, 'effort': None, 'args': [], 'description': None}, **spec)
+
+    def audit_native(self, task, spec, capture):
+        if spec['harness'] != 'pi':
+            return {'available': False, 'limitation': 'native model audit implemented for Pi only'}
+        # horch wait may already have closed the delivered task's pane. Bind
+        # the transcript to its independently captured working-session identity.
+        session = capture.get('session') or {}
+        value = session.get('value')
+        paths = []
+        if value and session.get('kind') == 'path':
+            path = Path(value).expanduser()
+            paths = [path] if path.is_file() else []
+        elif value:
+            paths = list((Path.home() / '.pi/agent/sessions').rglob('*' + value + '*.jsonl'))
+        if len(paths) != 1:
+            return {'available': False, 'limitation': 'native Pi transcript unavailable or ambiguous'}
+        path = paths[0]
+        rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+        header = rows[0] if rows else {}
+        session_started = datetime.fromisoformat(header['timestamp'].replace('Z', '+00:00')).timestamp()
+        task_started = datetime.fromisoformat(task['created_at'].replace('Z', '+00:00')).timestamp()
+        identity_ok = (header.get('type') == 'session' and header.get('version') == 3
+                       and bool(header.get('id')) and header.get('cwd') == task['cwd'] == str(self.args.cwd)
+                       and task_started <= session_started <= capture.get('observed_at', 0)
+                       and capture.get('task_id') == task['task_id']
+                       and capture.get('agent') == task['agent']
+                       and capture.get('pane_id') == task['pane_id']
+                       and session.get('agent') == 'pi' and session.get('source') == 'herdr:pi'
+                       and (session.get('kind') == 'path' or header.get('id') == value))
+        models = {(row.get('provider'), row.get('modelId')) for row in rows if row.get('type') == 'model_change'}
+        models.update((row['message'].get('provider'), row['message']['model']) for row in rows
+                      if row.get('message', {}).get('role') == 'assistant' and row['message'].get('model'))
+        self.check('hot swap native model identity ' + task['task_id'], identity_ok and bool(models)
+                   and all(model == spec['model'] and (not spec.get('provider') or provider == spec['provider'])
+                           for provider, model in models))
+        return {'available': True, 'sha256': sha(path), 'model': spec['model'],
+                'session_id_sha256': hashlib.sha256(str(header.get('id')).encode()).hexdigest()}
+
+    def scenario(self):
+        self.selected = list(self.workers)
+        if len(self.selected) != 2:
+            raise RuntimeError('hot_swap_requires_exactly_two_workers')
+        self.selected_specs = {name: dict(spec) for name, spec in self.workers.items()}
+        first, second = (self.selected_specs[name] for name in self.selected)
+        # Descriptions alone do not make two execution definitions different.
+        execution = lambda spec: {k: self.normalized(spec).get(k) for k in ('harness', 'model', 'provider', 'effort', 'args')}
+        if execution(first) == execution(second):
+            self.skipped = True
+            self.limitations.append('selected worker execution definitions are indistinguishable; no hot swap was run')
+            return
+        for tool in dict.fromkeys(['herdr', first['harness'], second['harness']]):
+            proc = self.command([tool, '--version'])
+            self.versions['herdr_cli' if tool == 'herdr' else tool] = {
+                'exit_code': proc.returncode, 'version': self.version(proc.stdout or proc.stderr)}
+        proc = self.command(['herdr', 'status', 'server', '--json'])
+        if proc.returncode:
+            raise RuntimeError('herdr_command_failed')
+        server = json.loads(proc.stdout)
+        version = self.version(server.get('version')) if isinstance(server, dict) else None
+        self.versions['herdr_server'] = {'version': version}
+        if version is None:
+            raise RuntimeError('herdr_server_version_unavailable')
+        self.checkout_before = self.checkout_signature()
+        self.configure_alias(first, 'initial')
+        result = self.herdr('workspace', 'create', '--cwd', self.args.cwd,
+                            '--label', 'hot-swap-e2e', '--no-focus',
+                            '--env', 'MISE_CONFIG_DIR=' + self.env['MISE_CONFIG_DIR'],
+                            '--env', 'MISE_STATE_DIR=' + self.env['MISE_STATE_DIR'],
+                            '--env', 'XDG_CONFIG_HOME=' + self.env['XDG_CONFIG_HOME'],
+                            '--env', 'XDG_STATE_HOME=' + self.env['XDG_STATE_HOME'])
+        self.workspace = result['workspace']
+        self.root_pane = result['root_pane']['pane_id']
+        baseline = self.panes()
+        a = self.start_gated('a')
+        self.check_gates([a], 'before-update')
+        self.configure_alias(second, 'replaced')
+        self.check_gates([a], 'after-update')
+        b = self.start_gated('b')
+        self.check_gates([a, b], 'before-removal')
+        self.configure_alias(None, 'removed')
+        self.check_gates([a, b], 'after-removal')
+        before = self.allocation()
+        proc = self.hot_cli('run', 'swap', '--brief', self.root / 'calculation-a/brief.md',
+                            '--cwd', self.args.cwd, '--caller-pane', self.root_pane)
+        error = json.loads(proc.stdout)
+        self.check('hot swap removed alias refuses dispatch', proc.returncode != 0 and error.get('error') == 'unknown_worker')
+        self.check('hot swap removed alias allocates nothing', self.allocation() == before)
+        self.check_gates([a, b], 'after-refusal')
+        # Compare immutable records against independently loaded saved config phases.
+        sys.path.insert(0, str(HORCH.parent))
+        import horch
+        self.observations['hot_swap_tasks'] = []
+        for gate, spec, phase in ((a, first, 'initial'), (b, second, 'replaced')):
+            task = gate['task']
+            self.check('hot swap exact launch snapshot ' + phase,
+                       task['worker'] == 'swap' and task['argv'] == horch.launch_args(self.normalized(spec), Path(task['task_dir']))
+                       and task['harness'] == spec['harness'] and task['model'] == spec['model'])
+            self.observations['hot_swap_tasks'].append({
+                'task_id': task['task_id'], 'phase': phase, 'harness': spec['harness'],
+                'model': spec['model'], 'effort': spec.get('effort'),
+                'task_record_sha256': gate['record_sha256']})
+        for gate in (a, b):
+            (gate['directory'] / 'release').write_text('released\n')
+        waiting = {a['task']['task_id'], b['task']['task_id']}
+        while waiting:
+            proc = self.hot_cli('wait', *sorted(waiting), '--max-seconds', str(max(1, min(20, int(self.remaining())))))
+            rows = self.rows('hot_wait', proc)
+            self.check('hot swap wait succeeds', proc.returncode == 0)
+            for row in rows:
+                if row.get('state') == 'done':
+                    waiting.discard(row['task_id'])
+                elif row.get('state') not in ('running', 'long_running'):
+                    raise RuntimeError('hot_swap_worker_did_not_deliver')
+        for gate, spec in ((a, first), (b, second)):
+            task = gate['task']
+            directory = Path(task['task_dir'])
+            result = read(directory / 'result.json')
+            self.check('hot swap valid delivered identity ' + task['task_id'],
+                       horch.validate_result(result, task) == 'valid' and result.get('status') == 'completed'
+                       and read(directory / 'state.json').get('state') == 'done')
+            self.check('hot swap independent reconciliation ' + task['task_id'],
+                       read(directory / 'answer.json') == gate['expected'])
+            # Preserve the delivered answer, then require the actual retained
+            # script to regenerate it. This produces a rerunnable E2E artifact.
+            (directory / 'answer-delivered.json').write_bytes((directory / 'answer.json').read_bytes())
+            (directory / 'answer.json').unlink()
+            proc = subprocess.run([sys.executable, str(directory / 'solution.py')],
+                                  cwd=directory, env=self.env, text=True, capture_output=True,
+                                  timeout=min(30, self.remaining()))
+            self.streams(proc.stdout, proc.stderr)
+            self.check('hot swap solution independently reruns ' + task['task_id'],
+                       proc.returncode == 0 and read(directory / 'answer.json') == gate['expected'])
+            native = self.audit_native(task, spec, gate['native_capture'])
+            self.observations['hot_swap_tasks'][0 if gate is a else 1]['native'] = native
+            if not native['available']:
+                self.limitations.append(native['limitation'])
+        self.observations['alias_snapshots'] = self.alias_specs
+        self.observations['baseline_pane_count'] = len(baseline)
+        self.complete = True
+
+    def cleanup(self):
+        # Inspect failure panes before parent cleanup, retaining private diagnostics.
+        for task in self.records().values():
+            try:
+                state = read(Path(task['task_dir']) / 'state.json')
+                if not state.get('closed'):
+                    proc = self.command(['herdr', 'pane', 'read', task['pane_id'], '--source', 'recent', '--lines', '80'])
+                    if proc.returncode:
+                        raise RuntimeError('owned_task_pane_inspection_failed')
+            except Exception as exc:
+                self.failure(exc)
+        if self.root_pane:
+            try:
+                proc = self.command(['herdr', 'pane', 'read', self.root_pane, '--source', 'recent', '--lines', '80'])
+                if proc.returncode:
+                    raise RuntimeError('owned_root_pane_inspection_failed')
+            except Exception as exc:
+                self.failure(exc)
+        super().cleanup()
+        self.assertions.append({'name': 'hot swap skill sources unchanged',
+                                'ok': self.skill_hashes() == self.source_before})
+        self.observations['skill_source_hashes_before'] = self.source_before
+        self.observations['skill_source_hashes_after'] = self.skill_hashes()
+        if self.checkout_before is not None:
+            after = self.checkout_signature()
+            self.observations['checkout_before'] = self.checkout_before
+            self.observations['checkout_after'] = after
+            self.assertions.append({'name': 'hot swap tracked checkout and revision unchanged',
+                                    'ok': after == self.checkout_before})
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--worker', action='append', required=True,
                         help='existing authenticated worker; repeat for at least two distinct names')
     parser.add_argument('--cwd', type=Path, default=Path.cwd(), help='existing trusted checkout, read only')
     parser.add_argument('--output', type=Path, required=True, help='private artifact parent outside checkout')
-    parser.add_argument('--max-seconds', type=int, default=300, help='per-check wait cap (positive)')
+    parser.add_argument('--hot-swap-only', action='store_true',
+                        help='exercise an isolated live worker alias replacement/removal only (exactly two workers)')
+    parser.add_argument('--max-seconds', type=int, default=300, help='normal per-check wait cap; hot-swap overall deadline (positive)')
     args = parser.parse_args()
     if os.environ.get('HERDR_ENV') != '1' or not os.environ.get('HERDR_PANE_ID', '').strip():
         parser.error('run inside Herdr with a verified live caller pane ID')
@@ -535,7 +916,7 @@ def main():
     config_hash = None
     workers = {}
     args.output.mkdir(parents=True, exist_ok=True)
-    run = Run(args, workers)
+    run = (HotSwapRun if args.hot_swap_only else Run)(args, workers)
     print(f'Run directory: {run.root}', flush=True)
     problem = None
     try:
@@ -564,23 +945,33 @@ def main():
             except OSError:
                 ok = False
             run.assertions.append({'name': name, 'ok': ok})
+        real_config_after = None
+        if args.hot_swap_only:
+            try:
+                real_config_after = sha(cfg)
+            except OSError:
+                pass
         evidence = run.sanitize({
-            'schema': 'horch/check-workers-e2e/v1',
-            'verdict': 'pass' if run.complete and problem is None and all(a['ok'] for a in run.assertions) else 'fail',
+            'schema': 'horch/hot-swap-e2e/v1' if args.hot_swap_only else 'horch/check-workers-e2e/v1',
+            'verdict': ('skip' if args.hot_swap_only and run.skipped and problem is None and all(a['ok'] for a in run.assertions)
+                        else 'pass' if run.complete and problem is None and all(a['ok'] for a in run.assertions) else 'fail'),
             'scenario_complete': run.complete,
             'diagnostics': str(run.diagnostics),
             'source_hashes': run.hashes, 'versions': run.versions,
             'workers': {n: {k: s.get(k) for k in ('harness', 'model', 'provider', 'effort')}
                         for n, s in workers.items()},
-            'batch_limit': 1, 'selections': run.selected,
-            'rerun': ['python3', 'e2e/check_workers.py', *sum((['--worker', n] for n in names), []),
+            'batch_limit': 2 if args.hot_swap_only else 1, 'selections': run.selected,
+            **({'mode': 'hot-swap-only', 'limitations': run.limitations,
+                'real_config_sha256_before': config_hash,
+                'real_config_sha256_after': real_config_after} if args.hot_swap_only else {}),
+            'rerun': ['python3', 'e2e/check_workers.py', *(['--hot-swap-only'] if args.hot_swap_only else []), *sum((['--worker', n] for n in names), []),
                       '--cwd', str(args.cwd), '--output', str(args.output), '--max-seconds', str(args.max_seconds)],
             'seconds': round(time.monotonic() - run.started, 3),
             'observations': run.observations, 'assertions': run.assertions, 'problem_category': problem})
         receipt = run.root / 'evidence.json'
         receipt.write_text(json.dumps(evidence, indent=2) + '\n', encoding='utf-8')
         print(f'Evidence: {receipt}\nVerdict: {evidence["verdict"]}', flush=True)
-    return 0 if evidence['verdict'] == 'pass' else 1
+    return 0 if evidence['verdict'] in ('pass', 'skip') else 1
 
 
 if __name__ == '__main__':

@@ -17,6 +17,13 @@ Original pstack describes Cursor tools and agents. With `pstack-herdr` active, t
 | Follow up with `SendMessage` | Wait for the prior task to settle. Start a new task with the complete brief, previous report, and current branch or revision. |
 | Stop a subagent | `horch close <task-id>` closes only that task's recorded pane. Read a problem pane before closing it. |
 
+Named-agent files are not preloaded native agents. If the original agent constrains
+its first response, include a loading instruction in the brief: fully read the
+original agent and its required skill using tools before emitting any assistant
+text, then follow the original first-output rule. Do not paraphrase or copy the
+agent's rules into the assignment. A preamble before those reads can violate the
+agent contract even when the later report is useful.
+
 For a panel role such as `interrogate reviewers`, start one task per configured entry, including repeated worker names. Give every reviewer the same intent, revision, rubric, and code scope in a fresh process. The `arena cross-judge pool` selects one worker after candidates finish; it is not a panel. Roles may share a single model. Compare configured models when upstream requires diversity and disclose any unmet requirement; `horch` does not enforce it. A same-model panel is not cross-model validation.
 
 For assignments outside a named playbook, use an applicable configured role before selecting a worker directly. Optional worker descriptions guide the choice only when no role fits. Record the role, worker, and concrete reason in the brief; follow the [role resolution rules](../SKILL.md#resolve-roles).

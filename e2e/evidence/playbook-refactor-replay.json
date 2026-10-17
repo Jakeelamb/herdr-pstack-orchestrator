@@ -1,0 +1,348 @@
+{
+  "schema": "horch/synthetic-refactor-cli-replay/v1",
+  "kind": "fresh local CLI behavior replay; not a model or full-playbook run",
+  "verdict": "pass",
+  "full_refactoring_verdict": "unresolved",
+  "original_workflow_receipt": "playbook-refactor-comment.json",
+  "original_workflow_receipt_sha256": "bc7bf22043b008fe4d0b5c4539677149a8fa732d8bf1101fcc6b0aa5995ca477",
+  "fixture_generator_revision": "1f9af5a79b0908e10042ff9bce9457b6ab3d7d6b",
+  "fixture_generator_sha256": "c897c30eecc0be1471332ac73ff07d88f0c0a4b2af1002af1f1c0d3f876d6148",
+  "accepted_source": "playbook-refactor-final-storage.py",
+  "accepted_source_sha256": "e1b7760444a3f374cc6b3e19b73b32de246d0dcb029eeb4d7cb5265e48c34f4d",
+  "source_artifact_byte_identical": true,
+  "fixture_files": 8,
+  "changed_fixture_files": [
+    "storage.py"
+  ],
+  "normal_flows_identical": true,
+  "cli_observations": 14,
+  "models_invoked": false,
+  "forge_calls": false,
+  "herdr_calls": false,
+  "before": {
+    "receipt_sha256": "b578b854df35ca30fa0efd4b7092aab2463816714277b4cf40f40d7cfffdca2b",
+    "receipt": {
+      "schema": "invoice/import-e2e/v1",
+      "verdict": "pass",
+      "checks": [
+        {
+          "name": "existing store seeded through the real CLI",
+          "ok": true
+        },
+        {
+          "name": "two input files preserve independent integer money results",
+          "ok": true
+        },
+        {
+          "name": "persisted-duplicate rejects without changing persisted bytes",
+          "ok": true
+        },
+        {
+          "name": "within-file-duplicate rejects without changing persisted bytes",
+          "ok": true
+        },
+        {
+          "name": "across-file-duplicate rejects without changing persisted bytes",
+          "ok": true
+        },
+        {
+          "name": "late-invalid-discount rejects without changing persisted bytes",
+          "ok": true
+        },
+        {
+          "name": "export matches the complete sorted independent ledger",
+          "ok": true
+        },
+        {
+          "name": "fixture source unchanged",
+          "ok": true
+        }
+      ],
+      "flows": [
+        {
+          "name": "seed",
+          "command": "import",
+          "input_files": 1,
+          "exit_code": 0,
+          "output": {
+            "count": 1,
+            "total_cents": 98
+          }
+        },
+        {
+          "name": "two-files",
+          "command": "import",
+          "input_files": 2,
+          "exit_code": 0,
+          "output": {
+            "count": 6,
+            "total_cents": 994
+          }
+        },
+        {
+          "name": "persisted-duplicate",
+          "command": "import",
+          "input_files": 1,
+          "exit_code": 2,
+          "output": {
+            "error": "duplicate transaction: old-01"
+          }
+        },
+        {
+          "name": "within-file-duplicate",
+          "command": "import",
+          "input_files": 1,
+          "exit_code": 2,
+          "output": {
+            "error": "duplicate transaction: new-dup"
+          }
+        },
+        {
+          "name": "across-file-duplicate",
+          "command": "import",
+          "input_files": 2,
+          "exit_code": 2,
+          "output": {
+            "error": "duplicate transaction: cross-dup"
+          }
+        },
+        {
+          "name": "late-invalid-discount",
+          "command": "import",
+          "input_files": 2,
+          "exit_code": 2,
+          "output": {
+            "error": "invalid discount"
+          }
+        },
+        {
+          "name": "export",
+          "command": "export",
+          "input_files": 0,
+          "exit_code": 0,
+          "output": [
+            {
+              "discount_bp": 0,
+              "id": "old-01",
+              "quantity": 2,
+              "total_cents": 98,
+              "unit_price_cents": 49
+            },
+            {
+              "discount_bp": 0,
+              "id": "txn-0",
+              "quantity": 0,
+              "total_cents": 0,
+              "unit_price_cents": 999
+            },
+            {
+              "discount_bp": 3333,
+              "id": "txn-a",
+              "quantity": 2,
+              "total_cents": 444,
+              "unit_price_cents": 333
+            },
+            {
+              "discount_bp": 10000,
+              "id": "txn-free",
+              "quantity": 7,
+              "total_cents": 0,
+              "unit_price_cents": 101
+            },
+            {
+              "discount_bp": 250,
+              "id": "txn-m",
+              "quantity": 3,
+              "total_cents": 401,
+              "unit_price_cents": 137
+            },
+            {
+              "discount_bp": 5000,
+              "id": "txn-z",
+              "quantity": 1,
+              "total_cents": 51,
+              "unit_price_cents": 101
+            }
+          ]
+        }
+      ],
+      "source_sha256_before": {
+        "money.py": "7fa0c12b3b374830ed93c7777570ffcb23416394ff6b60e47a4c436b600373ac",
+        "storage.py": "c32037b76d52e28908e2a46b40e77bf46be109fdb7fb25afd702070e7d74bfc2",
+        "cli.py": "4dedfc1da14792f2f28b7aa59db358cab589bd3a5985185466884861e750ae22"
+      },
+      "source_sha256_after": {
+        "money.py": "7fa0c12b3b374830ed93c7777570ffcb23416394ff6b60e47a4c436b600373ac",
+        "storage.py": "c32037b76d52e28908e2a46b40e77bf46be109fdb7fb25afd702070e7d74bfc2",
+        "cli.py": "4dedfc1da14792f2f28b7aa59db358cab589bd3a5985185466884861e750ae22"
+      },
+      "failure_category": null
+    }
+  },
+  "after": {
+    "receipt_sha256": "c4d383519e705d2e0652dd4d2bd9395c4c1502a3eab897dbc3672b3981d0cb10",
+    "receipt": {
+      "schema": "invoice/import-e2e/v1",
+      "verdict": "pass",
+      "checks": [
+        {
+          "name": "existing store seeded through the real CLI",
+          "ok": true
+        },
+        {
+          "name": "two input files preserve independent integer money results",
+          "ok": true
+        },
+        {
+          "name": "persisted-duplicate rejects without changing persisted bytes",
+          "ok": true
+        },
+        {
+          "name": "within-file-duplicate rejects without changing persisted bytes",
+          "ok": true
+        },
+        {
+          "name": "across-file-duplicate rejects without changing persisted bytes",
+          "ok": true
+        },
+        {
+          "name": "late-invalid-discount rejects without changing persisted bytes",
+          "ok": true
+        },
+        {
+          "name": "export matches the complete sorted independent ledger",
+          "ok": true
+        },
+        {
+          "name": "fixture source unchanged",
+          "ok": true
+        }
+      ],
+      "flows": [
+        {
+          "name": "seed",
+          "command": "import",
+          "input_files": 1,
+          "exit_code": 0,
+          "output": {
+            "count": 1,
+            "total_cents": 98
+          }
+        },
+        {
+          "name": "two-files",
+          "command": "import",
+          "input_files": 2,
+          "exit_code": 0,
+          "output": {
+            "count": 6,
+            "total_cents": 994
+          }
+        },
+        {
+          "name": "persisted-duplicate",
+          "command": "import",
+          "input_files": 1,
+          "exit_code": 2,
+          "output": {
+            "error": "duplicate transaction: old-01"
+          }
+        },
+        {
+          "name": "within-file-duplicate",
+          "command": "import",
+          "input_files": 1,
+          "exit_code": 2,
+          "output": {
+            "error": "duplicate transaction: new-dup"
+          }
+        },
+        {
+          "name": "across-file-duplicate",
+          "command": "import",
+          "input_files": 2,
+          "exit_code": 2,
+          "output": {
+            "error": "duplicate transaction: cross-dup"
+          }
+        },
+        {
+          "name": "late-invalid-discount",
+          "command": "import",
+          "input_files": 2,
+          "exit_code": 2,
+          "output": {
+            "error": "invalid discount"
+          }
+        },
+        {
+          "name": "export",
+          "command": "export",
+          "input_files": 0,
+          "exit_code": 0,
+          "output": [
+            {
+              "discount_bp": 0,
+              "id": "old-01",
+              "quantity": 2,
+              "total_cents": 98,
+              "unit_price_cents": 49
+            },
+            {
+              "discount_bp": 0,
+              "id": "txn-0",
+              "quantity": 0,
+              "total_cents": 0,
+              "unit_price_cents": 999
+            },
+            {
+              "discount_bp": 3333,
+              "id": "txn-a",
+              "quantity": 2,
+              "total_cents": 444,
+              "unit_price_cents": 333
+            },
+            {
+              "discount_bp": 10000,
+              "id": "txn-free",
+              "quantity": 7,
+              "total_cents": 0,
+              "unit_price_cents": 101
+            },
+            {
+              "discount_bp": 250,
+              "id": "txn-m",
+              "quantity": 3,
+              "total_cents": 401,
+              "unit_price_cents": 137
+            },
+            {
+              "discount_bp": 5000,
+              "id": "txn-z",
+              "quantity": 1,
+              "total_cents": 51,
+              "unit_price_cents": 101
+            }
+          ]
+        }
+      ],
+      "source_sha256_before": {
+        "money.py": "7fa0c12b3b374830ed93c7777570ffcb23416394ff6b60e47a4c436b600373ac",
+        "storage.py": "e1b7760444a3f374cc6b3e19b73b32de246d0dcb029eeb4d7cb5265e48c34f4d",
+        "cli.py": "4dedfc1da14792f2f28b7aa59db358cab589bd3a5985185466884861e750ae22"
+      },
+      "source_sha256_after": {
+        "money.py": "7fa0c12b3b374830ed93c7777570ffcb23416394ff6b60e47a4c436b600373ac",
+        "storage.py": "e1b7760444a3f374cc6b3e19b73b32de246d0dcb029eeb4d7cb5265e48c34f4d",
+        "cli.py": "4dedfc1da14792f2f28b7aa59db358cab589bd3a5985185466884861e750ae22"
+      },
+      "failure_category": null
+    }
+  },
+  "limitations": [
+    "Replays the existing seven-flow fixture oracle before and after one accepted synthetic source change.",
+    "The broader nine normalized observation equivalence was verified in the separate original-run audit; this replay does not repeat that independent oracle.",
+    "Does not verify original How/design/scoring/reader/Comment/PR stages or create a fresh full-playbook PASS.",
+    "The original workflow remains FAIL at mandatory Comment first-output review; all its quarantined bodies remain unread."
+  ]
+}

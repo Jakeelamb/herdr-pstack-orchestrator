@@ -1,0 +1,107 @@
+{
+  "kind": "real CLI characterization of encountered post-replace summary fault",
+  "source_sha256": {
+    "money.py": "7fa0c12b3b374830ed93c7777570ffcb23416394ff6b60e47a4c436b600373ac",
+    "storage.py": "c32037b76d52e28908e2a46b40e77bf46be109fdb7fb25afd702070e7d74bfc2",
+    "cli.py": "4dedfc1da14792f2f28b7aa59db358cab589bd3a5985185466884861e750ae22",
+    "e2e_import.py": "5791d79542ebcb9468e421e9cdeb8bea3898e1d745876ff6898f69a1775da137"
+  },
+  "initial_rows": [
+    {
+      "id": "persisted-missing-total",
+      "quantity": 2,
+      "unit_price_cents": 49,
+      "discount_bp": 0
+    }
+  ],
+  "batches": [
+    [
+      {
+        "id": "new-z",
+        "quantity": 1,
+        "unit_price_cents": 101,
+        "discount_bp": 5000
+      },
+      {
+        "id": "new-a",
+        "quantity": 2,
+        "unit_price_cents": 333,
+        "discount_bp": 3333
+      }
+    ],
+    [
+      {
+        "id": "new-m",
+        "quantity": 3,
+        "unit_price_cents": 137,
+        "discount_bp": 250
+      }
+    ]
+  ],
+  "pending_before_hex": "7072656578697374696e672070656e64696e672065766964656e63650a",
+  "expected": {
+    "import_exit_code": 1,
+    "import_stdout": "",
+    "import_stderr_terminal_line": "KeyError: 'total_cents'",
+    "import_store_after_rows": [
+      {
+        "id": "persisted-missing-total",
+        "quantity": 2,
+        "unit_price_cents": 49,
+        "discount_bp": 0
+      },
+      {
+        "id": "new-z",
+        "quantity": 1,
+        "unit_price_cents": 101,
+        "discount_bp": 5000,
+        "total_cents": 51
+      },
+      {
+        "id": "new-a",
+        "quantity": 2,
+        "unit_price_cents": 333,
+        "discount_bp": 3333,
+        "total_cents": 444
+      },
+      {
+        "id": "new-m",
+        "quantity": 3,
+        "unit_price_cents": 137,
+        "discount_bp": 250,
+        "total_cents": 401
+      }
+    ],
+    "pending_after_exists": false,
+    "export_exit_code": 0,
+    "export_rows": [
+      {
+        "id": "new-a",
+        "quantity": 2,
+        "unit_price_cents": 333,
+        "discount_bp": 3333,
+        "total_cents": 444
+      },
+      {
+        "id": "new-m",
+        "quantity": 3,
+        "unit_price_cents": 137,
+        "discount_bp": 250,
+        "total_cents": 401
+      },
+      {
+        "id": "new-z",
+        "quantity": 1,
+        "unit_price_cents": 101,
+        "discount_bp": 5000,
+        "total_cents": 51
+      },
+      {
+        "id": "persisted-missing-total",
+        "quantity": 2,
+        "unit_price_cents": 49,
+        "discount_bp": 0
+      }
+    ]
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "kind": "artifact_reanalysis",
+  "original_receipt_unchanged": true,
+  "original_workflow_verdict": "fail",
+  "semantic_workflow_audit": "fail_substantial_how_rewrite",
+  "artifact_checks": {
+    "checks": [
+      {
+        "name": "source and supplied captures unchanged",
+        "ok": true
+      },
+      {
+        "name": "investigation identifies duplicate_scope",
+        "ok": true
+      },
+      {
+        "name": "investigation identifies commit_operation",
+        "ok": true
+      },
+      {
+        "name": "investigation identifies rounding_scope",
+        "ok": true
+      },
+      {
+        "name": "investigation identifies failure_effect",
+        "ok": true
+      },
+      {
+        "name": "investigation identifies export_order",
+        "ok": true
+      },
+      {
+        "name": "investigation source citations resolve across all modules",
+        "ok": true,
+        "observed": {
+          "cited_modules": [
+            "cli.py",
+            "money.py",
+            "storage.py"
+          ]
+        }
+      },
+      {
+        "name": "how output explains flow and gotchas",
+        "ok": true
+      },
+      {
+        "name": "investigation checklist copies all four steps",
+        "ok": true
+      },
+      {
+        "name": "investigation reports the read-only throughput checkpoint",
+        "ok": true
+      },
+      {
+        "name": "investigation reply follows concrete unslop rules",
+        "ok": true
+      }
+    ],
+    "observations": {
+      "cited_modules": [
+        "cli.py",
+        "money.py",
+        "storage.py"
+      ],
+      "fact_checks": 5
+    },
+    "limitations": []
+  },
+  "schema": "horch/playbook-artifact-reanalysis/v1",
+  "scenario": "investigation",
+  "original_receipt_sha256": "f55447f7804352de4bedf7f96209434357573602a6267881d1a75f0dbc03d4f4",
+  "native_transcript_sha256": "427b610b099c2ba4d83da409a5b86f09314b005a371ef05b7299bdc2859d48b4",
+  "artifact_checker_sha256": {
+    "e2e/playbook_cases.py": "2280157a53404ef3f64a3ee5593d67208c7e7b95e56e18cb32036a9b25920f3a"
+  },
+  "manual_audit": {
+    "kind": "independent_read_only_review",
+    "native_codemode_call_line": 58,
+    "full_explorer_reports_propagated": true,
+    "explainer_report_sha256": "0b3ccf595f995d955327663d6f16af198bb663a436f7238ef2232dc87b344fe1",
+    "final_reply_sha256": "2a72971cd5e19e1b2eb3df5fd52e974dff91676d8481a20afad37cb43031549d",
+    "workflow_verdict": "fail",
+    "reason": "The controller substantially rewrote the delivered How explanation instead of presenting it with only light edits."
+  }
+}

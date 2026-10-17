@@ -11,7 +11,10 @@
 [![Pstack source: 0.15.25](https://img.shields.io/badge/pstack_source-0.15.25-blue)](https://github.com/cursor/plugins/tree/e5136d82418d2db3165ea1050d17577cd618cc05/pstack)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Run coding agents from one conversation and inspect their work in [Herdr](https://herdr.dev). The controller assigns tasks, waits for results, and verifies the work.
+Add agent orchestration to your existing workflow without changing application
+code. Run coding agents from one conversation and inspect their work in
+[Herdr](https://herdr.dev). The controller assigns tasks, waits for results,
+and verifies the work.
 
 [Latest release](https://github.com/conscientiousness/herdr-pstack-orchestrator/releases/latest).
 
@@ -28,6 +31,23 @@ Two Agent Skills connect your controller to Pi, Codex CLI, and Claude Code. Each
 
 Workers open in separate tabs labeled `horch`, at most four panes per tab, without taking focus or using the controller's tab.
 
+The controller uses your existing agent CLIs and one worker configuration. No
+application-code changes are required. Worker definitions are read for each new
+task; an existing task retains its recorded launch arguments. Installing or
+updating skills can require a fresh controller session. Review same-name skill
+conflicts before installing.
+
+Live [worker replacement evidence](e2e/evidence/hot-swap.json) records two tasks
+running across a definition change and removal, with correct independently
+replayed results and unchanged user configuration. This covers worker
+definitions; role selection and skill loading remain controller responsibilities.
+
+Release readiness focuses on reversible setup, configured role routing, worker
+replacement and a practical implementation/review/private-PR workflow. See the
+[adoption evidence](docs/RELEASE-EVIDENCE.md). Full compatibility with all 23
+original playbooks is a later milestone; the [inventory](e2e/PLAYBOOKS.md)
+retains failures and blocked capabilities separately.
+
 ## Requirements
 
 - [Herdr](https://herdr.dev) 0.9.3 or later, with the controller agent running inside a Herdr pane (`HERDR_ENV=1`)
@@ -38,19 +58,32 @@ Workers open in separate tabs labeled `horch`, at most four panes per tab, witho
 
 ## Install
 
-Install pstack and both Herdr adapters together:
+Start with the core delegation skill:
+
+```bash
+npx skills@1.7.1 add conscientiousness/herdr-pstack-orchestrator -s herdr-orchestrator
+```
+
+For original pstack guidance and both Herdr adapters, install the full bundle:
 
 ```bash
 npx skills@1.7.1 add https://github.com/conscientiousness/herdr-pstack-orchestrator/tree/main/skills --skill '*'
 ```
 
-Choose harnesses and installation scope, review skill-name conflicts, then open a new agent session inside Herdr. The command installs the whole bundle from this repository's `main`; no upstream clone is needed, and v0.2.0 predates this layout.
+Choose harnesses and installation scope, review skill-name conflicts, then open a new agent session inside Herdr. The commands use this repository's `main`; no upstream clone is needed, and v0.2.0 predates the bundle layout.
 
-For delegation without pstack, install only the core skill:
+To remove the core skill from a project:
 
 ```bash
-npx skills@1.7.1 add conscientiousness/herdr-pstack-orchestrator -s herdr-orchestrator
+npx skills@1.7.1 remove herdr-orchestrator -y
 ```
+
+For a full bundle, run `npx skills@1.7.1 remove` and select its entries while
+keeping unrelated skills. Omit `-a` for complete project removal: selecting
+agents can leave shared `.agents/skills` copies. The [removal receipt](e2e/evidence/project-removal.json)
+verifies all 56 named entries disappear from a disposable project while an
+unrelated skill and application files remain. Empty directories and installer
+lock metadata may remain; fresh sessions observe the updated catalogs.
 
 Or clone and run directly:
 
@@ -198,15 +231,31 @@ All three controller harnesses read roles directly from `workers.toml`. Configur
 "interrogate reviewers" = ["glm", "haiku"]
 ```
 
-A single role names one worker; a panel lists one worker per task. Same-model reviews are separate processes, not cross-model validation, so disclose an unmet panel-size or model-diversity requirement. The [adapter instructions](skills/pstack-herdr/SKILL.md) define workflow coordination, role routing, and review. Read-only assignments rely on worker briefs and harness permissions; `horch` is not a sandbox.
+A single role names one worker; a panel lists one worker per task. Same-model reviews are separate processes, not cross-model validation, so disclose an unmet panel-size or model-diversity requirement. The [adapter instructions](skills/pstack-herdr/SKILL.md) define workflow coordination, role routing, and review. Read-only assignments rely on worker briefs and harness permissions; `horch` is not a sandbox. A [live forge attempt](e2e/evidence/playbook-forge-scope-audit.json) was manually stopped after an investigator queried outside its assigned repository; that workflow remains failed.
 
 Cursor modes, hooks, `/loop`, cloud execution, and unavailable MCP or app-driving tools are not supplied; a workflow requiring one stops at that step. For the pinned source, adaptations, exclusions, discovery behavior, and the maintainer sync procedure, see the [selection and compatibility notes](skills/pstack-herdr/references/compatibility.md).
 
 ## Verification
 
+The [practical delivery receipt](e2e/evidence/practical-private-pr.json) completes
+one requirement-to-implementation-to-independent-review-to-ready-private-PR
+workflow. Its reviewed change passes 20 real CLI observations, preserves all
+11 baseline normal observations and passes private Python 3.11/3.14 CI. This is
+ordinary functionality review; original playbook eligibility remains separate.
+The [adoption evidence page](docs/RELEASE-EVIDENCE.md) collects this workflow,
+reversible installation, role routing and live worker replacement.
+
 Runtime checks run on Linux with real Pi workers. Real Codex and Claude Code controller runs are also recorded. The verified set covers worker setup, the implementation and review loop, a controller-level run, workspace limits, invalid record handling, and Pi preflight. The 0.15.25 bundle passed a local installation check and native discovery in the Pi and Codex catalogs. A receipt for each verified claim is linked in [evidence and source attribution](e2e/README.md#evidence-and-source-attribution).
 
-Not verified: macOS, deliberate approval denial, task turns longer than 30 minutes, and Claude Code native discovery, which was not measured although installation was checked. Apart from one recorded `how` run, most pstack playbooks remain unverified at runtime: updated workflows, `ketchup`, other original skills, and `poteto-mode` playbooks. Discovery does not prove workflow execution.
+The original Prototype playbook has an [ordered six-stage core workflow receipt](e2e/evidence/playbook-prototype.json) for a fixed-direction behavioral fork. Both independent alternatives and their labeled runner were replayed; the production build remains a separate Feature task. Live worker replacement also has [independent evidence](e2e/evidence/hot-swap.json).
+
+[Trace forensics](e2e/evidence/playbook-trace.json) also passed its six-stage paired-capture workflow. Independent review checked all profile rows and caller edges, replayed the SQL observations, and verified source attribution and unchanged inputs. [Pause and Pickup](e2e/evidence/playbook-continuity.json) passed their four- and five-stage local workflows in distinct sessions, with six real CLI cases independently replayed. Earlier failed continuity fixtures remain published. Investigation retains both an earlier explanation rewrite and a later erroneous synthesis that the controller correctly withheld.
+
+[Runtime forensics](e2e/evidence/playbook-runtime.json) passed its five-stage owned-process scenario: live CPU capture, exact reduction, benign instrumentation, later natural counter growth and source mapping. Independent review checked the raw Inspector exchange and preserved inputs; this is a diagnostic result, without a fix or speedup claim.
+
+Ready private child PRs have independently checked parent, head, body and remote state. The earlier complete Opening a PR judgment is [withdrawn](e2e/evidence/playbook-opening-pr-correction.json): the required Comment Sicko review was omitted. Full Perf also remains unresolved.
+
+Not verified: macOS, deliberate approval denial, task turns longer than 30 minutes, and Claude Code native discovery, which was not measured although installation was checked. Most original pstack skills and 18 other playbooks lack a complete passing scenario; see the [complete inventory](e2e/PLAYBOOKS.md), including cloud and wake capabilities this adapter does not supply. Discovery does not prove workflow execution. The [capability and evidence gaps](docs/CAPABILITY-GAPS.md) separate missing runtime facilities, unverified scenarios and authorization boundaries.
 
 Historical receipts keep their original source attribution in [evidence and source attribution](e2e/README.md#evidence-and-source-attribution). To rerun the checks, use [verify-herdr-orchestrator](.agents/skills/verify-herdr-orchestrator/SKILL.md).
 

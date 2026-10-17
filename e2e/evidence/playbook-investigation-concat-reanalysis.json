@@ -1,0 +1,55 @@
+{
+  "schema": "horch/playbook-artifact-reanalysis/v1",
+  "kind": "artifact_reanalysis",
+  "scenario": "investigation",
+  "original_receipt_unchanged": true,
+  "original_receipt_sha256": "17e82fd93e6127d66e4839188c376774590b91cd3df3815380e48ceb19126f5f",
+  "original_workflow_verdict": "fail",
+  "native_transcript_sha256": "22f61c5a59dd54252fff9113f56a7bf81592551ae984d1bd9958afe21ae9bdc2",
+  "prepared_fixture_sha256": "d6d447a370f59dd799b3884b9c141965311b0aaf0d4866f8a65c400f68ca79f6",
+  "artifact_checker_sha256": {
+    "e2e/playbook_cases.py": "85aeed9dac6a5f7284c9a4833f9c68505e648e0d87f395014724ffbdf842ed25"
+  },
+  "artifact_checks": {
+    "checks": [
+      {"name": "source and supplied captures unchanged", "ok": true},
+      {"name": "investigation identifies duplicate_scope", "ok": true},
+      {"name": "investigation identifies commit_operation", "ok": true},
+      {"name": "investigation identifies rounding_scope", "ok": true},
+      {"name": "investigation identifies failure_effect", "ok": true},
+      {"name": "investigation identifies export_order", "ok": true},
+      {"name": "investigation source citations resolve across all modules", "ok": true},
+      {"name": "how output explains flow and gotchas", "ok": false},
+      {"name": "investigation checklist copies all four steps", "ok": true},
+      {"name": "investigation reports the read-only throughput checkpoint", "ok": true},
+      {"name": "investigation reply follows concrete unslop rules", "ok": true}
+    ],
+    "observations": {
+      "cited_modules": ["cli.py", "money.py", "storage.py"],
+      "fact_checks": 5,
+      "passed_checks": 10,
+      "total_checks": 11
+    }
+  },
+  "manual_audit": {
+    "kind": "independent_read_only_review",
+    "full_explorer_reports_propagated_exactly_once": true,
+    "independent_composition_matches_exact_bytes": true,
+    "composed_brief_bytes": 49519,
+    "composed_brief_sha256": "009a592d757f1da194771d9a2458a3431d71ce32e3d99443606de295809c388f",
+    "explainer_report_sha256": "79be444330102d70293838e98eb4ed7bb4f5a822789739caae6caccdfab15e19",
+    "findings_sha256": "7008059703c686dbe028ef09fab9d3abcae9239e1239cab93201bb392af18d0a",
+    "final_reply_sha256": "a5c9c2855d17d3a0f2a5be8078fbc31c2c4c2c9340344ca186f8b9a57f4fd367",
+    "auditor_gap": "Inline Python file composition is outside the native artifact-access grammar.",
+    "synthesis_error": "The canonical report incorrectly guarantees identical totals after export and reimport; stored stale totals are exported unchanged but recomputed on import.",
+    "controller_withheld_incorrect_synthesis": true,
+    "controller_rewrote_explanation": false,
+    "stop_without_rewriting_rule_respected": true,
+    "successful_verbatim_presentation": false,
+    "workflow_verdict": "fail"
+  },
+  "limitations": [
+    "Artifact reanalysis does not replace the failed automated native audit.",
+    "Correct stopping behavior does not complete successful Investigation presentation."
+  ]
+}

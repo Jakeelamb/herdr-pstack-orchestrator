@@ -1,0 +1,57 @@
+{
+  "schema": "horch/independent-feature-contract-stop/v1",
+  "kind": "source-contract audit and exact-owned manual stop; not a new passing run",
+  "original_receipt": "playbook-feature-contract.json",
+  "original_receipt_sha256": "50eaddd5375bde806d3626357f730f4cb9069dacf27f968b1c1a5dd93402fbda",
+  "original_receipt_unchanged": true,
+  "original_workflow_verdict": "fail",
+  "source_revision": "08074fae76fd88a958070b00a0ea7eb7834d09e7",
+  "driver_sha256": "e2270529240334ac13d47e3074f62567be782381a03f03f38d4af1b7f5c997a4",
+  "oracle_sha256": "f84be8dc16f8d5c94c72c8ba186ba02f9d81e000b87eb585c2b973076f8004dc",
+  "seconds": 277.473,
+  "recorded_checks": {
+    "total": 31,
+    "passed": 31,
+    "scope": "preparation, runtime prefix, integrity and cleanup only"
+  },
+  "failure_categories": [
+    "operator_interrupted"
+  ],
+  "stop": {
+    "manual": true,
+    "reason": "Two concrete Feature prompt/eligibility defects identified by independent source review before worker dispatch.",
+    "operator_stop_sha256": "6255d5e12bdaf8f16a375fd4529959f853a83304be8850a6ab9db79bf4d5b8ff",
+    "exact_owned_pid_argv_cwd_and_start_ticks_verified": true,
+    "signal": "SIGINT",
+    "worker_tasks_allocated": 0,
+    "native_stages": 0,
+    "commits": 0,
+    "pushes": 0,
+    "child_prs": 0
+  },
+  "contract_defects": [
+    {
+      "kind": "phase allocation ambiguity",
+      "observed": "Shared prose requires a reader-load slot and review after reader-load, although that slot is allocated only for Refactoring.",
+      "forward_repair": "Explicitly scope both reader-load statements to Refactoring, preserving existing slot allocation and phase validators."
+    },
+    {
+      "kind": "normal-behavior preservation false-pass gap",
+      "observed": "Feature promises all normal CLI behavior remains unchanged but only Refactoring compares existing final normal observations to the before pin. Feature current-normal versus dry comparison alone can accept unrelated normal changes.",
+      "forward_repair": "Require each candidate and final implementation to preserve all nine named normal observations and missing-field status against the frozen before records using existing normalization; retain all eight new dry observations and raw traceback evidence."
+    }
+  ],
+  "integrity": {
+    "source_unchanged": true,
+    "config_unchanged": true,
+    "original_fixture_checkout_untouched": true,
+    "owned_panes_absent": true,
+    "original_fixture_witness": "Original checkout HEAD and full Git status match the before snapshot; no broader filesystem identity is inferred."
+  },
+  "limitations": [
+    "No actual worker violation, automatic worker quarantine or successful Feature phase is claimed.",
+    "No unfinished worker report/result/native-output payload was consumed; no worker was dispatched.",
+    "Static repair and compilation cannot complete Feature; a fresh immutable live run remains necessary.",
+    "This stopped run does not alter the earlier first Feature scope failure."
+  ]
+}

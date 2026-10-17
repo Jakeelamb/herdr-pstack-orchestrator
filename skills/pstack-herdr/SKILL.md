@@ -17,6 +17,14 @@ This mapping takes precedence over upstream tool names, model defaults, configur
 
 The bundle's workflow entries load this mapping automatically; pure guidance keeps its original body. Cursor custom modes and hooks are not installed. Runtime verification is separate from discovery and source compatibility.
 
+## Repository and host boundaries
+
+State the exact repositories, hosts, local worktrees and evidence sources authorized for the task in every delegate brief. These boundaries apply to all investigators, synthesizers, implementers and reviewers. Broad-search instructions in an upstream prompt apply only inside that explicit boundary. An empty or thin result never authorizes an owner-wide, global, cross-repository or cross-host search. Record a broader linked lead without fetching it; ask the controller to resolve whether the user authorized that scope.
+
+When a workflow uses a controller-captured repository snapshot, disclose its repository, capture time, completeness and unavailable categories. Delegates query only that local dataset; snapshot investigation is not live worker forge access or proof that the original live-source workflow was completed. Keep a real investigator for an available source even when its captured result is empty.
+
+A native-command audit after a worker finishes can gate whether its output is read or forwarded. Audit failed calls as well as successful ones, quarantine outputs when the boundary is violated, and stop before synthesis. Such a gate detects workflow violations after execution. It does not prevent the worker from using credentials or making requests, and is not a hard sandbox or credential-containment claim.
+
 ## Resolve roles
 
 On Claude Code, Codex, and Pi, read `$XDG_CONFIG_HOME/herdr-orchestrator/workers.toml`, or `~/.config/herdr-orchestrator/workers.toml` when `XDG_CONFIG_HOME` is unset. Its `[roles]` values name workers from `[workers]`. This is the only role configuration. Upstream `setup-pstack` maps to the companion skill's setup and these TOML roles; do not create a separate model sheet or import one.

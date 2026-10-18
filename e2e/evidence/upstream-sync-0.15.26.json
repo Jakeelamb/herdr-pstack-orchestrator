@@ -1,0 +1,138 @@
+{
+  "verdict": "pass",
+  "scope": "installation_and_catalogs",
+  "driver_sha256": "32b9b7eabe38429a421ec0de0d92bdef8ac1e37c374db4a2acb3c5c8562e469f",
+  "checks": {
+    "installed_catalog": true,
+    "all_files_preserved": true,
+    "claude_entries": true,
+    "pi_catalog": true,
+    "codex_catalog": true,
+    "codex_no_errors": true
+  },
+  "installed_files": 200,
+  "file_differences": [],
+  "installed_tree_sha256": "85ba1edb024e2ea87846bc167077c4b97ea514f2d273e663f469181460cc1faf",
+  "recorded_at": "2026-10-18T13:30:11.002696+00:00",
+  "source_base_revision": "0ecf2e222fcee31f0cc9c9043475d7623af023a5",
+  "source_skills_git_tree": "865e5f4ad7a42adae6666827a983feb8009b36cb",
+  "source_attribution": "Installed from a working tree based on source_base_revision. source_skills_git_tree identifies the exact tested skills tree.",
+  "original_receipt_sha256": "170f072f48dd6ced65bf30a896bc81fc96e31887cee272e7b76a9b825233f0a4",
+  "upstream": {
+    "repository": "https://github.com/cursor/plugins.git",
+    "revision": "0b8e952052d482ee6de06deebf14d590d77b1b34",
+    "version": "0.15.26"
+  },
+  "previous_upstream": {
+    "revision": "101b274dd991f694e1f7024be2157e5f3adf07de",
+    "version": "0.15.25"
+  },
+  "installed_skills": 57,
+  "native_catalogs": {
+    "pi": {
+      "discovered_skills": 57,
+      "new_skills_discovered": [
+        "create-formal-verification-skill"
+      ]
+    },
+    "codex": {
+      "discovered_skills": 57,
+      "new_skills_discovered": [
+        "create-formal-verification-skill"
+      ]
+    }
+  },
+  "reviewed_changes": {
+    "comparison": "https://github.com/cursor/plugins/compare/101b274dd991f694e1f7024be2157e5f3adf07de...0b8e952052d482ee6de06deebf14d590d77b1b34",
+    "direct_sync": [
+      "pstack/skills/create-formal-verification-skill/SKILL.md",
+      "pstack/skills/typescript-best-practices/SKILL.md",
+      "pstack/skills/typescript-best-practices/references/patterns.md"
+    ],
+    "sync_with_existing_herdr_preamble": [
+      "pstack/skills/ketchup/SKILL.md"
+    ],
+    "source_only_name_normalization": [
+      "pstack/skills/poteto-mode/SKILL.md"
+    ],
+    "new_adaptations": [],
+    "added_skills": [
+      "create-formal-verification-skill"
+    ],
+    "removed_skills": [],
+    "unchanged_exclusions": [
+      "make-bot-ui",
+      "poteto-help",
+      "setup-pstack"
+    ],
+    "distribution_decision": "Keep the original skill and agent sources with Herdr mappings. Upstream plugin metadata, guides, generated Claude Code tree, model-rule setup, and skip-with-placeholder behavior are not imported.",
+    "formal_verification_decision": "Preserve the new skill byte for byte, including explicit-only frontmatter. It requires no Cursor paths or delegation mapping; a project-specific verification toolchain must be supplied separately.",
+    "agents_and_team_kit_changed": false
+  },
+  "installation": {
+    "method": "Installed a temporary copy of the complete skills tree into a disposable project, deleted the source, then verified all installed files and native Pi/Codex catalogs.",
+    "command": [
+      "npx",
+      "--yes",
+      "skills@1.7.1",
+      "add",
+      "<temporary-source>",
+      "-s",
+      "*",
+      "-a",
+      "codex",
+      "-a",
+      "claude-code",
+      "-a",
+      "pi",
+      "-y"
+    ],
+    "global_install": false,
+    "temporary_source_removed_before_catalog_check": true,
+    "versions": {
+      "python": "Python 3.14.7",
+      "npx": "11.20.0",
+      "pi": "1.3.0",
+      "codex": "codex-cli 0.163.0",
+      "git": "git version 2.55.0"
+    }
+  },
+  "regeneration": {
+    "verdict": "pass",
+    "full_skills_tree_matches": true,
+    "driver_sha256": "d43c82640bb8f1f571f3fc3c05d77112cab6379ca295ba473492906038f56187"
+  },
+  "upstream_check": {
+    "status": "current",
+    "compared_paths": [
+      "pstack/",
+      "cursor-team-kit/"
+    ],
+    "repository": "https://github.com/cursor/plugins.git",
+    "pinned_revision": "0b8e952052d482ee6de06deebf14d590d77b1b34",
+    "pinned_version": "0.15.26",
+    "default_branch": "main",
+    "upstream_revision": "0b8e952052d482ee6de06deebf14d590d77b1b34",
+    "compare_url": "https://github.com/cursor/plugins/compare/0b8e952052d482ee6de06deebf14d590d77b1b34...0b8e952052d482ee6de06deebf14d590d77b1b34",
+    "upstream_version": "0.15.26",
+    "changed_files": []
+  },
+  "reproduction": {
+    "procedure": ".agents/skills/verify-herdr-orchestrator/features/discovery.md",
+    "catalog_command": "python3 e2e/skill_catalogs.py <disposable-consumer>",
+    "regeneration_command": "python3 scripts/prepare_pstack.py --source <clean-pinned-source> --output <new-package-directory>",
+    "regeneration_comparison": "diff -r --exclude=__pycache__ skills <new-package-directory>/skills",
+    "upstream_command": "python3 scripts/check_upstream.py --output <artifact-directory>/upstream.json"
+  },
+  "scope_limits": [
+    "No authenticated model workflow was run; formal verification, ketchup, and changed TypeScript guidance remain runtime unverified.",
+    "Claude Code installation was checked; native Claude Code discovery was not measured.",
+    "Installation used a local source copy, not a remote GitHub URL.",
+    "Formal verification tooling was not installed or executed.",
+    "Historical receipts retain their original source attribution."
+  ],
+  "cleanup": {
+    "owned_install_directories_removed": true,
+    "receipts_retained": true
+  }
+}

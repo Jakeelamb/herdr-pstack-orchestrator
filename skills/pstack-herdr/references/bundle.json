@@ -1,7 +1,7 @@
 {
   "repository": "https://github.com/cursor/plugins.git",
-  "revision": "101b274dd991f694e1f7024be2157e5f3adf07de",
-  "version": "0.15.25",
+  "revision": "0b8e952052d482ee6de06deebf14d590d77b1b34",
+  "version": "0.15.26",
   "excluded_skills": {
     "make-bot-ui": "Requires unavailable Cursor Routines and secret-request tools; no coding workflow depends on it.",
     "poteto-help": "Cursor-specific setup and navigation duplicate the adapter docs and require unbundled guide pages; no workflow depends on it.",
@@ -51,6 +51,12 @@
       "source_sha256": "e347045d00c967a0b831ef883cc6ac79d21329aa10b5968637df95de7febf0ba"
     },
     {
+      "name": "create-formal-verification-skill",
+      "adapted": false,
+      "source": "pstack/skills/create-formal-verification-skill/SKILL.md",
+      "source_sha256": "5f5c08d6f5787ce18ffc9f018113e9cc6e7ddcc7878aa7ae94ef56978978497b"
+    },
+    {
       "name": "create-verification-skill",
       "adapted": true,
       "source": "pstack/skills/create-verification-skill/SKILL.md",
@@ -84,7 +90,7 @@
       "name": "ketchup",
       "adapted": true,
       "source": "pstack/skills/ketchup/SKILL.md",
-      "source_sha256": "47b3fb0d5626a40fcb3bd016e68f1cb3d2d313351183e8f6c05d4c7abd76e665"
+      "source_sha256": "f2923ffd14f6fc778f75a47aaed1f317fb5fd00b5701ca769d6446c74106dead"
     },
     {
       "name": "maintain-verification-skill",
@@ -102,7 +108,7 @@
       "name": "poteto-mode",
       "adapted": true,
       "source": "pstack/skills/poteto-mode/SKILL.md",
-      "source_sha256": "c5e6b605f46e5d9fbab31afa7a99d3d50680f2180d1fdfae3a924901bc52d99a"
+      "source_sha256": "2755f102e7a6d0496b429d1031a22fb353e1f3d523543367caeaae5c4ed6f544"
     },
     {
       "name": "principle-attack-the-premise",
@@ -300,7 +306,7 @@
       "name": "typescript-best-practices",
       "adapted": false,
       "source": "pstack/skills/typescript-best-practices/SKILL.md",
-      "source_sha256": "28f9e61710e205f6f3c5476f333483cff0e988f6a5b639e2faad536344b40c5e"
+      "source_sha256": "ec1dac086d3708e5940d45d250c30a37dd953b4e3cb2ca0692f5851d7a039e27"
     },
     {
       "name": "unslop",

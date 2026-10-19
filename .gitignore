@@ -41,6 +41,7 @@ e2e/evidence/*
 !e2e/evidence/upstream-sync-0.15.17.json
 !e2e/evidence/upstream-sync-0.15.18.json
 !e2e/evidence/upstream-sync-0.15.21.json
+!e2e/evidence/upstream-sync-0.15.28.json
 !e2e/evidence/workspace-limits.json
 !e2e/evidence/invalid-task-records.json
 !e2e/caller_identity.py

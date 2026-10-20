@@ -1,0 +1,123 @@
+{
+  "verdict": "pass",
+  "scope": "installation_and_catalogs",
+  "driver_sha256": "32b9b7eabe38429a421ec0de0d92bdef8ac1e37c374db4a2acb3c5c8562e469f",
+  "checks": {
+    "installed_catalog": true,
+    "all_files_preserved": true,
+    "claude_entries": true,
+    "pi_catalog": true,
+    "codex_catalog": true,
+    "codex_no_errors": true
+  },
+  "installed_files": 202,
+  "file_differences": [],
+  "installed_tree_sha256": "0d94426d594d229224f015f78838109aec9961cec480c208f0bc6bd3d4138f6b",
+  "recorded_at": "2026-10-20T07:55:28.462118+00:00",
+  "source_base_revision": "bbd8893df4226a5f685620eb6afc3fc8f1e06d60",
+  "source_skills_git_tree": "3a9895b4cebae2ae7d0086bf0769e690b95ece6b",
+  "source_attribution": "Installed from a working tree based on source_base_revision. source_skills_git_tree identifies the exact tested skills tree.",
+  "original_receipt_sha256": "d86eef7bc31886a7dd5c555f58cb29d925ba7363c7aae27eb2570fa3334355a0",
+  "upstream": {
+    "repository": "https://github.com/cursor/plugins.git",
+    "revision": "88d47514b82e7c44f00f2b2a72ff6dd12158038c",
+    "version": "0.15.29"
+  },
+  "previous_upstream": {
+    "revision": "d457567332aa6989e753ea289f30ea2bfbc80bc0",
+    "version": "0.15.28"
+  },
+  "installed_skills": 58,
+  "native_catalogs": {
+    "pi": {
+      "discovered_skills": 58,
+      "new_skills_discovered": []
+    },
+    "codex": {
+      "discovered_skills": 58,
+      "new_skills_discovered": []
+    }
+  },
+  "reviewed_changes": {
+    "comparison": "https://github.com/cursor/plugins/compare/d457567332aa6989e753ea289f30ea2bfbc80bc0...88d47514b82e7c44f00f2b2a72ff6dd12158038c",
+    "direct_sync": [
+      "pstack/skills/sharpen/SKILL.md"
+    ],
+    "new_adaptations": [],
+    "added_skills": [],
+    "removed_skills": [],
+    "unchanged_exclusions": [
+      "make-bot-ui",
+      "poteto-help",
+      "setup-pstack"
+    ],
+    "distribution_decision": "Keep the original skill and agent sources with existing Herdr mappings. Upstream plugin manifests, guides, and excluded Cursor setup/help remain outside this bundle.",
+    "sharpen_decision": "Preserve the revised prompt-rewriting instructions byte for byte, including explicit-only frontmatter. The skill names the expert approach, raw materials, methods and tools, and an outside correctness check, then returns a rewritten prompt while leaving user choices open. It no longer carries out the task; no new Herdr mapping is needed.",
+    "agents_and_team_kit_changed": false
+  },
+  "installation": {
+    "method": "Installed a temporary copy of the complete skills tree into a disposable project, deleted the source, then verified all installed files and native Pi/Codex catalogs.",
+    "command": [
+      "npx",
+      "--yes",
+      "skills@1.7.1",
+      "add",
+      "<temporary-source>",
+      "-s",
+      "*",
+      "-a",
+      "codex",
+      "-a",
+      "claude-code",
+      "-a",
+      "pi",
+      "-y"
+    ],
+    "global_install": false,
+    "temporary_source_removed_before_catalog_check": true,
+    "versions": {
+      "python": "Python 3.14.8",
+      "npx": "11.20.0",
+      "pi": "1.3.0",
+      "codex": "codex-cli 0.163.0",
+      "git": "git version 2.56.0"
+    }
+  },
+  "regeneration": {
+    "verdict": "pass",
+    "full_skills_tree_matches": true,
+    "driver_sha256": "d43c82640bb8f1f571f3fc3c05d77112cab6379ca295ba473492906038f56187"
+  },
+  "upstream_check": {
+    "status": "current",
+    "compared_paths": [
+      "pstack/",
+      "cursor-team-kit/"
+    ],
+    "repository": "https://github.com/cursor/plugins.git",
+    "pinned_revision": "88d47514b82e7c44f00f2b2a72ff6dd12158038c",
+    "pinned_version": "0.15.29",
+    "default_branch": "main",
+    "upstream_revision": "88d47514b82e7c44f00f2b2a72ff6dd12158038c",
+    "compare_url": "https://github.com/cursor/plugins/compare/88d47514b82e7c44f00f2b2a72ff6dd12158038c...88d47514b82e7c44f00f2b2a72ff6dd12158038c",
+    "upstream_version": "0.15.29",
+    "changed_files": []
+  },
+  "reproduction": {
+    "procedure": ".agents/skills/verify-herdr-orchestrator/features/discovery.md",
+    "catalog_command": "python3 e2e/skill_catalogs.py <disposable-consumer>",
+    "regeneration_command": "python3 scripts/prepare_pstack.py --source <clean-pinned-source> --output <new-package-directory>",
+    "regeneration_comparison": "diff -r --exclude=__pycache__ skills <new-package-directory>/skills",
+    "upstream_command": "python3 scripts/check_upstream.py --output <artifact-directory>/upstream.json"
+  },
+  "scope_limits": [
+    "No authenticated model workflow was run; revised sharpen prompt-rewriting guidance remains runtime unverified.",
+    "Claude Code installation was checked; native Claude Code discovery was not measured.",
+    "Installation used a local source copy, not a remote GitHub URL.",
+    "Historical receipts retain their original source attribution."
+  ],
+  "cleanup": {
+    "owned_install_directories_removed": true,
+    "receipts_retained": true
+  }
+}

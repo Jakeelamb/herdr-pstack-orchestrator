@@ -1,7 +1,7 @@
 {
   "repository": "https://github.com/cursor/plugins.git",
-  "revision": "d457567332aa6989e753ea289f30ea2bfbc80bc0",
-  "version": "0.15.28",
+  "revision": "88d47514b82e7c44f00f2b2a72ff6dd12158038c",
+  "version": "0.15.29",
   "excluded_skills": {
     "make-bot-ui": "Requires unavailable Cursor Routines and secret-request tools; no coding workflow depends on it.",
     "poteto-help": "Cursor-specific setup and navigation duplicate the adapter docs and require unbundled guide pages; no workflow depends on it.",
@@ -276,7 +276,7 @@
       "name": "sharpen",
       "adapted": false,
       "source": "pstack/skills/sharpen/SKILL.md",
-      "source_sha256": "d895695fcc29b832bf118b842c1d7cf356a69622d63c9d49b40a0c97d8496c80"
+      "source_sha256": "563dfc460c605d311e650726288e2f1cbd61eab817db178d6e7e29643e07e7a2"
     },
     {
       "name": "show-me-your-work",

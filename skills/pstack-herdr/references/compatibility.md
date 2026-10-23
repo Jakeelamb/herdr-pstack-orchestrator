@@ -1,6 +1,6 @@
 # Original pstack source and compatibility
 
-This bundle tracks [Lauren Tan's original pstack](https://github.com/cursor/plugins/tree/88d47514b82e7c44f00f2b2a72ff6dd12158038c/pstack), version **0.15.29**, at commit `88d47514b82e7c44f00f2b2a72ff6dd12158038c`. The revision pins instructions and references; it does not establish runtime support for every playbook.
+This bundle tracks [Lauren Tan's original pstack](https://github.com/cursor/plugins/tree/8b3326d99fd4b993cb33a24dad8af03175c642c5/pstack), version **0.15.30**, at commit `8b3326d99fd4b993cb33a24dad8af03175c642c5`. The revision pins instructions and references; it does not establish runtime support for every playbook.
 
 ## Install
 
@@ -14,7 +14,7 @@ No separate source checkout is needed. The installer copies complete skill direc
 
 ## Included skills and adaptations
 
-The bundle contains **58 entries**: 53 pstack skills, the three referenced team-kit skills (`control-cli`, `control-ui`, `deslop`), and two Herdr adapters. Each upstream skill retains its resource tree and `UPSTREAM-LICENSE.txt`. The two original agent instructions and their license live in [agents/](agents/). The [bundle provenance](bundle.json) records source paths and hashes; [upstream.json](upstream.json) defines the pin, adaptations, and exclusions.
+The bundle contains **59 entries**: 54 pstack skills, the three referenced team-kit skills (`control-cli`, `control-ui`, `deslop`), and two Herdr adapters. Each upstream skill retains its resource tree and `UPSTREAM-LICENSE.txt`. The two original agent instructions and their license live in [agents/](agents/). The [bundle provenance](bundle.json) records source paths and hashes; [upstream.json](upstream.json) defines the pin, adaptations, and exclusions.
 
 | Excluded original skill | Reason |
 |---|---|
@@ -42,6 +42,8 @@ The [0.15.28 update](https://github.com/cursor/plugins/compare/0b8e952052d482ee6
 
 The [0.15.29 update](https://github.com/cursor/plugins/compare/d457567332aa6989e753ea289f30ea2bfbc80bc0...88d47514b82e7c44f00f2b2a72ff6dd12158038c) changes `sharpen` to name the expert approach, raw source material, specific methods and tools, and an outside correctness check, then return a rewritten prompt with the user's choices left open. It no longer carries out the task. The skill is copied byte for byte with its explicit-only frontmatter; no new Herdr adaptation is needed. Matching upstream guide and `poteto-help` edits remain outside this bundle, along with plugin metadata. Agents, roles, resources, team-kit dependencies, and the three exclusions are unchanged. The revised prompt-rewriting workflow remains runtime unverified.
 
+The [0.15.30 update](https://github.com/cursor/plugins/compare/88d47514b82e7c44f00f2b2a72ff6dd12158038c...8b3326d99fd4b993cb33a24dad8af03175c642c5) adds `statechart` with its complete scripts, model, and fixtures, copied byte for byte with explicit-only frontmatter. It generates user-facing Mermaid charts from TLA+ models, checks agreed charts, and compares code models with an existing spec or proposed fix. It has no Cursor-specific tools or delegation requirements, so no new Herdr mapping is needed. The scripts require Node.js, Java 11 or later, and a separately supplied `tla2tools.jar` through `TLA2TOOLS`; PNG output also invokes `npx @mermaid-js/mermaid-cli`. Bundling does not install these tools. Matching upstream README, guide, and excluded `poteto-help` edits remain outside this bundle, along with plugin metadata. Agents, roles, team-kit dependencies, and the three exclusions are unchanged. The statechart modeling, PNG inspection, and real-code replay workflow remains runtime unverified.
+
 The controller owns each `poteto-mode` playbook; `poteto-agent` remains a bounded delegate. Its brief includes both the bundled agent instructions and the absolute path to the installed `poteto-mode/SKILL.md`. The `comment-sicko` agent ID maps to its bundled instructions through the same configured-worker mechanism.
 
 ## Resource and runtime mapping
@@ -56,7 +58,7 @@ The controller owns each `poteto-mode` playbook; `poteto-agent` remains a bounde
 
 Read [herdr-tools.md](herdr-tools.md) for tool substitutions and unavailable capabilities. Cursor modes, `/loop`, cloud execution, and missing MCP/app tools remain unavailable unless the environment supplies an equivalent. A workflow requiring one stops at that step. Scripts may require their own tools; bundling them does not install those dependencies.
 
-The current 0.15.29 bundle at `88d4751` passed a local source-copy installation check: all 58 entries and 202 files were preserved for Codex, Pi, and Claude Code. After deleting the temporary source, all 58 entries appeared in Pi and Codex native catalogs. See the [0.15.29 receipt](https://github.com/conscientiousness/herdr-pstack-orchestrator/blob/main/e2e/evidence/upstream-sync-0.15.29.json). Historical receipts, including the [0.15.25 receipt at `101b274`](https://github.com/conscientiousness/herdr-pstack-orchestrator/blob/main/e2e/evidence/upstream-sync-0.15.25-101b274.json), retain their original source attribution in the [E2E guide](https://github.com/conscientiousness/herdr-pstack-orchestrator/blob/main/e2e/README.md#evidence-and-source-attribution). Native Claude Code discovery has not been measured.
+The current 0.15.30 bundle at `8b3326d` passed a local source-copy installation check: all 59 entries and 215 files were preserved for Codex, Pi, and Claude Code. After deleting the temporary source, all 59 entries appeared in Pi and Codex native catalogs. See the [0.15.30 receipt](https://github.com/conscientiousness/herdr-pstack-orchestrator/blob/main/e2e/evidence/upstream-sync-0.15.30.json). Historical receipts, including the [0.15.25 receipt at `101b274`](https://github.com/conscientiousness/herdr-pstack-orchestrator/blob/main/e2e/evidence/upstream-sync-0.15.25-101b274.json), retain their original source attribution in the [E2E guide](https://github.com/conscientiousness/herdr-pstack-orchestrator/blob/main/e2e/README.md#evidence-and-source-attribution). Native Claude Code discovery has not been measured.
 
 The recorded original `how` run completed three explorer tasks and one explainer task through Herdr. Its [historical receipt](https://github.com/conscientiousness/herdr-pstack-orchestrator/blob/main/e2e/evidence/skill-discovery.json) used the earlier prepared package. Updated workflows and scripts, `ketchup`, other original skills, and `poteto-mode` playbooks remain **runtime unverified**. Native discovery and workflow execution are separate checks. Earlier controller/review-loop receipts keep their original attribution in the [E2E guide](https://github.com/conscientiousness/herdr-pstack-orchestrator/blob/main/e2e/README.md#historical-pstack-source).
 

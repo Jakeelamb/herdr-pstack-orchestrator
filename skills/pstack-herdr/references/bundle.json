@@ -1,7 +1,7 @@
 {
   "repository": "https://github.com/cursor/plugins.git",
-  "revision": "88d47514b82e7c44f00f2b2a72ff6dd12158038c",
-  "version": "0.15.29",
+  "revision": "8b3326d99fd4b993cb33a24dad8af03175c642c5",
+  "version": "0.15.30",
   "excluded_skills": {
     "make-bot-ui": "Requires unavailable Cursor Routines and secret-request tools; no coding workflow depends on it.",
     "poteto-help": "Cursor-specific setup and navigation duplicate the adapter docs and require unbundled guide pages; no workflow depends on it.",
@@ -283,6 +283,12 @@
       "adapted": true,
       "source": "pstack/skills/show-me-your-work/SKILL.md",
       "source_sha256": "920a8217cbb62f92a2222fb81fc9eab17ecd554a0277e444a95a927195139bd1"
+    },
+    {
+      "name": "statechart",
+      "adapted": false,
+      "source": "pstack/skills/statechart/SKILL.md",
+      "source_sha256": "9b2a6dccf86286646cffb3bd00f7ee060d6c26983e566c766d4be53aa56f9445"
     },
     {
       "name": "swarm",

@@ -1,7 +1,7 @@
 {
   "repository": "https://github.com/cursor/plugins.git",
-  "revision": "8b3326d99fd4b993cb33a24dad8af03175c642c5",
-  "version": "0.15.30",
+  "revision": "99b609a72323b70204eab407c622f436e858e112",
+  "version": "0.15.32",
   "excluded_skills": {
     "make-bot-ui": "Requires unavailable Cursor Routines and secret-request tools; no coding workflow depends on it.",
     "poteto-help": "Cursor-specific setup and navigation duplicate the adapter docs and require unbundled guide pages; no workflow depends on it.",
@@ -54,7 +54,7 @@
       "name": "create-formal-verification-skill",
       "adapted": false,
       "source": "pstack/skills/create-formal-verification-skill/SKILL.md",
-      "source_sha256": "6c934cd15a9583533ff9b7a9cad62775d7e80402d26d3ba7f74f79ea21a1d8eb"
+      "source_sha256": "5e489d938620883502c27c9c2f32143ae7aa8c0543088dad996b2c815d2acc52"
     },
     {
       "name": "create-verification-skill",
@@ -91,6 +91,12 @@
       "adapted": true,
       "source": "pstack/skills/ketchup/SKILL.md",
       "source_sha256": "f2923ffd14f6fc778f75a47aaed1f317fb5fd00b5701ca769d6446c74106dead"
+    },
+    {
+      "name": "ketchup-video",
+      "adapted": false,
+      "source": "pstack/skills/ketchup-video/SKILL.md",
+      "source_sha256": "74f1b9e61f8479e2be5b91a4f53136f6ad8e144fd950c9848de6aa1cdbb7645c"
     },
     {
       "name": "maintain-formal-verification-skill",
@@ -270,7 +276,7 @@
       "name": "reflect",
       "adapted": true,
       "source": "pstack/skills/reflect/SKILL.md",
-      "source_sha256": "1f5a8c246cdee8251f8667d85bd5d97f6c2801f505843c26ddbd6c621632519b"
+      "source_sha256": "9648df23cabaae99b78ed59cd93b6f35ebbf02105d228e3d0b5c3a3b3419d753"
     },
     {
       "name": "sharpen",
@@ -288,13 +294,13 @@
       "name": "statechart",
       "adapted": false,
       "source": "pstack/skills/statechart/SKILL.md",
-      "source_sha256": "9b2a6dccf86286646cffb3bd00f7ee060d6c26983e566c766d4be53aa56f9445"
+      "source_sha256": "b1c544782b1527ba09e63311e4faa4c277c86aa33b0506590f8082b7b4bea505"
     },
     {
       "name": "swarm",
       "adapted": true,
       "source": "pstack/skills/swarm/SKILL.md",
-      "source_sha256": "031657cb81e490f9aed5c75d6ff2a4fda35ccafbaf72be604e59481cc4080cdc"
+      "source_sha256": "fea6bfbbf21e067a4e2d2ebab034bc3af508118e9df1abc9d2ba040d58a6df3a"
     },
     {
       "name": "tdd",

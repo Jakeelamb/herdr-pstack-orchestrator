@@ -1,0 +1,143 @@
+{
+  "verdict": "pass",
+  "scope": "installation_and_catalogs",
+  "driver_sha256": "32b9b7eabe38429a421ec0de0d92bdef8ac1e37c374db4a2acb3c5c8562e469f",
+  "checks": {
+    "installed_catalog": true,
+    "all_files_preserved": true,
+    "claude_entries": true,
+    "pi_catalog": true,
+    "codex_catalog": true,
+    "codex_no_errors": true
+  },
+  "installed_files": 232,
+  "file_differences": [],
+  "installed_tree_sha256": "3b2617f6f21ccd4bd275d1ca21b946e7b26a7ac63cb5c8bfab095f730eaa2ff1",
+  "recorded_at": "2026-10-25T02:08:11.081874+00:00",
+  "source_base_revision": "b87836010a32758d712f9a353466c607cf8c5dfd",
+  "source_skills_git_tree": "4a9465cf8fa1dfec47c5dc56d2987c63ce7175a2",
+  "source_attribution": "Installed from a working tree based on source_base_revision. source_skills_git_tree identifies the exact tested skills tree.",
+  "original_receipt_sha256": "7259dc33951680f463f2e2967800d0ffd995d4ccf72d88a1b76e3d9134535c9e",
+  "upstream": {
+    "repository": "https://github.com/cursor/plugins.git",
+    "revision": "99b609a72323b70204eab407c622f436e858e112",
+    "version": "0.15.32"
+  },
+  "previous_upstream": {
+    "revision": "8b3326d99fd4b993cb33a24dad8af03175c642c5",
+    "version": "0.15.30"
+  },
+  "installed_skills": 60,
+  "native_catalogs": {
+    "pi": {
+      "discovered_skills": 60,
+      "new_skills_discovered": [
+        "ketchup-video"
+      ]
+    },
+    "codex": {
+      "discovered_skills": 60,
+      "new_skills_discovered": [
+        "ketchup-video"
+      ]
+    }
+  },
+  "reviewed_changes": {
+    "comparison": "https://github.com/cursor/plugins/compare/8b3326d99fd4b993cb33a24dad8af03175c642c5...99b609a72323b70204eab407c622f436e858e112",
+    "direct_sync": [
+      "pstack/skills/create-formal-verification-skill/SKILL.md",
+      "pstack/skills/ketchup-video/",
+      "pstack/skills/poteto-mode/scripts/",
+      "pstack/skills/statechart/"
+    ],
+    "existing_adapted_sync": [
+      "pstack/skills/reflect/SKILL.md",
+      "pstack/skills/swarm/SKILL.md"
+    ],
+    "new_adapted_skills": [],
+    "added_skills": [
+      "ketchup-video"
+    ],
+    "removed_skills": [],
+    "unchanged_exclusions": [
+      "make-bot-ui",
+      "poteto-help",
+      "setup-pstack"
+    ],
+    "mapping_updates": [
+      "Map ketchup-video through sibling ketchup; preserve read-only forge/Herdr checks and allow only video creation/rendering outside the repository, with an explicit capability/failure fallback.",
+      "Map reflect approved skill copies to discovered project/user skill directories; retain approval and plugin-cache constraints, with user/project instruction priority."
+    ],
+    "distribution_decision": "Keep original skill and agent sources with existing Herdr mappings. Upstream plugin manifests, README, guides, and excluded Cursor setup/help remain outside this bundle.",
+    "ketchup_video_decision": "Copy byte for byte to preserve explicit-only frontmatter. Its instruction to follow sibling ketchup loads the existing Herdr mapping; rendering and embedding require current-harness capabilities and remain unverified.",
+    "statechart_decision": "Preserve revised instructions, complete modules, tests, and fixtures. Remove the deleted OutputFolder model fixture. Without TLA2TOOLS, scripts use mise to install checksum-pinned TLC 1.7.4 and Temurin Java 25, with JAVA override support. PNG rendering installs pele@1.8.0 and @resvg/resvg-js@2.6.2 via npm into the user cache. Bundling performs none of these runtime installs.",
+    "poteto_scripts_decision": "Preserve upstream changes for open-PR selection among historical PRs, fork-aware stack discovery, polling deadlines, Markdown inline-code handling, and GNU/BSD worktree-audit commands. Existing tool mappings apply; changed script scenarios were not run.",
+    "agents_and_team_kit_changed": false
+  },
+  "installation": {
+    "method": "Installed a temporary copy of the complete skills tree into a disposable project, deleted the source, then verified all installed files and native Pi/Codex catalogs.",
+    "command": [
+      "npx",
+      "--yes",
+      "skills@1.7.1",
+      "add",
+      "<temporary-source>",
+      "-s",
+      "*",
+      "-a",
+      "codex",
+      "-a",
+      "claude-code",
+      "-a",
+      "pi",
+      "-y"
+    ],
+    "global_install": false,
+    "temporary_source_removed_before_catalog_check": true,
+    "versions": {
+      "python": "Python 3.14.8",
+      "node": "v26.12.0",
+      "npx": "11.20.0",
+      "pi": "1.3.0",
+      "codex": "codex-cli 0.163.0",
+      "git": "git version 2.56.0"
+    }
+  },
+  "regeneration": {
+    "verdict": "pass",
+    "full_skills_tree_matches": true,
+    "driver_sha256": "d43c82640bb8f1f571f3fc3c05d77112cab6379ca295ba473492906038f56187"
+  },
+  "upstream_check": {
+    "status": "current",
+    "compared_paths": [
+      "pstack/",
+      "cursor-team-kit/"
+    ],
+    "repository": "https://github.com/cursor/plugins.git",
+    "pinned_revision": "99b609a72323b70204eab407c622f436e858e112",
+    "pinned_version": "0.15.32",
+    "default_branch": "main",
+    "upstream_revision": "99b609a72323b70204eab407c622f436e858e112",
+    "compare_url": "https://github.com/cursor/plugins/compare/99b609a72323b70204eab407c622f436e858e112...99b609a72323b70204eab407c622f436e858e112",
+    "upstream_version": "0.15.32",
+    "changed_files": []
+  },
+  "reproduction": {
+    "procedure": ".agents/skills/verify-herdr-orchestrator/features/discovery.md",
+    "catalog_command": "python3 e2e/skill_catalogs.py <disposable-consumer>",
+    "regeneration_command": "python3 scripts/prepare_pstack.py --source <clean-pinned-source> --output <new-package-directory>",
+    "regeneration_comparison": "diff -r --exclude=__pycache__ skills <new-package-directory>/skills",
+    "upstream_command": "python3 scripts/check_upstream.py --output <artifact-directory>/upstream.json"
+  },
+  "scope_limits": [
+    "No authenticated model workflow, video render, TLC install/model check, PNG render, real-code bug replay, or changed upstream script scenario was run; these runtime behaviors remain unverified.",
+    "Claude Code installation was checked; native Claude Code discovery was not measured.",
+    "Installation used a local source copy, not a remote GitHub URL.",
+    "Historical receipts retain their original source attribution."
+  ],
+  "cleanup": {
+    "owned_install_directories_removed": true,
+    "receipts_retained": true
+  }
+}

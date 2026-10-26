@@ -57,7 +57,7 @@ WORKER_RULES = """\
 - Write your output files first. Write `result.json` last.
 - Do not ask the user questions. If something is unclear, write `result.json` with status `blocked` and the question, then stop.
 - Do not run `herdr` or `horch`.
-- You may use your own subagents.
+- Follow any delegation limits in the task brief.
 
 Write `result.json` at exactly this path:
 
@@ -74,7 +74,7 @@ It must be one JSON object with exactly these keys:
       "question": null
     }}
 
-`status` is `completed`, `blocked`, or `failed`. `files` lists the output files you wrote, relative to the directory of `result.json`. `question` is required when `status` is `blocked`, else null.
+`status` is `completed`, `blocked`, or `failed`. `files` lists the report and deliverables the controller must inspect, relative to the directory of `result.json`. Link generated logs, fixtures, and bulk artifacts through an evidence index or manifest in the report, preserving their paths and hashes there. `question` is required when `status` is `blocked`, else null.
 """
 
 
@@ -883,14 +883,34 @@ def _start_task_locked(config, worker_name, brief_text, cwd, skip_if_full, calle
         return run_object(state["state"])
 
     pointer = f"New task {task_id}. Read {directory / 'brief.md'} in full and follow it exactly."
+    acknowledgement_deadline = time.monotonic() + ACK_TIMEOUT_MS / 1000
+    stalled = None
     try:
-        doc = herdr(
-            "agent", "prompt", agent, pointer,
-            "--wait", "--until", "working", "--until", "blocked",
-            "--timeout", str(ACK_TIMEOUT_MS),
-            timeout=45.0,
-        )
-        status = ((doc.get("result") or {}).get("agent") or {}).get("agent_status")
+        try:
+            doc = herdr(
+                "agent", "prompt", agent, pointer,
+                "--wait", "--until", "working", "--until", "blocked",
+                "--timeout", str(ACK_TIMEOUT_MS),
+                timeout=45.0,
+            )
+        except HerdrError as exc:
+            remaining_ms = int((acknowledgement_deadline - time.monotonic()) * 1000)
+            if herdr_error_code(exc) != "agent_prompt_stalled" or remaining_ms <= 0:
+                raise
+            stalled = exc
+            # Herdr's five-second submission guard can expire before our budget.
+            # Observe the accepted prompt; never submit it a second time.
+            doc = herdr(
+                "agent", "wait", agent,
+                "--until", "working", "--until", "blocked", "--until", "done",
+                "--timeout", str(remaining_ms), timeout=45.0,
+            )
+        acknowledged = herdr_path(doc, "result", "agent")
+        if not isinstance(acknowledged, dict):
+            raise HerdrError("prompt acknowledgement has no agent object")
+        status = acknowledged.get("agent_status")
+        if status not in ("working", "blocked") and not turn_ended(acknowledged, state):
+            raise HerdrError(f"prompt acknowledgement reported unconfirmed status {status!r}")
         if status == "blocked":
             state["state"] = "blocked"
             state["problem"] = "the worker is waiting at a dialog"
@@ -899,6 +919,8 @@ def _start_task_locked(config, worker_name, brief_text, cwd, skip_if_full, calle
             state["state"] = "running"
             state["saw_working"] = status == "working"
     except HerdrError as exc:
+        if stalled is not None:
+            exc = HerdrError(f"{stalled}; passive acknowledgement: {exc}", exc.payload)
         code = None
         if isinstance(exc.payload, dict) and isinstance(exc.payload.get("error"), dict):
             code = exc.payload["error"].get("code")
@@ -1329,17 +1351,29 @@ def cmd_stats(args):
 
 def cmd_list(args):
     require_herdr_env()
+    if args.workspace is not None and not args.workspace.strip():
+        fail("invalid_arguments", "--workspace must not be blank")
     rows = []
     for task_id in all_task_ids():
+        directory = task_dir(task_id)
+        if args.workspace is not None:
+            # Known other owners can be excluded even when the record is invalid.
+            # Unknown or invalid workspace metadata must remain diagnostic.
+            raw = read_json(directory / "task.json")
+            workspace = raw.get("workspace_id") if isinstance(raw, dict) else None
+            if isinstance(workspace, str) and workspace.strip() and workspace != args.workspace:
+                continue
         try:
-            task = load_task(task_dir(task_id), task_id)
+            task = load_task(directory, task_id)
         except TaskMissingError:
             continue
         except TaskInvalidError as exc:
             rows.append(("", task_id, {"task_id": task_id, "state": "task_invalid",
                                       "error": "task_invalid", "message": str(exc)}))
             continue
-        state = load_state(task_dir(task_id))
+        if args.workspace is not None and task.get("workspace_id") != args.workspace:
+            continue
+        state = load_state(directory)
         rows.append(
             (
                 str(task.get("created_at") or ""),
@@ -1373,7 +1407,8 @@ def cmd_close(args):
     with task_state_lock(directory):
         current = load_state(directory)
         current["closed"] = True
-        current["problem"] = None
+        if current["state"] == "done":
+            current["problem"] = None
         write_json(directory / "state.json", current)
     emit({"task_id": args.task_id, "closed": True, "pane": outcome})
 
@@ -1575,6 +1610,7 @@ def build_parser():
     p_wait.set_defaults(func=cmd_wait)
 
     p_list = sub.add_parser("list", help="print every task as one JSON line, oldest first")
+    p_list.add_argument("--workspace", help="only tasks created in this workspace")
     p_list.set_defaults(func=cmd_list)
 
     p_stats = sub.add_parser("stats", help="summarize stored worker performance without Herdr or writes")

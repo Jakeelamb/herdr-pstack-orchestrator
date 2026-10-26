@@ -2,7 +2,11 @@
 
 Use `horch stats` when the user asks whether workers are worth keeping, slow,
 failing, or efficient, whether reminder timing fits, or before changing
-`workers.toml`. It reports facts; the controller interprets them.
+`workers.toml`. Interpret its stored facts within the user's assigned scope.
+
+An observer uses these stored facts and existing logs without joining project
+coordination. Project controllers own their feedback loops; do not request
+forwarded context, send instructions, dispatch work, or change task state.
 
 ```bash
 python3 <skill-dir>/scripts/horch.py stats [--workspace <id>] [--days <n>]

@@ -54,6 +54,8 @@ jobs:
           path = pathlib.Path('skills/herdr-orchestrator/references/workers.example.toml')
           tomllib.loads(path.read_text())
           PY
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
       - name: Install the bundled skills into a disposable project
         env:
           DISABLE_TELEMETRY: '1'

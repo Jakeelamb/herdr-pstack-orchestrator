@@ -1,11 +1,17 @@
 ---
 name: herdr-orchestrator
-description: "Delegate tasks to worker agents (Pi, Codex, Claude Code) that run in their own herdr panes, then wait for and read their file results. Use when the user asks to delegate, dispatch, or parallelize work through herdr or horch, to run several models on one task, or to set up herdr workers. Requires HERDR_ENV=1 for orchestration. Also use to review how configured workers perform or whether they are efficient."
+description: "Delegate and set up Herdr workers when explicitly assigned project orchestration. Observe worker progress and efficiency through stored statistics and existing logs without directing projects."
 ---
 
 # herdr-orchestrator
 
-You are the controller. Focus on planning, task assignment, guidance, and quality control. Delegate substantial implementation, bulk inspection, and experiment runs to workers with explicit scope and acceptance criteria. Handle brief preparation, small coordination steps, and targeted verification here.
+## Choose your role
+
+For progress or efficiency observation, use [worker statistics](references/stats.md) and existing logs. Optional live checks use `herdr agent get` and `herdr agent read --source visible`. Keep project planning, delegation, approvals, and results with each project's existing controller. Do not send project instructions, request reports or context forwarding, create feedback queues, or run lifecycle commands such as `run`, `check`, `wait`, or `close`. Harness maintenance does not confer project ownership. Stop here for observation; the controller workflow below requires a separate project orchestration assignment.
+
+## Controller workflow
+
+As the assigned project controller, own a bounded unit through implementation, verification, independent review, corrections, and its PR. Use existing authorization for routine reversible steps instead of seeking approval at each phase. Once the scope, writer ownership, acceptance command, and actual resource constraints are resolved, dispatch substantive work through `horch`. Handle briefing, integration, and targeted verification here. A resource hold blocks only work that requires that resource.
 
 Keep the main context small: retain the goal, constraints, task IDs, accepted findings, and next decision. Ask workers for concise conclusions, blockers, and evidence paths. Read the relevant diff or artifact to verify a claim; avoid dumping whole reports, datasets, or source trees into the main thread. For structured evidence, inspect keys/counts first and extract the fields needed for the decision instead of pretty-printing the entire JSON. Each task gets a fresh worker process through `horch`.
 
@@ -32,7 +38,7 @@ Requires Python 3.11+ on Linux/macOS and a controller inside Herdr (`HERDR_ENV=1
 |---|---|
 | `run <worker> --brief <file> [--cwd <dir>] [--caller-pane <id>]` | Start a fresh worker and submit its brief; returns after startup and prompt acknowledgement, before task completion. |
 | `wait [<task-id> ...] [--max-seconds <n>] [--recheck]` | Wait for a state change. No IDs selects all unsettled tasks. See waiting below. |
-| `list` | List task, worker, pane, and state. |
+| `list [--workspace <id>]` | List recorded task, worker, pane, and state; scope routine project inventory to its verified workspace. |
 | `stats [--workspace <id>] [--days <n>]` | Review configured workers from stored facts, without Herdr calls or writes. |
 | `close <task-id>` | Close that task's recorded pane. |
 | `detect` | List installed harnesses, versions, Pi providers, and Pi integration status. |
@@ -47,9 +53,9 @@ On `caller_context_invalid`, follow [caller context recovery](references/setup.m
 ## Delegate and verify
 
 1. Choose a configured worker based on the assignment and its optional `description`. With `pstack-herdr` active, follow its role-first routing rules. One worker/model can serve multiple roles in fresh processes. Create a separate git worktree for a writer and pass it as `--cwd`. A read-only worker may share a checkout; explicitly forbid file and external-state changes in its brief.
-2. Write a complete brief: goal and acceptance criteria, absolute paths to read, file ownership and constraints, verification commands, output files, and whether to commit. Name the summary and evidence needed for your next decision. Workers have none of your conversation. Reports go beside `result.json`; `horch` appends its worker rules and exact result schema automatically.
+2. Write a complete brief: goal and acceptance criteria, absolute paths to read, file ownership and constraints, verification commands, output files, and whether to commit. Use the maintained bounded command itself as the capability check where practical; preserve its exit status, timing, and raw output. Diagnostic heuristics cannot add admission gates. Keep host-bound checks with an authorized executor under existing caps and locks; configured flags alone do not prove access. Workers have none of your conversation. Reports go beside `result.json`; `horch` appends the worker rules and result schema.
 3. Run `horch run <worker> --brief <file> --cwd <dir>`. Record `task_id` and `pane_id`; any state other than `running` needs problem handling. For parallel tasks, submit all allowed by `max_active_workers` before waiting.
-4. Wait until every required task is `done`, using the method below. Read `result_path`, inspect its `status`, and read all listed files (paths are relative to the result directory). Relay a blocked result's `question` to the user. A follow-up is a new task with a complete brief and the prior report.
+4. Wait until every required task is `done`, using the method below. Read `result_path`, inspect its `status`, and read the listed reports and deliverables (paths are relative to the result directory). Verify linked bulk evidence with structured checks rather than dumping generated artifacts into context. Relay a blocked result's `question` to the user. A follow-up is a new task with a complete brief and the prior report.
 5. Verify the diff, behavior, and reviewer verdicts before reporting. If `closed` is false, read `message` and retry cleanup with `horch close`; its worker slot remains occupied until closure is confirmed.
 
 ## Wait without repeated short calls

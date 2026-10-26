@@ -32,6 +32,15 @@ For assignments outside a named playbook, use an applicable configured role befo
 
 ## Other Cursor instructions
 
+Codex session UUIDs are not Herdr agent targets. When a controller's native
+thread-messaging tool is unavailable, the existing
+`codex queue --thread <UUID> --message <text>` can queue authorized controller
+metadata ([CLI reference](https://learn.chatgpt.com/docs/developer-commands#codex-queue)).
+A queue receipt confirms submission, not recipient acknowledgement or work
+authority. Worker follow-ups still use fresh `horch run` tasks.
+This messaging path is for authorized project coordination. An observer must not
+use it to direct project work or request forwarded context and status reports.
+
 | Upstream instruction | On the current harness |
 |---|---|
 | `Read`, `Glob`, `Grep`, edits, shell commands | Use the harness's available file/search/edit tools or shell. |
@@ -52,5 +61,12 @@ For assignments outside a named playbook, use an applicable configured role befo
 | Approved skill edits from `reflect` | Before approval, show the destination in the current harness's discovered project or user skills directory. After explicit approval, copy the skill folder there and edit the copy. Never edit `plugins/cache/`. Retain the source instruction against opening a PR or pushing; user and project instructions still take precedence. Use only an available, authorized backlog tracker. |
 | Generated skills under `.cursor/skills/` | Use the current harness's project skills directory. Keep generated user/project skills separate from this installed bundle. |
 | `/loop`, custom modes, cloud agents | These are not supplied by this adapter. Use a corresponding capability only if the current environment provides it. |
+
+On pickup, reconcile handoff holds once against current authorized owner/lock
+evidence. An expired advisory note is historical, not proof that a real lock is
+free. Preserve actual locks and single-writer ownership; block only the affected
+action if ownership is unknown, and advance independent authorized work. Recheck
+when ownership changes or before acquiring the resource, rather than seeking
+approval for every step.
 
 If a required step has no available equivalent, report the specific gap and keep that step unresolved. Do not claim the complete playbook ran. Follow existing authorization and verification constraints. Upstream scripts may need Bun, GitHub CLI or Origin CLI, `jq`, or app-specific tools; inspect their prerequisites before running them. Do not add dependencies merely to read a skill.

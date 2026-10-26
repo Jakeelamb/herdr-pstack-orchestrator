@@ -57,9 +57,12 @@ These appear before the worker reads its task. `horch` reports `start_failed` an
 
 `horch check` verifies startup and result delivery. It does not establish access
 to systemd, GPUs, network endpoints, or other task-specific execution facilities.
-Check those prerequisites in the intended execution context before assigning
-the execution work. A denied prerequisite remains blocked; the check does not
-grant permission to bypass it.
+Check required capabilities in the intended context with the maintained bounded
+command where practical, retaining its actual outcome. A heuristic such as
+checking cache presence for every Cargo.lock package cannot replace the selected
+`--locked --offline` command or introduce another admission gate. An actual
+denial stays blocked; do not bypass it or silently fetch dependencies. Continue
+independent authorized source work when only host execution is unavailable.
 
 Use `horch stats [--workspace <id>] [--days <n>]` before proposing changes to this file. It reads the store and configuration without Herdr calls or writes, even outside Herdr. See [worker statistics](stats.md) for fields, limitations, and interpreting the numbers with the user.
 

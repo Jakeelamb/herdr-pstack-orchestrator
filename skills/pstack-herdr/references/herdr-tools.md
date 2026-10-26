@@ -62,4 +62,11 @@ use it to direct project work or request forwarded context and status reports.
 | Generated skills under `.cursor/skills/` | Use the current harness's project skills directory. Keep generated user/project skills separate from this installed bundle. |
 | `/loop`, custom modes, cloud agents | These are not supplied by this adapter. Use a corresponding capability only if the current environment provides it. |
 
+On pickup, reconcile handoff holds once against current authorized owner/lock
+evidence. An expired advisory note is historical, not proof that a real lock is
+free. Preserve actual locks and single-writer ownership; block only the affected
+action if ownership is unknown, and advance independent authorized work. Recheck
+when ownership changes or before acquiring the resource, rather than seeking
+approval for every step.
+
 If a required step has no available equivalent, report the specific gap and keep that step unresolved. Do not claim the complete playbook ran. Follow existing authorization and verification constraints. Upstream scripts may need Bun, GitHub CLI or Origin CLI, `jq`, or app-specific tools; inspect their prerequisites before running them. Do not add dependencies merely to read a skill.

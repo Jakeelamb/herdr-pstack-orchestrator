@@ -1351,17 +1351,29 @@ def cmd_stats(args):
 
 def cmd_list(args):
     require_herdr_env()
+    if args.workspace is not None and not args.workspace.strip():
+        fail("invalid_arguments", "--workspace must not be blank")
     rows = []
     for task_id in all_task_ids():
+        directory = task_dir(task_id)
+        if args.workspace is not None:
+            # Known other owners can be excluded even when the record is invalid.
+            # Unknown or invalid workspace metadata must remain diagnostic.
+            raw = read_json(directory / "task.json")
+            workspace = raw.get("workspace_id") if isinstance(raw, dict) else None
+            if isinstance(workspace, str) and workspace.strip() and workspace != args.workspace:
+                continue
         try:
-            task = load_task(task_dir(task_id), task_id)
+            task = load_task(directory, task_id)
         except TaskMissingError:
             continue
         except TaskInvalidError as exc:
             rows.append(("", task_id, {"task_id": task_id, "state": "task_invalid",
                                       "error": "task_invalid", "message": str(exc)}))
             continue
-        state = load_state(task_dir(task_id))
+        if args.workspace is not None and task.get("workspace_id") != args.workspace:
+            continue
+        state = load_state(directory)
         rows.append(
             (
                 str(task.get("created_at") or ""),
@@ -1395,7 +1407,8 @@ def cmd_close(args):
     with task_state_lock(directory):
         current = load_state(directory)
         current["closed"] = True
-        current["problem"] = None
+        if current["state"] == "done":
+            current["problem"] = None
         write_json(directory / "state.json", current)
     emit({"task_id": args.task_id, "closed": True, "pane": outcome})
 
@@ -1597,6 +1610,7 @@ def build_parser():
     p_wait.set_defaults(func=cmd_wait)
 
     p_list = sub.add_parser("list", help="print every task as one JSON line, oldest first")
+    p_list.add_argument("--workspace", help="only tasks created in this workspace")
     p_list.set_defaults(func=cmd_list)
 
     p_stats = sub.add_parser("stats", help="summarize stored worker performance without Herdr or writes")

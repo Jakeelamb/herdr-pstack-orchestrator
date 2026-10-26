@@ -6,6 +6,15 @@ The integration follows Herdr 0.9.3's [agent automation](https://github.com/herd
 
 Herdr supplies agent lifecycle state; `horch` adds task identity, file delivery, review gates, and cleanup. Its single two-second `agent list` poll covers all waited tasks and the notification timer without invoking a model. Herdr's event-driven `agent wait` targets one agent; replacing this loop with subscriptions would also require reconnect and lost-event reconciliation. The current loop is an orchestration choice, not a missing Herdr wait capability.
 
+Herdr can return `agent_prompt_stalled` after its five-second submission guard,
+before horch's 15-second acknowledgement budget expires. In that case horch uses
+one passive `agent wait` for the remaining budget. It never resubmits the prompt
+or restarts the worker. A later dialog remains `blocked`; an unconfirmed prompt
+remains `not_started` with both observations retained for inspection. This does
+not retry harness bootstrap or provider failures. A short turn already marked
+`idle` or `done` can acknowledge startup only with completion evidence newer than the
+pre-prompt baseline; valid result delivery still happens through `horch wait`.
+
 Use `visible` reads for passive inspection. Recent-history reads can send mouse-scroll input to an idle full-screen agent before restoring its viewport. Routine status checks should use Herdr's agent metadata, not parse a harness's private session files. The Pi readiness guard below also reads Herdr metadata.
 
 ## Delivery, outcome, and review verdict

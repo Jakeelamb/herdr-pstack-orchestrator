@@ -55,6 +55,12 @@ These appear before the worker reads its task. `horch` reports `start_failed` an
 
 ## Reviewing configured workers
 
+`horch check` verifies startup and result delivery. It does not establish access
+to systemd, GPUs, network endpoints, or other task-specific execution facilities.
+Check those prerequisites in the intended execution context before assigning
+the execution work. A denied prerequisite remains blocked; the check does not
+grant permission to bypass it.
+
 Use `horch stats [--workspace <id>] [--days <n>]` before proposing changes to this file. It reads the store and configuration without Herdr calls or writes, even outside Herdr. See [worker statistics](stats.md) for fields, limitations, and interpreting the numbers with the user.
 
 ## Configuration

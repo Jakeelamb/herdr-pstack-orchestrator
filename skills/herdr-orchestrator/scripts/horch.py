@@ -74,7 +74,7 @@ It must be one JSON object with exactly these keys:
       "question": null
     }}
 
-`status` is `completed`, `blocked`, or `failed`. `files` lists the output files you wrote, relative to the directory of `result.json`. `question` is required when `status` is `blocked`, else null.
+`status` is `completed`, `blocked`, or `failed`. `files` lists the report and deliverables the controller must inspect, relative to the directory of `result.json`. Link generated logs, fixtures, and bulk artifacts through an evidence index or manifest in the report, preserving their paths and hashes there. `question` is required when `status` is `blocked`, else null.
 """
 
 

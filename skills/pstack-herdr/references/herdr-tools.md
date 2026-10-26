@@ -32,6 +32,13 @@ For assignments outside a named playbook, use an applicable configured role befo
 
 ## Other Cursor instructions
 
+Codex session UUIDs are not Herdr agent targets. When a controller's native
+thread-messaging tool is unavailable, the existing
+`codex queue --thread <UUID> --message <text>` can queue authorized controller
+metadata ([CLI reference](https://learn.chatgpt.com/docs/developer-commands#codex-queue)).
+A queue receipt confirms submission, not recipient acknowledgement or work
+authority. Worker follow-ups still use fresh `horch run` tasks.
+
 | Upstream instruction | On the current harness |
 |---|---|
 | `Read`, `Glob`, `Grep`, edits, shell commands | Use the harness's available file/search/edit tools or shell. |

@@ -38,6 +38,8 @@ thread-messaging tool is unavailable, the existing
 metadata ([CLI reference](https://learn.chatgpt.com/docs/developer-commands#codex-queue)).
 A queue receipt confirms submission, not recipient acknowledgement or work
 authority. Worker follow-ups still use fresh `horch run` tasks.
+This messaging path is for authorized project coordination. An observer must not
+use it to direct project work or request forwarded context and status reports.
 
 | Upstream instruction | On the current harness |
 |---|---|

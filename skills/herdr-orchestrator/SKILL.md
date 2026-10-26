@@ -1,11 +1,17 @@
 ---
 name: herdr-orchestrator
-description: "Delegate tasks to worker agents (Pi, Codex, Claude Code) that run in their own herdr panes, then wait for and read their file results. Use when the user asks to delegate, dispatch, or parallelize work through herdr or horch, to run several models on one task, or to set up herdr workers. Requires HERDR_ENV=1 for orchestration. Also use to review how configured workers perform or whether they are efficient."
+description: "Delegate and set up Herdr workers when explicitly assigned project orchestration. Observe worker progress and efficiency through stored statistics and existing logs without directing projects."
 ---
 
 # herdr-orchestrator
 
-You are the controller. Focus on planning, task assignment, guidance, and quality control. Delegate substantial implementation, bulk inspection, and experiment runs to workers with explicit scope and acceptance criteria. Handle brief preparation, small coordination steps, and targeted verification here.
+## Choose your role
+
+For progress or efficiency observation, use [worker statistics](references/stats.md) and existing logs. Optional live checks use `herdr agent get` and `herdr agent read --source visible`. Keep project planning, delegation, approvals, and results with each project's existing controller. Do not send project instructions, request reports or context forwarding, create feedback queues, or run lifecycle commands such as `run`, `check`, `wait`, or `close`. Harness maintenance does not confer project ownership. Stop here for observation; the controller workflow below requires a separate project orchestration assignment.
+
+## Controller workflow
+
+As the assigned project controller, focus on planning, task assignment, guidance, and quality control. Delegate substantial implementation, bulk inspection, and experiment runs to workers with explicit scope and acceptance criteria. Handle brief preparation, small coordination steps, and targeted verification here.
 
 Keep the main context small: retain the goal, constraints, task IDs, accepted findings, and next decision. Ask workers for concise conclusions, blockers, and evidence paths. Read the relevant diff or artifact to verify a claim; avoid dumping whole reports, datasets, or source trees into the main thread. For structured evidence, inspect keys/counts first and extract the fields needed for the decision instead of pretty-printing the entire JSON. Each task gets a fresh worker process through `horch`.
 

@@ -219,10 +219,17 @@ After sign-in the app bounces back to /login instead of the page the user
 came from.
 
 - Read src/auth/session.ts and src/routes/login.ts first.
+- Record the base revision with git rev-parse HEAD before editing.
 - Change only files under src/auth/ and src/routes/.
-- Verify with npm run e2e -- login, including a return URL and an expired session.
+- Acceptance means a valid session returns to its original URL and an expired
+  session returns to /login without a redirect loop.
+- Run the maintained npm run e2e -- login recipe in the project's documented
+  Node environment. Record its fixture identities and check availability early.
+  Preserve missing-input blockers and continue independent authorized work.
 - Commit on the current branch with a message explaining the cause.
-- Write report.md next to result.json: cause, fix, verification output.
+- Write report.md next to result.json with the cause, fix, source review, and
+  actual command results. The controller owns PR delivery and records required
+  checks on the exact published head, including unresolved acceptance blockers.
 ```
 
 `horch` appends the worker rules and the `result.json` format to every brief, so do not add them yourself.

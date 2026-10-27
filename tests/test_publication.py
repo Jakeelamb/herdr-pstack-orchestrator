@@ -104,9 +104,38 @@ def postcommit_fault(root, boundary="unlink", damaged=None):
     """Commit real state, fail after commit, then fail diagnostic replacement."""
     replace, unlink, flock, read_text = os.replace, os.unlink, fcntl.flock, Path.read_text
     publication_error = OSError("injected postcommit " + boundary)
-    state_replacements, identity_replacements, state_acquisitions, state_unlocks = 0, 0, 0, 0
+    save_state, state_lock, validate = horch.save_state, horch.task_state_lock, horch.initialized_state_exists
+    state_replacements, identity_replacements = 0, 0
     events = []
     failed = False
+    saving, reconciling = False, False
+    reconciliation_stream = None
+
+    def save(directory, state):
+        nonlocal saving
+        saving = True
+        try:
+            return save_state(directory, state)
+        finally:
+            saving = False
+
+    @contextmanager
+    def lock(directory):
+        nonlocal reconciling
+        # The recovery read transaction is outside save_state. Scope the real
+        # syscalls to that transaction, independent of earlier saves or probes.
+        reconciling = boundary.startswith("reconcile_") and not saving
+        try:
+            with state_lock(directory):
+                yield
+        finally:
+            reconciling = False
+
+    def validate_state(directory):
+        events.append("reconciliation validation started")
+        initialized = validate(directory)
+        events.append("reconciliation validation " + ("passed" if initialized else "failed"))
+        return initialized
 
     def replace_file(source, target):
         nonlocal state_replacements, identity_replacements
@@ -139,21 +168,23 @@ def postcommit_fault(root, boundary="unlink", damaged=None):
         return unlink(path, *args, **kwargs)
 
     def lock_file(stream, operation):
-        nonlocal failed, state_acquisitions, state_unlocks
-        if Path(stream.name).name == ".state.lock":
-            if operation == fcntl.LOCK_EX:
-                state_acquisitions += 1
-                if boundary == "reconcile_acquire" and state_acquisitions == 3:
-                    events.append("reconciliation acquisition failed")
-                    raise OSError("injected reconciliation acquisition failure")
-            elif operation == fcntl.LOCK_UN:
-                state_unlocks += 1
-                if boundary == "reconcile_unlock_before" and state_unlocks == 3:
-                    events.append("reconciliation unlock failed before syscall")
-                    raise OSError("injected reconciliation unlock before syscall")
+        nonlocal failed, reconciliation_stream
+        if reconciling and operation == fcntl.LOCK_EX:
+            reconciliation_stream = stream
+            events.append("reconciliation acquisition attempted")
+            if boundary == "reconcile_acquire":
+                events.append("reconciliation acquisition failed")
+                raise OSError("injected reconciliation acquisition failure")
+        reconciliation_unlock = stream is reconciliation_stream and operation == fcntl.LOCK_UN
+        if reconciliation_unlock and boundary == "reconcile_unlock_before":
+            events.append("reconciliation unlock failed before syscall")
+            raise OSError("injected reconciliation unlock before syscall")
         result = flock(stream, operation)
-        if (boundary == "reconcile_unlock_after" and operation == fcntl.LOCK_UN
-                and Path(stream.name).name == ".state.lock" and state_unlocks == 3):
+        if stream is reconciliation_stream and operation == fcntl.LOCK_EX:
+            events.append("reconciliation lock acquired")
+        if reconciliation_unlock:
+            events.append("reconciliation lock unlocked")
+        if reconciliation_unlock and boundary == "reconcile_unlock_after":
             events.append("reconciliation unlock failed after syscall")
             raise OSError("injected reconciliation unlock after syscall")
         if (boundary == "unlock" and not failed and operation == fcntl.LOCK_UN
@@ -164,8 +195,10 @@ def postcommit_fault(root, boundary="unlink", damaged=None):
         return result
 
     def read_file(path, *args, **kwargs):
-        if ((damaged == "unreadable" or boundary == "reconcile_read") and state_replacements > 1
+        if ((damaged == "unreadable" and state_replacements > 1 or
+             boundary == "reconcile_read" and reconciling)
                 and path == root / "t-abcdef/state.json"):
+            events.append("state read failed")
             raise OSError("injected state read failure")
         return read_text(path, *args, **kwargs)
 
@@ -173,7 +206,10 @@ def postcommit_fault(root, boundary="unlink", damaged=None):
         with patch.object(os, "replace", side_effect=replace_file), \
                 patch.object(os, "unlink", side_effect=unlink_file), \
                 patch.object(fcntl, "flock", side_effect=lock_file), \
-                patch.object(Path, "read_text", read_file):
+                patch.object(Path, "read_text", read_file), \
+                patch.object(horch, "save_state", side_effect=save), \
+                patch.object(horch, "task_state_lock", side_effect=lock), \
+                patch.object(horch, "initialized_state_exists", side_effect=validate_state):
             yield publication_error, events
     finally:
         record(root / "faults.json", {"events": events, "state_replacements": state_replacements,
@@ -498,9 +534,27 @@ class PublicationTests(unittest.TestCase):
                                "warning": warning.getvalue(), "checkpoints": checkpoints,
                                "original_exception_retained": raised.exception is original})
                         qualified = boundary.startswith("reconcile_unlock_")
+                        expected_events = ["replaced state.json", "replaced state.json",
+                                           "reconciliation acquisition attempted"]
+                        if boundary == "reconcile_acquire":
+                            expected_events.append("reconciliation acquisition failed")
+                        else:
+                            expected_events.extend(["reconciliation lock acquired",
+                                                    "reconciliation validation started"])
+                            if boundary == "reconcile_read":
+                                expected_events.extend(["state read failed", "reconciliation validation failed",
+                                                        "reconciliation lock unlocked"])
+                            else:
+                                expected_events.append("reconciliation validation passed")
+                                if boundary == "reconcile_unlock_after":
+                                    expected_events.append("reconciliation lock unlocked")
+                                expected_events.extend(["reconciliation unlock failed " +
+                                                        ("before" if boundary.endswith("before") else "after") +
+                                                        " syscall", "replaced task.json"])
                         self.assertEqual(count, int(qualified))
                         self.assertEqual([row["task_id"] for row in rows], ["t-abcdef"] if qualified else [])
                         self.assertEqual(statistics["task_count"], int(qualified))
+                        self.assertEqual(events, expected_events)
                         if qualified:
                             self.assertEqual(second.get("error"), "worker_limit")
                             self.assertEqual(second["exit_code"], 1)

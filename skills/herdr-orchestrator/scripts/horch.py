@@ -284,6 +284,32 @@ def load_state(directory):
     return normalize_state(read_json(directory / "state.json"))
 
 
+def initialized_state_exists(directory):
+    """Check persisted state without load_state's defaults; caller holds its lock."""
+    stored = read_json(directory / "state.json")
+    if not isinstance(stored, dict) or not default_state().keys() <= stored.keys():
+        return False
+    if (not isinstance(stored["state"], str)
+            or stored["state"] not in SETTLED_STATES | {"running"}
+            or any(type(stored[key]) is not bool for key in ("closed", "saw_working", "long_notified"))
+            or (stored["problem"] is not None and not isinstance(stored["problem"], str))):
+        return False
+    baseline = stored["baseline_seq"]
+    if baseline is not None and (type(baseline) is not int or baseline < 0):
+        return False
+    for key in ("settled_at", "first_done_at"):
+        value = stored[key]
+        if value is not None:
+            if not isinstance(value, str):
+                return False
+            try:
+                if datetime.fromisoformat(value.replace("Z", "+00:00")).tzinfo is None:
+                    return False
+            except ValueError:
+                return False
+    return True
+
+
 @contextmanager
 def task_state_lock(directory):
     """Serialize short state transactions; never hold across herdr calls."""
@@ -302,8 +328,9 @@ def save_state(directory, state):
         for key in ("closed", "saw_working", "long_notified"):
             merged[key] = bool(current[key] or state[key])
         for key in ("settled_at", "first_done_at"):
-            merged[key] = current[key] or state.get(key)
-        mark_settled(merged)
+            merged[key] = current[key] if current["closed"] else current[key] or state.get(key)
+        if not merged["closed"]:
+            mark_settled(merged)
         write_json(directory / "state.json", merged)
         state.update(merged)
 
@@ -815,19 +842,26 @@ def _start_task_locked(config, worker_name, brief_text, cwd, skip_if_full, calle
     }
     state = default_state()
     try:
-        write_json(directory / "task.json", task)
         save_state(directory, state)
+        write_json(directory / "task.json", task)
     except BaseException:
         # If publication fails, close the unused pane. If close is uncertain,
         # retain/publish its reservation so a later launch cannot reuse the slot.
         try:
             close_pane(pane_id)
-        except HerdrError as exc:
+        except (HerdrError, OSError) as exc:
             state["state"] = "start_failed"
             state["problem"] = f"task publication failed; unused pane cleanup failed: {exc}"
             try:
-                write_json(directory / "task.json", task)
                 save_state(directory, state)
+            except OSError as recovery_error:
+                print(f"warning: cannot save failure diagnostic for task {task_id} "
+                      f"for pane {pane_id}: {recovery_error}; {state['problem']}", file=sys.stderr)
+            try:
+                with task_state_lock(directory):
+                    if not initialized_state_exists(directory):
+                        raise OSError("no readable complete initialized state")
+                write_json(directory / "task.json", task)
             except OSError as recovery_error:
                 print(f"warning: cannot preserve task {task_id} for pane {pane_id}: "
                       f"{recovery_error}", file=sys.stderr)

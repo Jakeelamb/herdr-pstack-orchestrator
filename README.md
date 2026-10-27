@@ -189,6 +189,8 @@ Other keys are documented in [configuration](skills/herdr-orchestrator/reference
 
 Task directories live under `~/.local/state/herdr-orchestrator/tasks/`, or the corresponding `$XDG_STATE_HOME` path, until you delete them.
 
+An explicitly selected, default-off [experimental exact Codex completion mode](skills/herdr-orchestrator/references/exact-completion.md) uses a separate private store and a committed result snapshot. It assumes a cooperative exclusive worker. A matching native notification plus an exact completed turn can precede completion of enabled background compaction or later session work. Automatic pane cleanup can interrupt that work. Controlled tests do not qualify the installed producer, its effective configuration, or safe pane closure. Do not activate the mode or close panes based on this proof alone.
+
 ## How delegation works
 
 The controller sends a complete brief with `horch run`, waits for the structured result with `horch wait`, and verifies the outcome before reporting back. Commands, waiting rules, and recovery are in the [herdr-orchestrator skill](skills/herdr-orchestrator/SKILL.md).

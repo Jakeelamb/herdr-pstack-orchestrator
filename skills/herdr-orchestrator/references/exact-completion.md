@@ -3,10 +3,12 @@
 This developer experiment is **default off and not native-runtime qualified**.
 It has an end-to-end caller, notification wrapper, bounded stdio observer and
 persisted delivery/cancellation decision. Controlled fixtures verify its control
-logic. They do not establish that an installed Codex producer reports `completed`
-only after post-notification compaction has finished. Complete that native
-qualification before using the mode for actual work. App-server is documented
-as experimental; the installed binary's upstream provenance is not established.
+logic, not worker quiescence. A matching native notification plus an exact
+`completed` turn does not prove that all session work has ended. Automatic pane
+cleanup can interrupt enabled background compaction or later work. The mode is
+not generally safe to activate or close panes based on this proof alone.
+App-server is documented as experimental. The installed binary's upstream
+provenance and effective worker configuration are not established.
 
 Ordinary Codex, Pi and Claude tasks keep their existing contract, including the
 null-completion-sequence fallback. Existing tasks are never upgraded.
@@ -79,6 +81,13 @@ worker isolation or root-process authentication**. A conflict discovered after
 committed delivery cannot revoke the snapshot; it records an association
 assumption diagnostic instead.
 
+On the pinned [Codex 0.164.0 turn path](https://github.com/openai/codex/blob/6aaac694803004a63c6f393d153c96d22521a6b9/codex-rs/core/src/session/turn.rs#L773),
+foreground post-notification compaction is awaited when attempted, but errors
+can preserve a completed answer. Enabled [session-owned background compaction](https://github.com/openai/codex/blob/6aaac694803004a63c6f393d153c96d22521a6b9/codex-rs/core/src/session/async_compaction.rs#L62)
+can remain pending beyond turn completion. The session can also [start later work](https://github.com/openai/codex/blob/6aaac694803004a63c6f393d153c96d22521a6b9/codex-rs/core/src/tasks/mod.rs#L907).
+These source findings do not establish that the installed binary matches this
+source or that background compaction is enabled for the worker.
+
 After a matching callback, ordinary `wait` queries only that bound thread's
 `thread/turns/list` over private app-server stdio, with `itemsView: notLoaded`.
 It selects the exact turn, never the newest one. Only `completed` without an
@@ -145,9 +154,11 @@ file/directory fsync guarantee is made.
 Before any real rollout, qualify the exact executable/version and unchanged
 reader/Herdr context with native foreign callbacks, notifier preservation,
 early result plus delayed compaction/interruption, cancellation, and observer
-SIGKILL controls. A premature positive `completed` projection is a blocking
-producer defect. Do not make this mode the default or retrofit it onto running
-work based on the controlled fixture suite.
+SIGKILL controls. These controls alone do not establish safe pane closure.
+Preserving background work requires a separately qualified producer lifecycle
+barrier or qualified exclusions of the relevant capabilities. Keep this mode
+default off and do not retrofit it onto running work based on the controlled
+fixture suite.
 
 Official protocol references: [notification contract](https://learn.chatgpt.com/docs/config-file/config-advanced#notifications),
 [app-server and turn history](https://learn.chatgpt.com/docs/app-server).

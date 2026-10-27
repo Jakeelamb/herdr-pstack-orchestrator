@@ -23,6 +23,8 @@ class PromptAcknowledgementTests(unittest.TestCase):
             self.commands.append(args)
             if args[:2] == ("agent", "start"):
                 return {"result": {"type": "agent_started"}}
+            if args[:2] == ("agent", "read"):
+                return "\n› \n"
             value = prompt if args[:2] == ("agent", "prompt") else observed
             if args[:2] == ("agent", "prompt"):
                 self.clock += elapsed

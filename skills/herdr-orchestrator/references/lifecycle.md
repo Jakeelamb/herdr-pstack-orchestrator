@@ -102,7 +102,11 @@ reads and validates the complete persisted state under its task lock. A save
 can raise after replacing the state file, so recovery uses the actual record,
 not whether the save returned. Missing, unreadable, malformed, or incomplete
 state does not qualify; the defaults used by ordinary reads are not proof of
-a saved record. The retained state can remain
+a saved record. Identity publication follows release of the task lock. If
+validation succeeds but unlocking raises, descriptor closure releases the lock;
+startup warns and still retries identity publication using that validation.
+Acquisition or read failure does not qualify. Recovery retains the original
+publication exception. The retained state can remain
 `running` without a persisted cleanup diagnostic. A retained unclosed task still
 reserves its slot. Confirmed cleanup
 removes the unused task directory. If storage repeatedly prevents state or

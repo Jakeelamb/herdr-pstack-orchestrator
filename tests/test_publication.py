@@ -61,6 +61,8 @@ def startup_boundary(root, failure=None, checkpoint=None, cleanup_oserror=False)
         record(root / "calls.json", calls)
         if args[:2] == ("agent", "start"):
             return {"result": {"type": "agent_started"}}
+        if args[:2] == ("agent", "read"):
+            return "\n› \n"
         if args[:2] == ("agent", "prompt"):
             return {"result": {"agent": {"agent_status": "working"}}}
         raise AssertionError("unexpected external boundary " + repr(args))
@@ -322,7 +324,8 @@ class PublicationTests(unittest.TestCase):
             self.assertIsNone(state["settled_at"])
             self.assertIsNone(state["first_done_at"])
             calls = horch.read_json(root / "calls.json")
-            self.assertEqual([call[:2] for call in calls], [["agent", "start"], ["agent", "prompt"]])
+            self.assertEqual([call[:2] for call in calls if call[:2] != ["agent", "read"]],
+                             [["agent", "start"], ["agent", "prompt"]])
 
     def test_unclosed_delivery_precedes_stale_running_save(self):
         with isolated_store(self._testMethodName) as root:
@@ -345,6 +348,8 @@ class PublicationTests(unittest.TestCase):
                 if args[:2] == ("agent", "start"):
                     starts.append(args[2])
                     return {"result": {"type": "agent_started"}}
+                if args[:2] == ("agent", "read"):
+                    return "\n› \n"
                 if args[:2] == ("agent", "prompt"):
                     task_id = "t-" + args[2].removeprefix("horch-")
                     directory = root / task_id

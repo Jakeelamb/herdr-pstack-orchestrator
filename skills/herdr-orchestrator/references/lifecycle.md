@@ -84,5 +84,38 @@ A Pi worker waiting for its session signal can use the full 90-second startup bu
 `horch close` resolves the recorded pane directly, even from another workspace. Only explicit pane/tab/workspace-not-found responses establish that it is already gone; other Herdr errors leave cleanup unresolved.
 Successful closure preserves a failed task's original problem and settlement;
 for delivered tasks it clears only the resolved pane-cleanup error.
+Later stale saves preserve the closed record's exact `settled_at` and
+`first_done_at`, including nulls. They neither import stale delivery times nor
+synthesize settlement after cancellation. Existing closed state and delivery
+precedence remain unchanged.
 
 `check` batches at its caller workspace's `max_active_workers` and deduplicates repeated worker names. Each row has `worker`, `task_id`, `state`, `ok`, `pane_id`, `seconds`, and `message`. Workers that cannot start before the wait cap or have no free slot are `not_checked`, with null task, pane, and duration. Invalid reservations do not abort a batch: started tasks are still polled and pending workers launch as slots free. If invalid records held capacity, never-started workers' messages name those IDs and recommend `horch list`. Unfinished/problem tasks retain their panes; inspect `message` before acting.
+
+## Task publication
+
+Startup saves initialized `state.json` before publishing `task.json`, which makes
+the task enumerable. If publication fails and unused-pane cleanup is uncertain,
+startup saves `start_failed` and its cleanup diagnostic before retrying identity
+publication. If that diagnostic save raises, startup warns that the failure
+diagnostic could not be saved. Before retrying identity publication, startup
+reads and validates the complete persisted state under its task lock. A save
+can raise after replacing the state file, so recovery uses the actual record,
+not whether the save returned. Missing, unreadable, malformed, or incomplete
+state does not qualify; the defaults used by ordinary reads are not proof of
+a saved record. Identity publication follows release of the task lock. If
+validation succeeds but unlocking raises, descriptor closure releases the lock;
+startup warns and still retries identity publication using that validation.
+Acquisition or read failure does not qualify. Recovery retains the original
+publication exception. The retained state can remain
+`running` without a persisted cleanup diagnostic. A retained unclosed task still
+reserves its slot. Confirmed cleanup
+removes the unused task directory. If storage repeatedly prevents state or
+identity publication, startup reports that it cannot preserve the task and pane
+reservation. An unpublished directory cannot reserve capacity. Inspect the
+reported pane before another launch.
+
+This ordering preserves initialized state after process death immediately
+following identity publication. Initial state remains `running` with no baseline
+or confirmed work. Death before identity publication can leave an unenumerated
+pane. These file replacements do not establish power-loss durability or ordered
+completion observations.

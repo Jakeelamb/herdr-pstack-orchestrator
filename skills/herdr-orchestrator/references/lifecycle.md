@@ -67,6 +67,21 @@ A pane-placement error can leave an empty pane when Herdr's response was lost. N
 
 Processes sharing a task store serialize startup to enforce `max_active_workers` independently for each workspace; workers execute concurrently after launch. Controllers in the same workspace share its slots when they use the same state directory. The shared startup lock prevents two controllers from claiming the last slot together; it does not turn workspace quotas into a total limit. Short per-task transactions prevent a concurrent wait from overwriting confirmed closure. JSON updates replace files atomically.
 
+Startup saves initialized `state.json` before publishing `task.json`, which makes
+the task enumerable. If publication fails and unused-pane cleanup is uncertain,
+startup saves `start_failed` and its cleanup diagnostic before retrying identity
+publication. A retained unclosed task still reserves its slot. Confirmed cleanup
+removes the unused task directory. If storage repeatedly prevents state or
+identity publication, startup reports that it cannot preserve the task and pane
+reservation. An unpublished directory cannot reserve capacity. Inspect the
+reported pane before another launch.
+
+This ordering preserves initialized state after process death immediately
+following identity publication. Initial state remains `running` with no baseline
+or confirmed work. Death before identity publication can leave an unenumerated
+pane. These file replacements do not establish power-loss durability or ordered
+completion observations.
+
 New task records retain the live caller's `workspace_id` at launch. An unclosed task keeps occupying that workspace's slot, including after a manual pane move or a failed startup. Older records without `workspace_id` count when their recorded pane is present in that workspace's live pane list. A missing legacy pane cannot reserve a slot in another workspace; pane-list failures leave admission unresolved instead of assuming capacity is free. No configuration migration is required.
 
 Scope each task store to one Herdr server. Pane IDs and agent names are server-local, and task records do not retain their originating socket. If using multiple named sessions or machines, give each a separate `XDG_STATE_HOME` and operate its tasks only through that server. Cross-server cleanup with a shared store is unsupported and can target an unrelated pane with the same ID.
@@ -76,5 +91,9 @@ A Pi worker waiting for its session signal can use the full 90-second startup bu
 `horch close` resolves the recorded pane directly, even from another workspace. Only explicit pane/tab/workspace-not-found responses establish that it is already gone; other Herdr errors leave cleanup unresolved.
 Successful closure preserves a failed task's original problem and settlement;
 for delivered tasks it clears only the resolved pane-cleanup error.
+Later stale saves preserve the closed record's exact `settled_at` and
+`first_done_at`, including nulls. They neither import stale delivery times nor
+synthesize settlement after cancellation. Existing closed state and delivery
+precedence remain unchanged.
 
 `check` batches at its caller workspace's `max_active_workers` and deduplicates repeated worker names. Each row has `worker`, `task_id`, `state`, `ok`, `pane_id`, `seconds`, and `message`. Workers that cannot start before the wait cap or have no free slot are `not_checked`, with null task, pane, and duration. Invalid reservations do not abort a batch: started tasks are still polled and pending workers launch as slots free. If invalid records held capacity, never-started workers' messages name those IDs and recommend `horch list`. Unfinished/problem tasks retain their panes; inspect `message` before acting.

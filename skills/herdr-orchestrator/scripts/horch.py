@@ -299,8 +299,9 @@ def save_state(directory, state):
         for key in ("closed", "saw_working", "long_notified"):
             merged[key] = bool(current[key] or state[key])
         for key in ("settled_at", "first_done_at"):
-            merged[key] = current[key] or state.get(key)
-        mark_settled(merged)
+            merged[key] = current[key] if current["closed"] else current[key] or state.get(key)
+        if not merged["closed"]:
+            mark_settled(merged)
         write_json(directory / "state.json", merged)
         state.update(merged)
 
@@ -812,19 +813,19 @@ def _start_task_locked(config, worker_name, brief_text, cwd, skip_if_full, calle
     }
     state = default_state()
     try:
-        write_json(directory / "task.json", task)
         save_state(directory, state)
+        write_json(directory / "task.json", task)
     except BaseException:
         # If publication fails, close the unused pane. If close is uncertain,
         # retain/publish its reservation so a later launch cannot reuse the slot.
         try:
             close_pane(pane_id)
-        except HerdrError as exc:
+        except (HerdrError, OSError) as exc:
             state["state"] = "start_failed"
             state["problem"] = f"task publication failed; unused pane cleanup failed: {exc}"
             try:
-                write_json(directory / "task.json", task)
                 save_state(directory, state)
+                write_json(directory / "task.json", task)
             except OSError as recovery_error:
                 print(f"warning: cannot preserve task {task_id} for pane {pane_id}: "
                       f"{recovery_error}", file=sys.stderr)

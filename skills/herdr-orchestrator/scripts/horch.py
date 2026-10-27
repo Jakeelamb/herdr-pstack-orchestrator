@@ -124,7 +124,7 @@ def _read_json_text(text):
         return None
     try:
         return json.loads(text)
-    except json.JSONDecodeError:
+    except (json.JSONDecodeError, RecursionError):
         return None
 
 
@@ -232,6 +232,10 @@ def require_exact_store():
     metadata = store.stat()
     if metadata.st_uid != os.getuid() or metadata.st_mode & 0o077:
         raise completion.Unverified("private_store_required")
+    tasks = store / "tasks"
+    if (tasks.is_symlink() or tasks.resolve() != tasks
+            or (tasks.exists() and not tasks.is_dir())):
+        raise completion.Unverified("unsafe_directory")
     marker = store / "exact-store.json"
     expected = {"mode": completion.MODE, "schema": 1}
     if marker.exists() or marker.is_symlink():
@@ -239,7 +243,6 @@ def require_exact_store():
             raise completion.Unverified("isolated_store_invalid")
     else:
         # The startup lock may already have created the otherwise empty tasks root.
-        tasks = store / "tasks"
         if (any(p.name != "tasks" for p in store.iterdir())
                 or (tasks.exists() and any(p.name != ".start.lock" for p in tasks.iterdir()))):
             raise completion.Unverified("new_isolated_store_required")
@@ -259,6 +262,8 @@ def task_dir(task_id):
 @contextmanager
 def task_store_lock():
     """Serialize allocation and startup across run/check processes on this store."""
+    if os.environ.get("HORCH_EXACT_STORE"):
+        require_exact_store()
     root = tasks_root()
     root.mkdir(parents=True, exist_ok=True)
     with (root / ".start.lock").open("a") as lock:
@@ -272,7 +277,7 @@ def task_store_lock():
 def read_json(path):
     try:
         return json.loads(Path(path).read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError, RecursionError):
         return None
 
 
@@ -452,15 +457,26 @@ def task_capacity(workspace_id):
     invalid = []
     for task_id in all_task_ids():
         directory = task_dir(task_id)
-        if load_state(directory)["closed"]:
-            continue
         try:
             task = load_task(directory, task_id)
         except TaskMissingError:
             continue  # manual recovery removed the record after enumeration
         except TaskInvalidError:
+            raw = read_json(directory / "task.json")
+            if (not os.environ.get("HORCH_EXACT_STORE")
+                    and not (isinstance(raw, dict) and "completion" in raw)
+                    and load_state(directory)["closed"]):
+                continue  # preserve closed invalid legacy reservations
             active += 1  # unknown owner and pane; reserve a slot in every workspace
             invalid.append(task_id)
+            continue
+        try:
+            state = state_for_task(directory, task)
+        except completion.Unverified:
+            active += 1
+            invalid.append(task_id)
+            continue
+        if state["closed"]:
             continue
         if "workspace_id" not in task:
             legacy_panes.append(task["pane_id"])
@@ -1245,8 +1261,9 @@ def state_for_task(directory, task):
         return load_state(directory)
     stored = completion.read_record(directory / "state.json")
     control = stored.get("exact") if isinstance(stored, dict) else None
-    if not isinstance(control, dict) or control.get("kind") not in {
-            "active", "cancel_requested", "closed_before_delivery", "delivered"}:
+    if (not isinstance(control, dict) or not isinstance(control.get("kind"), str)
+            or control["kind"] not in {
+            "active", "cancel_requested", "closed_before_delivery", "delivered"}):
         raise completion.Unverified("exact_state_invalid")
     if control.get("task_digest") != completion.digest(task):
         raise completion.Unverified("launch_changed")
@@ -1287,7 +1304,10 @@ def snapshot_result(task, control):
                 or any(not isinstance(proof.get(key), str) or not re.fullmatch(r"[0-9a-f]{64}", proof[key])
                        for key in ("binding_digest", "response_sha256"))):
             return None
-        result = json.loads(raw)
+        try:
+            result = json.loads(raw)
+        except RecursionError:
+            return None
         return result if validate_result(result, task) == "valid" else None
     except (KeyError, ValueError, TypeError, UnicodeError):
         return None
@@ -1301,6 +1321,8 @@ def delivered_result(directory, task, state):
 
 
 def observable(info):
+    if info.get("invalid_exact") is not None:
+        return False
     state = info["state"]
     if "completion" in info["task"]:
         return not state["closed"] and state["exact"]["kind"] in ("active", "delivered")
@@ -1400,7 +1422,13 @@ def poll_exact(info, deadline):
                         raise completion.Unverified("proof_changed")
                     try:
                         raw = completion.read_bytes(directory / "result.json")
-                        if len(raw) > 256 * 1024 or validate_result(json.loads(raw), task) != "valid":
+                        if len(raw) > 256 * 1024:
+                            raise completion.Unverified("result_invalid")
+                        try:
+                            parsed = json.loads(raw)
+                        except RecursionError as exc:
+                            raise completion.Unverified("result_unavailable") from exc
+                        if validate_result(parsed, task) != "valid":
                             raise completion.Unverified("result_invalid")
                     except (OSError, ValueError, UnicodeError) as exc:
                         raise completion.Unverified("result_unavailable") from exc
@@ -1439,7 +1467,12 @@ def poll_round(infos, previous, config, *, deadline=None):
     deadline = min(deadline if deadline is not None else float("inf"), time.monotonic() + 10)
     for info in infos:
         if "completion" in info["task"]:
-            poll_exact(info, deadline)
+            if not info.get("invalid_exact"):
+                try:
+                    poll_exact(info, deadline)
+                except completion.Unverified as exc:
+                    info["invalid_exact"] = str(exc)
+                    info["reported"] = "task_invalid"
             reported = info["reported"]
             if previous.get(info["task_id"]) != reported:
                 previous[info["task_id"]] = reported
@@ -1447,7 +1480,15 @@ def poll_round(infos, previous, config, *, deadline=None):
     return changed, polled
 
 
+def exact_invalid_line(task_id, code):
+    message = code if code.startswith(f"task {task_id}: ") else f"task {task_id}: {code}"
+    return {"task_id": task_id, "state": "task_invalid", "error": "exact_unverified",
+            "message": message}
+
+
 def wait_line(info):
+    if info.get("invalid_exact") is not None:
+        return exact_invalid_line(info["task_id"], info["invalid_exact"])
     state = state_for_task(info["dir"], info["task"])
     reported = state["state"] if state["closed"] or state["state"] == "done" else info["reported"]
     # A worker may write its result before its turn ends. Do not deliver it yet.
@@ -1472,7 +1513,10 @@ def wait_line(info):
 def make_info(task_id):
     directory = task_dir(task_id)
     task = load_task(directory, task_id)
-    state = state_for_task(directory, task)
+    try:
+        state = state_for_task(directory, task)
+    except completion.Unverified as exc:
+        raise completion.Unverified(f"task {task_id}: {exc}") from exc
     return {"task_id": task_id, "dir": directory, "task": task, "state": state, "reported": state["state"]}
 
 
@@ -1498,6 +1542,9 @@ def cmd_wait(args):
                 info = make_info(task_id)
             except (TaskInvalidError, TaskMissingError):
                 continue
+            except completion.Unverified as exc:
+                emit(exact_invalid_line(task_id, str(exc)))
+                continue
             if observable(info):
                 infos.append(info)
     if not infos:
@@ -1510,7 +1557,10 @@ def cmd_wait(args):
                 info["recheck"] = True
     wait_until_change(infos, config, args.max_seconds)
     for info in infos:
-        emit(wait_line(info))
+        try:
+            emit(wait_line(info))
+        except completion.Unverified as exc:
+            emit(exact_invalid_line(info["task_id"], str(exc)))
 
 
 def wait_until_change(infos, config, max_seconds):
@@ -1757,7 +1807,12 @@ def cmd_list(args):
             continue
         if args.workspace is not None and task.get("workspace_id") != args.workspace:
             continue
-        state = state_for_task(directory, task)
+        try:
+            state = state_for_task(directory, task)
+        except completion.Unverified as exc:
+            rows.append((str(task.get("created_at") or ""), task_id,
+                         exact_invalid_line(task_id, str(exc))))
+            continue
         rows.append(
             (
                 str(task.get("created_at") or ""),
@@ -1909,6 +1964,11 @@ def cmd_check(args):
     unknown = [name for name in names if name not in config["workers"]]
     if unknown:
         fail("unknown_worker", f"no worker named {', '.join(unknown)} in {config_path()}")
+    if args.completion:
+        if any(config["workers"][name]["harness"] != "codex" for name in names):
+            raise completion.Unverified("codex_exact_required")
+        for name in names:
+            completion.plan_argv(launch_args(config["workers"][name], tasks_root()))
     if any(config["workers"][name]["harness"] == "pi" for name in names):
         require_pi_integration()
     cwd = resolve_cwd(args.cwd)

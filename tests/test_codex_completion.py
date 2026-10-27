@@ -481,11 +481,13 @@ class ExactTests(unittest.TestCase):
         self.assertEqual(original[9], 'notify=["notify-tool", "a b", "$()`"]')
 
     def test_unsupported_or_ambiguous_notify_is_rejected_before_pane_creation(self):
-        unsupported = [[], ["-c", "notify=[]", "-c", "notify=[]"], ["--config=notify=[]"],
+        valid_notify = ['-c', 'notify=["/usr/bin/true"]']
+        unsupported = [[], valid_notify + ["-c", 'notify=["/usr/bin/false"]'], ["--config=notify=[]"],
                        ["-cnotify=[]"], ["-c", '"notify"=[]'], ["-c", "notify.x=[]"],
                        ["-c", "notify=oops"], ["-c", 'notify=[""]'], ["-c", "notify=1"],
-                       ["resume", "-c", "notify=[]"], ["-c", "notify=[]", "prompt"],
-                       ["-c", "notify=[]", "--unknown"], ["-c", "notify=[]", "-c", 'profile="x"']]
+                       ["resume", *valid_notify], valid_notify + ["prompt"],
+                       valid_notify + ["--unknown"], valid_notify + ["-c", 'profile="x"'],
+                       valid_notify + ["--profile", "p", "--profile", "q"]]
         with patch.object(h, "require_caller_context", return_value={"workspace_id": "w1", "tab_id": "t"}), \
                 patch.object(h, "place_pane") as pane, patch.object(h, "herdr") as herdr:
             for argv in unsupported:

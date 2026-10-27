@@ -25,6 +25,10 @@ for raw in sys.stdin:
     else:
         if method != "thread/turns/list":
             sys.exit(7)
+        if '--deep-json' in sys.argv:
+            print('{"id":' + str(request['id']) + ',"result":{"data":'
+                  + '[' * 1500 + '0' + ']' * 1500 + '}}', flush=True)
+            continue
         if scenario.get("hang"):
             time.sleep(60)
         if scenario.get("malformed"):

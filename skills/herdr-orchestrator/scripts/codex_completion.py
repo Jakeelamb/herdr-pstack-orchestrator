@@ -49,7 +49,10 @@ def encode(value):
 
 
 def decode(value):
-    return json.loads(base64.b64decode(value, altchars=b"-_", validate=True))
+    try:
+        return json.loads(base64.b64decode(value, altchars=b"-_", validate=True))
+    except (ValueError, UnicodeError, RecursionError) as exc:
+        raise Unverified("record_unavailable") from exc
 
 
 def read_bytes(path):
@@ -76,7 +79,7 @@ def read_bytes(path):
 def read_record(path):
     try:
         return json.loads(read_bytes(path))
-    except (ValueError, UnicodeError, OSError) as exc:
+    except (ValueError, UnicodeError, OSError, RecursionError) as exc:
         raise Unverified("record_unavailable") from exc
 
 
@@ -129,15 +132,12 @@ def executable_digest(path):
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
-def prepare(argv, directory, task_id, nonce, pointer, cwd, *, executable=None):
-    """Replace one supported, already supplied root notify override in place.
+def plan_argv(argv):
+    """Plan one supported explicit notifier slot without allocation or I/O.
 
     Deliberately small grammar: no subcommands, prompts, wrappers, provider or
     profile-changing config overlays. No inherited configuration is read.
     """
-    if sys.platform != "linux":
-        raise Unverified("linux_required")
-    original = list(argv)
     reader = []
     slot, notifier = None, None
     i = 0
@@ -188,6 +188,15 @@ def prepare(argv, directory, task_id, nonce, pointer, cwd, *, executable=None):
             raise Unverified("unsupported_argv")
     if slot is None:
         raise Unverified("explicit_notify_required")
+    return slot, notifier, reader
+
+
+def prepare(argv, directory, task_id, nonce, pointer, cwd, *, executable=None):
+    """Wrap the planned notifier in place, pinning this attempt's reader."""
+    if sys.platform != "linux":
+        raise Unverified("linux_required")
+    original = list(argv)
+    slot, notifier, reader = plan_argv(original)
     binary = executable or shutil.which("codex")
     if not binary or Path(binary).name != "codex":
         raise Unverified("direct_codex_required")
@@ -240,7 +249,10 @@ def accept_notify(frozen, raw):
     validate_contract(contract)
     if len(raw.encode()) > MAX_FRAME:
         return
-    event = json.loads(raw)
+    try:
+        event = json.loads(raw)
+    except (ValueError, UnicodeError, RecursionError) as exc:
+        raise Unverified("native_malformed") from exc
     if (not isinstance(event, dict) or event.get("type") != "agent-turn-complete"
             or event.get("input-messages") != contract["expected_inputs"]):
         return
@@ -381,7 +393,7 @@ class Reader:
             raise Unverified("native_limit")
         try:
             value = json.loads(raw)
-        except (ValueError, UnicodeError) as exc:
+        except (ValueError, UnicodeError, RecursionError) as exc:
             raise Unverified("native_malformed") from exc
         if not isinstance(value, dict):
             raise Unverified("native_malformed")

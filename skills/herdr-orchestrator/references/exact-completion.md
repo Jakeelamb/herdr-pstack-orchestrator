@@ -19,6 +19,8 @@ also require `HORCH_EXACT_STORE` to name a new, absolute, private directory
 selection for `wait`, `list`, `stats` and `close`. The CLI rejects an existing,
 nonempty unmarked store and rejects legacy launches into the selected exact
 store. It never changes user configuration or the installed harness.
+Both new and marked stores reject a symlink or noncanonical `tasks` directory
+before creating its startup lock or any attempt files.
 
 For an already qualified disposable worker configuration, the command shape is:
 
@@ -45,6 +47,9 @@ Production launches require a nonempty notifier command. Empty notifications
 are used only inside disposable test fixtures, never suggested as a setup fix.
 Inherited-only, absent, duplicate, dotted/quoted, malformed or ambiguous notify
 settings decline the experiment before pane creation or prompt submission.
+For `check`, every selected worker must be Codex and pass the same argv/notifier
+planner before any worker starts or the store is initialized. A mixed or
+unsupported batch is rejected as a whole.
 
 The supported argv grammar is deliberately narrow: separate-value model,
 sandbox, approval, add-dir and a single profile flag; `model_reasoning_effort`
@@ -117,6 +122,14 @@ wait deadline; remaining candidates are deferred. Zero-budget observation
 starts no reader or cleanup RPC. Native failures remain task diagnostics and
 do not consume the unrelated Herdr-list failure budget. Unchanged diagnostics
 and duplicate receipts cause no state replacement.
+
+Aggregate `wait` and `list` identify invalid exact state by task ID and continue
+with healthy tasks. Named invalid tasks report their ID in the error. Invalid
+exact records retain a capacity reservation; a raw compatibility `closed` bit
+cannot release an active or cancelled exact decision. Healthy list rows and the
+stats schema are unchanged. Excessively nested JSON at native, callback, receipt,
+record and result ingress uses the existing malformed/unverified diagnostics;
+it cannot authorize delivery or cleanup and does not abort unrelated tasks.
 
 A Linux parent-death supervisor kills the owned reader process group when its
 observer dies, including same-group initialization descendants. Normal teardown

@@ -273,12 +273,15 @@ def mark_settled(state):
         state["first_done_at"] = observed
 
 
-def load_state(directory):
-    stored = read_json(directory / "state.json")
+def normalize_state(stored):
     state = default_state()
     if isinstance(stored, dict):
         state.update({key: value for key, value in stored.items() if key in state})
     return state
+
+
+def load_state(directory):
+    return normalize_state(read_json(directory / "state.json"))
 
 
 @contextmanager
@@ -1036,7 +1039,8 @@ def poll_round(infos, previous, config):
         notice = None
         cleanup = False
         with task_state_lock(directory):
-            state = load_state(directory)
+            stored = read_json(directory / "state.json")
+            state = normalize_state(stored)
             info["state"] = state
             old_state = state["state"]
             if state["closed"] or old_state == "done" or (
@@ -1051,7 +1055,9 @@ def poll_round(infos, previous, config):
                 elif state["problem"] and old_state != state["state"]:
                     notice = state["problem"]
                 mark_settled(state)
-                write_json(directory / "state.json", state)
+                # Compare raw JSON so missing fields are repaired and 1 differs from True.
+                if json.dumps(stored, sort_keys=True) != json.dumps(state, sort_keys=True):
+                    write_json(directory / "state.json", state)
         if cleanup:
             cleanup_error = None
             try:

@@ -21,6 +21,7 @@ CTX = multiprocessing.get_context("fork")
 CONFIG = {"max_active_workers": 1, "notify_after_minutes": 180, "workers": {
     name: {"harness": "codex", "model": "fixture", "effort": None, "args": []}
     for name in ("first", "second")}}
+CONFIG["roles"] = {}
 CALLER = {"workspace_id": "fixture", "tab_id": "fixture:controller"}
 
 
@@ -90,8 +91,78 @@ def startup_boundary(root, failure=None, checkpoint=None, cleanup_oserror=False)
 
 
 def publication_child(root, failure, connection):
+    if failure == "postcommit":
+        with startup_boundary(root, checkpoint=connection), postcommit_fault(root):
+            horch.start_task(CONFIG, "first", "Fixture only. Do not delegate.", root)
+        return
     with startup_boundary(root, failure, connection):
         horch.start_task(CONFIG, "first", "Fixture only. Do not delegate.", root)
+
+
+@contextmanager
+def postcommit_fault(root, boundary="unlink", damaged=None):
+    """Commit real state, fail after commit, then fail diagnostic replacement."""
+    replace, unlink, flock, read_text = os.replace, os.unlink, fcntl.flock, Path.read_text
+    publication_error = OSError("injected postcommit " + boundary)
+    state_replacements, identity_replacements = 0, 0
+    events = []
+    failed = False
+
+    def replace_file(source, target):
+        nonlocal state_replacements, identity_replacements
+        target = Path(target)
+        if target.parent.name == "t-abcdef" and target.name == "state.json":
+            state_replacements += 1
+            if state_replacements > (2 if boundary == "diagnostic_unlink" else 1):
+                if damaged == "missing":
+                    unlink(target)
+                elif damaged is not None and damaged != "unreadable":
+                    target.write_bytes(damaged)
+                events.append("diagnostic replace failed")
+                raise OSError("injected diagnostic replace failure")
+        if target.parent.name == "t-abcdef" and target.name == "task.json":
+            identity_replacements += 1
+            if boundary in ("diagnostic_unlink", "identity") and identity_replacements == 1:
+                raise publication_error
+        replace(source, target)
+        events.append("replaced " + target.name)
+
+    def unlink_file(path, *args, **kwargs):
+        nonlocal failed
+        expected = 2 if boundary == "diagnostic_unlink" else 1
+        if (boundary in ("unlink", "diagnostic_unlink") and not failed
+                and Path(path).name.startswith(".state.json.")
+                and state_replacements == expected):
+            failed = True
+            events.append("postcommit unlink failed")
+            raise publication_error
+        return unlink(path, *args, **kwargs)
+
+    def lock_file(stream, operation):
+        nonlocal failed
+        result = flock(stream, operation)
+        if (boundary == "unlock" and not failed and operation == fcntl.LOCK_UN
+                and Path(stream.name).name == ".state.lock"):
+            failed = True
+            events.append("postcommit unlock failed")
+            raise publication_error
+        return result
+
+    def read_file(path, *args, **kwargs):
+        if (damaged == "unreadable" and state_replacements > 1
+                and path == root / "t-abcdef/state.json"):
+            raise OSError("injected state read failure")
+        return read_text(path, *args, **kwargs)
+
+    try:
+        with patch.object(os, "replace", side_effect=replace_file), \
+                patch.object(os, "unlink", side_effect=unlink_file), \
+                patch.object(fcntl, "flock", side_effect=lock_file), \
+                patch.object(Path, "read_text", read_file):
+            yield publication_error, events
+    finally:
+        record(root / "faults.json", {"events": events, "state_replacements": state_replacements,
+               "identity_replacements": identity_replacements})
 
 
 def stale_save_child(directory, connection):
@@ -176,7 +247,7 @@ class PublicationTests(unittest.TestCase):
             self.assertFalse(state["closed"])
             self.assertIsNone(state["first_done_at"])
             self.assertFalse((directory / "result.json").exists())
-            if failure:
+            if failure and failure != "postcommit":
                 self.assertEqual(state["state"], "start_failed")
                 self.assertIn("cleanup transport error", state["problem"])
                 self.assertIsNotNone(state["settled_at"])
@@ -188,6 +259,9 @@ class PublicationTests(unittest.TestCase):
 
     def test_rollback_publication_survives_sigkill(self):
         self.publication_death("state_once")
+
+    def test_postcommit_recovery_publication_survives_sigkill(self):
+        self.publication_death("postcommit")
 
     def test_closed_timestamps_survive_contended_stale_save_and_sigkill(self):
         cases = (
@@ -310,6 +384,74 @@ class PublicationTests(unittest.TestCase):
                 self.assertIn("injected failure diagnostic storage error", warning.getvalue())
                 self.assertIn("cleanup OS error" if cleanup_oserror else "cleanup transport error", warning.getvalue())
                 self.assertNotIn("cannot preserve task", warning.getvalue())
+
+    def test_postcommit_errors_retain_visible_reservation_when_diagnostic_fails(self):
+        for boundary in ("unlink", "unlock", "diagnostic_unlink"):
+            for cleanup_oserror in (False, True):
+                with self.subTest(boundary=boundary, cleanup_oserror=cleanup_oserror), \
+                        isolated_store(self._testMethodName + boundary + str(cleanup_oserror)) as root:
+                    warning, listing, stats, launch = (io.StringIO() for _ in range(4))
+                    with startup_boundary(root, cleanup_oserror=cleanup_oserror), \
+                            postcommit_fault(root, boundary) as (original, events), \
+                            patch("sys.stderr", warning), \
+                            patch.object(horch, "require_herdr_env"), \
+                            patch.object(horch, "load_config", return_value=CONFIG), \
+                            patch.object(horch.secrets, "token_hex", side_effect=["abcdef", "nonce1", "123abc", "nonce2"]), \
+                            patch.object(horch, "place_pane", return_value=("fixture:pane", "fixture:worker")) as place:
+                        with self.assertRaises(OSError) as raised:
+                            horch.start_task(CONFIG, "first", "Fixture only", root)
+                        state = horch.read_json(root / "t-abcdef/state.json")
+                        count = horch.active_task_count("fixture")
+                        with redirect_stdout(listing):
+                            horch.main(["list", "--workspace", "fixture"])
+                        with redirect_stdout(stats):
+                            horch.main(["stats", "--workspace", "fixture"])
+                        with redirect_stdout(launch):
+                            try:
+                                second = horch.start_task(CONFIG, "second", "Fixture only", root)
+                            except SystemExit as exc:
+                                second = {"exit_code": exc.code, **json.loads(launch.getvalue())}
+                        rows = [json.loads(line) for line in listing.getvalue().splitlines()]
+                        statistics = json.loads(stats.getvalue())
+                        record(root / "observation.json", {"state": state, "reservations": count,
+                               "list": rows, "stats": statistics, "second_launch": second,
+                               "warning": warning.getvalue(), "events": events})
+                        self.assertIs(raised.exception, original)
+                        self.assertEqual(count, 1)
+                        self.assertEqual([row["task_id"] for row in rows], ["t-abcdef"])
+                        self.assertEqual(statistics["task_count"], 1)
+                        self.assertEqual(second.get("error"), "worker_limit")
+                        self.assertEqual(second["exit_code"], 1)
+                        self.assertEqual(place.call_count, 1)
+                    if boundary == "diagnostic_unlink":
+                        self.assertEqual(state["state"], "start_failed")
+                        self.assertIsNotNone(state["settled_at"])
+                    else:
+                        self.assertEqual(state, horch.default_state())
+                    self.assertEqual(horch.read_json(root / "calls.json"), [["cleanup", "fixture:pane"]])
+                    self.assertIn("cannot save failure diagnostic", warning.getvalue())
+                    self.assertIn("cleanup OS error" if cleanup_oserror else "cleanup transport error", warning.getvalue())
+                    self.assertNotIn("cannot preserve task", warning.getvalue())
+
+    def test_postcommit_recovery_rejects_missing_corrupt_or_incomplete_state(self):
+        invalid = ["missing", "unreadable", b"{", b"[]", b"null", b"\xff", b'{}', b'{"state":"running"}']
+        for key, value in (("closed", "false"), ("saw_working", 0), ("state", []),
+                           ("state", "custom"), ("long_notified", None),
+                           ("baseline_seq", True), ("baseline_seq", -1), ("problem", []),
+                           ("settled_at", "yesterday"), ("first_done_at", "2020-01-01"),
+                           ("first_done_at", 0)):
+            invalid.append(json.dumps(dict(horch.default_state(), **{key: value})).encode())
+        for index, damaged in enumerate(invalid):
+            with self.subTest(damaged=damaged), isolated_store(self._testMethodName + str(index)) as root:
+                warning = io.StringIO()
+                with startup_boundary(root), postcommit_fault(root, boundary="identity", damaged=damaged) as (original, _), \
+                        patch("sys.stderr", warning), self.assertRaises(OSError) as raised:
+                    horch.start_task(CONFIG, "first", "Fixture only", root)
+                self.assertIs(raised.exception, original)
+                self.assertFalse((root / "t-abcdef/task.json").exists())
+                self.assertIn("cannot preserve task", warning.getvalue())
+                self.assertIn("cannot save failure diagnostic", warning.getvalue())
+                record(root / "observation.json", {"warning": warning.getvalue(), "identity_published": False})
 
     def test_failed_diagnostic_and_identity_retry_report_both_storage_errors(self):
         with isolated_store(self._testMethodName) as root:

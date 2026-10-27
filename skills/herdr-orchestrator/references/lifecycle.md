@@ -88,9 +88,13 @@ precedence remain unchanged.
 Startup saves initialized `state.json` before publishing `task.json`, which makes
 the task enumerable. If publication fails and unused-pane cleanup is uncertain,
 startup saves `start_failed` and its cleanup diagnostic before retrying identity
-publication. If that diagnostic save fails after initialized state was saved,
-startup still retries identity publication against the saved state and warns
-that the failure diagnostic could not be saved. The retained state can remain
+publication. If that diagnostic save raises, startup warns that the failure
+diagnostic could not be saved. Before retrying identity publication, startup
+reads and validates the complete persisted state under its task lock. A save
+can raise after replacing the state file, so recovery uses the actual record,
+not whether the save returned. Missing, unreadable, malformed, or incomplete
+state does not qualify; the defaults used by ordinary reads are not proof of
+a saved record. The retained state can remain
 `running` without a persisted cleanup diagnostic. A retained unclosed task still
 reserves its slot. Confirmed cleanup
 removes the unused task directory. If storage repeatedly prevents state or

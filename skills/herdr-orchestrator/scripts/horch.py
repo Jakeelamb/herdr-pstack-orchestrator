@@ -48,6 +48,7 @@ SETTLED_STATES = {
 POLL_SECONDS = 2.0
 ACK_TIMEOUT_MS = 15000
 START_TIMEOUT_MS = 90000
+CODEX_EDITOR_TIMEOUT_SECONDS = 6.0
 PANE_LABEL = "horch"
 PANES_PER_TAB = 4
 
@@ -758,16 +759,21 @@ def wait_for_codex_editor(agent, deadline):
     passive check uses Codex's current composer and picker structure, not their
     English labels. It is a rendering-specific mitigation, not a trust signal.
     """
+    # Allow a few render polls after agent start without holding the shared
+    # startup lock for the full agent-start budget on an unsupported screen.
+    deadline = min(deadline, time.monotonic() + CODEX_EDITOR_TIMEOUT_SECONDS)
     while (remaining := deadline - time.monotonic()) > 0:
         screen = herdr("agent", "read", agent, "--source", "visible",
                        timeout=min(30.0, remaining), text_output=True)
-        if re.search(r"(?m)^[ \t]*›[ \t]*[0-9]+[.)](?:[ \t]|$)", screen):
+        if re.search(r"(?m)^[ \t]*›[ \t]*(?:\r?\n[ \t]*)?[0-9]", screen):
             raise HerdrError("Codex shows a numbered selection menu; no task prompt was sent. "
                              "Inspect its pane before starting a fresh task")
         if re.search(r"(?m)^[ \t]*›(?:[ \t]|$)", screen) and time.monotonic() < deadline:
             return
         time.sleep(min(POLL_SECONDS, max(0.0, deadline - time.monotonic())))
-    raise HerdrError("Codex task editor was not observed within the startup budget; "
+    raise HerdrError("Codex task editor was not observed within the editor observation window "
+                     f"of at most {CODEX_EDITOR_TIMEOUT_SECONDS:g} seconds after agent start, "
+                     "bounded by the startup budget; "
                      "no task prompt was sent. Inspect its pane for a startup dialog "
                      "or an unsupported editor layout")
 

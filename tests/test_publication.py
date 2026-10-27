@@ -72,7 +72,7 @@ def startup_boundary(root, failure=None, checkpoint=None, cleanup_oserror=False)
         record(root / "calls.json", calls)
         if cleanup_oserror:
             raise OSError("injected cleanup OS error")
-        if failure != "state_cleanup":
+        if not failure or not failure.endswith("_cleanup"):
             raise horch.HerdrError("injected cleanup transport error")
         return "closed"
 
@@ -251,13 +251,103 @@ class PublicationTests(unittest.TestCase):
                 self.assertEqual(horch.read_json(root / "calls.json"), [["cleanup", "fixture:pane"]])
 
     def test_confirmed_unused_pane_cleanup_removes_unpublished_task(self):
+        for failure in ("state_cleanup", "task_cleanup"):
+            with self.subTest(failure=failure), isolated_store(self._testMethodName + failure) as root:
+                with startup_boundary(root, failure), self.assertRaisesRegex(OSError, "injected " + failure):
+                    horch.start_task(CONFIG, "first", "Fixture only", root)
+                self.assertFalse((root / "t-abcdef").exists())
+                with patch.object(horch, "tasks_root", return_value=root):
+                    self.assertEqual(horch.active_task_count("fixture"), 0)
+                self.assertEqual(horch.read_json(root / "calls.json"), [["cleanup", "fixture:pane"]])
+
+    def test_initialized_state_reserves_capacity_when_failure_diagnostic_cannot_save(self):
+        for cleanup_oserror in (False, True):
+            with self.subTest(cleanup_oserror=cleanup_oserror), \
+                    isolated_store(self._testMethodName + str(cleanup_oserror)) as root:
+                original = horch.write_json
+                writes = []
+                publication_error = OSError("injected transient identity failure")
+
+                def write(path, value):
+                    writes.append(path.name)
+                    if path.parent.name == "t-abcdef":
+                        if path.name == "task.json" and writes.count("task.json") == 1:
+                            raise publication_error
+                        if path.name == "state.json" and writes.count("state.json") > 1:
+                            raise OSError("injected failure diagnostic storage error")
+                    original(path, value)
+
+                warning, output = io.StringIO(), io.StringIO()
+                with startup_boundary(root, cleanup_oserror=cleanup_oserror), \
+                        patch.object(horch, "write_json", side_effect=write), \
+                        patch.object(horch.secrets, "token_hex", side_effect=["abcdef", "nonce1", "123abc", "nonce2"]), \
+                        patch.object(horch, "place_pane", side_effect=[("fixture:pane", "fixture:worker"),
+                                                                     ("fixture:pane2", "fixture:worker")]) as place, \
+                        patch.object(horch, "agent_index", return_value={"horch-123abc": {"state_change_seq": 10}}), \
+                        patch("sys.stderr", warning):
+                    with self.assertRaises(OSError) as raised:
+                        horch.start_task(CONFIG, "first", "Fixture only", root)
+                    state = horch.read_json(root / "t-abcdef/state.json")
+                    count = horch.active_task_count("fixture")
+                    with redirect_stdout(output):
+                        try:
+                            second = horch.start_task(CONFIG, "second", "Fixture only", root)
+                        except SystemExit as exc:
+                            second = {"exit_code": exc.code, **json.loads(output.getvalue())}
+                    calls = horch.read_json(root / "calls.json")
+                    record(root / "observation.json", {"state": state, "reservations": count,
+                           "second_launch": second, "panes_placed": place.call_count,
+                           "writes": writes, "calls": calls, "warning": warning.getvalue()})
+                    self.assertIs(raised.exception, publication_error)
+                    self.assertEqual(second.get("error"), "worker_limit")
+                    self.assertEqual(second["exit_code"], 1)
+                    self.assertEqual(place.call_count, 1)
+                self.assertEqual(count, 1)
+                self.assertEqual(state, horch.default_state())
+                self.assertEqual(writes.count("task.json"), 2)
+                self.assertEqual(calls, [["cleanup", "fixture:pane"]])
+                self.assertIn("cannot save failure diagnostic for task t-abcdef", warning.getvalue())
+                self.assertIn("injected failure diagnostic storage error", warning.getvalue())
+                self.assertIn("cleanup OS error" if cleanup_oserror else "cleanup transport error", warning.getvalue())
+                self.assertNotIn("cannot preserve task", warning.getvalue())
+
+    def test_failed_diagnostic_and_identity_retry_report_both_storage_errors(self):
         with isolated_store(self._testMethodName) as root:
-            with startup_boundary(root, "state_cleanup"), self.assertRaisesRegex(OSError, "injected state_cleanup"):
+            original = horch.write_json
+            task_writes, state_writes = 0, 0
+            publication_error = OSError("injected original identity failure")
+
+            def write(path, value):
+                nonlocal task_writes, state_writes
+                if path.name == "task.json":
+                    task_writes += 1
+                    if task_writes == 1:
+                        raise publication_error
+                    raise OSError("injected identity retry failure")
+                if path.name == "state.json":
+                    state_writes += 1
+                    if state_writes > 1:
+                        raise OSError("injected failure diagnostic storage error")
+                original(path, value)
+
+            warning = io.StringIO()
+            with startup_boundary(root), patch.object(horch, "write_json", side_effect=write), \
+                    patch("sys.stderr", warning), self.assertRaises(OSError) as raised:
                 horch.start_task(CONFIG, "first", "Fixture only", root)
-            self.assertFalse((root / "t-abcdef").exists())
+            self.assertIs(raised.exception, publication_error)
+            self.assertEqual(task_writes, 2)
+            self.assertEqual(horch.read_json(root / "t-abcdef/state.json"), horch.default_state())
+            self.assertFalse((root / "t-abcdef/task.json").exists())
             with patch.object(horch, "tasks_root", return_value=root):
                 self.assertEqual(horch.active_task_count("fixture"), 0)
+            self.assertIn("cannot save failure diagnostic", warning.getvalue())
+            self.assertIn("injected failure diagnostic storage error", warning.getvalue())
+            self.assertIn("injected cleanup transport error", warning.getvalue())
+            self.assertIn("cannot preserve task t-abcdef for pane fixture:pane", warning.getvalue())
+            self.assertIn("injected identity retry failure", warning.getvalue())
             self.assertEqual(horch.read_json(root / "calls.json"), [["cleanup", "fixture:pane"]])
+            record(root / "observation.json", {"warning": warning.getvalue(), "identity_attempts": task_writes,
+                   "reservations": 0, "limit": "identity storage remained unavailable"})
 
     def test_cleanup_oserror_retains_reservation_and_original_publication_error(self):
         with isolated_store(self._testMethodName) as root:
@@ -292,7 +382,7 @@ class PublicationTests(unittest.TestCase):
                     horch.start_task(CONFIG, "first", "Fixture only", root)
                 self.assertEqual(horch.active_task_count("fixture"), 1)
             self.assertEqual(horch.read_json(root / "t-abcdef/state.json"), horch.default_state())
-            self.assertIn("cannot preserve task t-abcdef", warning.getvalue())
+            self.assertIn("cannot save failure diagnostic for task t-abcdef", warning.getvalue())
             record(root / "observation.json", {"warning": warning.getvalue(), "reservations": 1,
                    "limit": "initialized state survived but failure-state update could not persist"})
 

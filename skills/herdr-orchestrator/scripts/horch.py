@@ -855,9 +855,17 @@ def _start_task_locked(config, worker_name, brief_text, cwd, skip_if_full, calle
                 print(f"warning: cannot save failure diagnostic for task {task_id} "
                       f"for pane {pane_id}: {recovery_error}; {state['problem']}", file=sys.stderr)
             try:
-                with task_state_lock(directory):
-                    if not initialized_state_exists(directory):
-                        raise OSError("no readable complete initialized state")
+                initialized = False
+                try:
+                    with task_state_lock(directory):
+                        if not initialized_state_exists(directory):
+                            raise OSError("no readable complete initialized state")
+                        initialized = True
+                except OSError as recovery_error:
+                    if not initialized:
+                        raise
+                    print(f"warning: state validation lock teardown failed for task {task_id} "
+                          f"for pane {pane_id}: {recovery_error}; retrying identity publication", file=sys.stderr)
                 write_json(directory / "task.json", task)
             except OSError as recovery_error:
                 print(f"warning: cannot preserve task {task_id} for pane {pane_id}: "

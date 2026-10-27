@@ -104,7 +104,7 @@ def postcommit_fault(root, boundary="unlink", damaged=None):
     """Commit real state, fail after commit, then fail diagnostic replacement."""
     replace, unlink, flock, read_text = os.replace, os.unlink, fcntl.flock, Path.read_text
     publication_error = OSError("injected postcommit " + boundary)
-    state_replacements, identity_replacements = 0, 0
+    state_replacements, identity_replacements, state_acquisitions, state_unlocks = 0, 0, 0, 0
     events = []
     failed = False
 
@@ -113,7 +113,7 @@ def postcommit_fault(root, boundary="unlink", damaged=None):
         target = Path(target)
         if target.parent.name == "t-abcdef" and target.name == "state.json":
             state_replacements += 1
-            if state_replacements > (2 if boundary == "diagnostic_unlink" else 1):
+            if state_replacements > (2 if boundary == "diagnostic_unlink" or boundary.startswith("reconcile_") else 1):
                 if damaged == "missing":
                     unlink(target)
                 elif damaged is not None and damaged != "unreadable":
@@ -122,7 +122,7 @@ def postcommit_fault(root, boundary="unlink", damaged=None):
                 raise OSError("injected diagnostic replace failure")
         if target.parent.name == "t-abcdef" and target.name == "task.json":
             identity_replacements += 1
-            if boundary in ("diagnostic_unlink", "identity") and identity_replacements == 1:
+            if (boundary in ("diagnostic_unlink", "identity") or boundary.startswith("reconcile_")) and identity_replacements == 1:
                 raise publication_error
         replace(source, target)
         events.append("replaced " + target.name)
@@ -139,8 +139,23 @@ def postcommit_fault(root, boundary="unlink", damaged=None):
         return unlink(path, *args, **kwargs)
 
     def lock_file(stream, operation):
-        nonlocal failed
+        nonlocal failed, state_acquisitions, state_unlocks
+        if Path(stream.name).name == ".state.lock":
+            if operation == fcntl.LOCK_EX:
+                state_acquisitions += 1
+                if boundary == "reconcile_acquire" and state_acquisitions == 3:
+                    events.append("reconciliation acquisition failed")
+                    raise OSError("injected reconciliation acquisition failure")
+            elif operation == fcntl.LOCK_UN:
+                state_unlocks += 1
+                if boundary == "reconcile_unlock_before" and state_unlocks == 3:
+                    events.append("reconciliation unlock failed before syscall")
+                    raise OSError("injected reconciliation unlock before syscall")
         result = flock(stream, operation)
+        if (boundary == "reconcile_unlock_after" and operation == fcntl.LOCK_UN
+                and Path(stream.name).name == ".state.lock" and state_unlocks == 3):
+            events.append("reconciliation unlock failed after syscall")
+            raise OSError("injected reconciliation unlock after syscall")
         if (boundary == "unlock" and not failed and operation == fcntl.LOCK_UN
                 and Path(stream.name).name == ".state.lock"):
             failed = True
@@ -149,7 +164,7 @@ def postcommit_fault(root, boundary="unlink", damaged=None):
         return result
 
     def read_file(path, *args, **kwargs):
-        if (damaged == "unreadable" and state_replacements > 1
+        if ((damaged == "unreadable" or boundary == "reconcile_read") and state_replacements > 1
                 and path == root / "t-abcdef/state.json"):
             raise OSError("injected state read failure")
         return read_text(path, *args, **kwargs)
@@ -432,6 +447,82 @@ class PublicationTests(unittest.TestCase):
                     self.assertIn("cannot save failure diagnostic", warning.getvalue())
                     self.assertIn("cleanup OS error" if cleanup_oserror else "cleanup transport error", warning.getvalue())
                     self.assertNotIn("cannot preserve task", warning.getvalue())
+
+    def test_reconciliation_teardown_retains_validation_but_acquisition_and_read_failures_do_not(self):
+        for boundary in ("reconcile_unlock_before", "reconcile_unlock_after", "reconcile_acquire", "reconcile_read"):
+            for cleanup_oserror in (False, True):
+                with self.subTest(boundary=boundary, cleanup_oserror=cleanup_oserror), \
+                        isolated_store(self._testMethodName + boundary + str(cleanup_oserror)) as root:
+                    directory = root / "t-abcdef"
+                    warning, listing, stats, launch = (io.StringIO() for _ in range(4))
+                    checkpoints = []
+                    replace = os.replace
+
+                    def replace_identity(source, target):
+                        if Path(target) == directory / "task.json":
+                            self.assert_lock(directory / ".state.lock", busy=False)
+                            self.assert_lock(root / ".start.lock", busy=True)
+                            checkpoints.append("state lock released; startup lock held")
+                        return replace(source, target)
+
+                    with startup_boundary(root, cleanup_oserror=cleanup_oserror), \
+                            patch.object(os, "replace", side_effect=replace_identity), \
+                            postcommit_fault(root, boundary) as (original, events), \
+                            patch("sys.stderr", warning), \
+                            patch.object(horch, "require_herdr_env"), \
+                            patch.object(horch, "load_config", return_value=CONFIG), \
+                            patch.object(horch.secrets, "token_hex", side_effect=["abcdef", "nonce1", "123abc", "nonce2"]), \
+                            patch.object(horch, "place_pane", return_value=("fixture:pane", "fixture:worker")) as place:
+                        with self.assertRaises(OSError) as raised:
+                            horch.start_task(CONFIG, "first", "Fixture only", root)
+                        self.assertIs(raised.exception, original)
+                        count = horch.active_task_count("fixture")
+                        with redirect_stdout(listing):
+                            horch.main(["list", "--workspace", "fixture"])
+                        with redirect_stdout(stats):
+                            horch.main(["stats", "--workspace", "fixture"])
+                        rows = [json.loads(line) for line in listing.getvalue().splitlines()]
+                        statistics = json.loads(stats.getvalue())
+                        # With no reservation the real admission path reaches placement.
+                        # Stop there so rejection controls cannot start a second worker.
+                        place.side_effect = AssertionError("capacity admitted an extra pane")
+                        with redirect_stdout(launch):
+                            try:
+                                horch.start_task(CONFIG, "second", "Fixture only", root)
+                            except SystemExit as exc:
+                                second = {"exit_code": exc.code, **json.loads(launch.getvalue())}
+                            except AssertionError as exc:
+                                second = {"placement": str(exc)}
+                        record(root / "observation.json", {"reservations": count, "list": rows,
+                               "stats": statistics, "second_launch": second, "events": events,
+                               "warning": warning.getvalue(), "checkpoints": checkpoints,
+                               "original_exception_retained": raised.exception is original})
+                        qualified = boundary.startswith("reconcile_unlock_")
+                        self.assertEqual(count, int(qualified))
+                        self.assertEqual([row["task_id"] for row in rows], ["t-abcdef"] if qualified else [])
+                        self.assertEqual(statistics["task_count"], int(qualified))
+                        if qualified:
+                            self.assertEqual(second.get("error"), "worker_limit")
+                            self.assertEqual(second["exit_code"], 1)
+                            self.assertEqual(place.call_count, 1)
+                            self.assertEqual(checkpoints, ["state lock released; startup lock held"])
+                            self.assertIn("injected reconciliation unlock", warning.getvalue())
+                            self.assertNotIn("cannot preserve task", warning.getvalue())
+                        else:
+                            self.assertEqual(second.get("placement"), "capacity admitted an extra pane")
+                            self.assertEqual(place.call_count, 2)
+                            self.assertEqual(checkpoints, [])
+                            self.assertIn("cannot preserve task", warning.getvalue())
+                        self.assertNotIn("cannot save failure diagnostic", warning.getvalue())
+                    self.assert_lock(root / ".start.lock", busy=False)
+                    self.assert_lock(directory / ".state.lock", busy=False)
+                    self.assertEqual((directory / "task.json").exists(), qualified)
+                    state = horch.read_json(directory / "state.json")
+                    self.assertEqual(state["state"], "start_failed")
+                    self.assertFalse(state["closed"])
+                    self.assertIsNotNone(state["settled_at"])
+                    self.assertIn("cleanup OS error" if cleanup_oserror else "cleanup transport error", state["problem"])
+                    self.assertEqual(horch.read_json(root / "calls.json"), [["cleanup", "fixture:pane"]])
 
     def test_postcommit_recovery_rejects_missing_corrupt_or_incomplete_state(self):
         invalid = ["missing", "unreadable", b"{", b"[]", b"null", b"\xff", b'{}', b'{"state":"running"}']

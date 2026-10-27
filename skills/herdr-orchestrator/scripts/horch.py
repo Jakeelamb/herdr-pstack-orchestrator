@@ -9,7 +9,10 @@ errors are one {"error": code, "message": text} object with exit status 1.
 from __future__ import annotations
 
 import argparse
+import base64
 import fcntl
+import hashlib
+import importlib.util
 import json
 import math
 import os
@@ -25,6 +28,11 @@ import tomllib
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+_completion_spec = importlib.util.spec_from_file_location(
+    "horch_codex_completion", Path(__file__).with_name("codex_completion.py"))
+completion = importlib.util.module_from_spec(_completion_spec)
+_completion_spec.loader.exec_module(completion)
 
 HARNESSES = ("pi", "codex", "claude")
 CONFIG_TOP_KEYS = {"max_active_workers", "notify_after_minutes", "workers", "roles"}
@@ -197,9 +205,45 @@ def config_path():
 
 
 def tasks_root():
+    isolated = os.environ.get("HORCH_EXACT_STORE")
+    if isolated:
+        return Path(isolated) / "tasks"
+    return ordinary_tasks_root()
+
+
+def ordinary_tasks_root():
     base = os.environ.get("XDG_STATE_HOME")
     root = Path(base).expanduser() if base else Path.home() / ".local" / "state"
     return root / "herdr-orchestrator" / "tasks"
+
+
+def require_exact_store():
+    """Opt in to a new, separate store; a marker cannot fence old clients."""
+    raw = os.environ.get("HORCH_EXACT_STORE")
+    if not raw or not Path(raw).is_absolute():
+        raise completion.Unverified("isolated_store_required")
+    store = Path(raw)
+    ordinary = ordinary_tasks_root().resolve()
+    resolved = store.resolve()
+    if (resolved != store or resolved == ordinary or ordinary in resolved.parents
+            or resolved in ordinary.parents):
+        raise completion.Unverified("isolated_store_required")
+    store.mkdir(parents=True, exist_ok=True, mode=0o700)
+    metadata = store.stat()
+    if metadata.st_uid != os.getuid() or metadata.st_mode & 0o077:
+        raise completion.Unverified("private_store_required")
+    marker = store / "exact-store.json"
+    expected = {"mode": completion.MODE, "schema": 1}
+    if marker.exists() or marker.is_symlink():
+        if completion.read_record(marker) != expected:
+            raise completion.Unverified("isolated_store_invalid")
+    else:
+        # The startup lock may already have created the otherwise empty tasks root.
+        tasks = store / "tasks"
+        if (any(p.name != "tasks" for p in store.iterdir())
+                or (tasks.exists() and any(p.name != ".start.lock" for p in tasks.iterdir()))):
+            raise completion.Unverified("new_isolated_store_required")
+        completion.atomic_record(marker, expected)
 
 
 def validate_task_id(task_id):
@@ -261,6 +305,7 @@ def default_state():
         "problem": None,
         "settled_at": None,
         "first_done_at": None,
+        "exact": None,
     }
 
 
@@ -324,6 +369,16 @@ def task_state_lock(directory):
 def save_state(directory, state):
     with task_state_lock(directory):
         current = load_state(directory)
+        if current.get("exact") is not None:
+            # Exact startup has lifecycle ownership; observers/close can never
+            # be overwritten by its stale acknowledgement or recovery save.
+            kind = current["exact"].get("kind")
+            if kind != "active":
+                state.update(current)
+                return
+            state["exact"] = {**current["exact"], "dispatch_intent": bool(
+                current["exact"].get("dispatch_intent") or
+                (state.get("exact") or {}).get("dispatch_intent"))}
         merged = dict(current if current["closed"] or current["state"] == "done" else state)
         for key in ("closed", "saw_working", "long_notified"):
             merged[key] = bool(current[key] or state[key])
@@ -364,6 +419,14 @@ def load_task(directory, task_id):
             raise ValueError("missing timezone")
     except ValueError as exc:
         raise TaskInvalidError(f"task {task_id} has an invalid created_at in task.json") from exc
+    if "completion" in task:
+        try:
+            completion.validate_contract(task["completion"])
+            if (task["completion"]["task_id"] != task_id
+                    or task["completion"]["nonce"] != task["nonce"]):
+                raise completion.Unverified("launch_changed")
+        except (completion.Unverified, KeyError, TypeError) as exc:
+            raise TaskInvalidError(f"task {task_id} has an invalid completion contract") from exc
     return task
 
 
@@ -749,13 +812,20 @@ def cmd_run(args):
     worker = config["workers"].get(args.worker)
     if worker is not None and worker["harness"] == "pi":
         require_pi_integration()
-    emit(start_task(config, args.worker, brief_text, resolve_cwd(args.cwd), caller_pane=args.caller_pane))
+    emit(start_task(config, args.worker, brief_text, resolve_cwd(args.cwd),
+                    caller_pane=args.caller_pane, completion_mode=args.completion))
 
 
-def start_task(config, worker_name, brief_text, cwd, *, skip_if_full=False, caller_pane=None):
+def start_task(config, worker_name, brief_text, cwd, *, skip_if_full=False, caller_pane=None,
+               completion_mode=None):
     # Startup includes placement, publication, and acknowledgement, never completion.
+    if completion_mode is not None:
+        require_exact_store()
+    elif os.environ.get("HORCH_EXACT_STORE"):
+        raise completion.Unverified("exact_store_requires_exact_mode")
     with task_store_lock():
-        return _start_task_locked(config, worker_name, brief_text, cwd, skip_if_full, caller_pane)
+        return _start_task_locked(config, worker_name, brief_text, cwd, skip_if_full, caller_pane,
+                                  completion_mode)
 
 
 def wait_for_pi_session(agent, deadline):
@@ -779,12 +849,19 @@ def wait_for_pi_session(agent, deadline):
                      "integration is installed with herdr integration install pi")
 
 
-def _start_task_locked(config, worker_name, brief_text, cwd, skip_if_full, caller_pane):
+def _start_task_locked(config, worker_name, brief_text, cwd, skip_if_full, caller_pane,
+                       completion_mode=None):
     """Start one worker on one task and return the run object; fail() on contract errors."""
     caller = require_caller_context(caller_pane)
     worker = config["workers"].get(worker_name)
     if worker is None:
         fail("unknown_worker", f"no worker named {worker_name!r} in {config_path()}")
+    if completion_mode is not None:
+        if completion_mode != completion.MODE or worker["harness"] != "codex":
+            raise completion.Unverified("codex_exact_required")
+        require_exact_store()
+    elif os.environ.get("HORCH_EXACT_STORE"):
+        raise completion.Unverified("exact_store_requires_exact_mode")
 
     max_active = config["max_active_workers"]
     active, invalid = task_capacity(caller["workspace_id"])
@@ -806,15 +883,30 @@ def _start_task_locked(config, worker_name, brief_text, cwd, skip_if_full, calle
         if task_id not in taken:
             break
     agent = "horch-" + task_id[2:]
-    nonce = secrets.token_hex(8)
+    nonce = secrets.token_hex(16 if completion_mode else 8)
 
     directory = root / task_id
-    directory.mkdir(parents=True)
+    directory.mkdir(parents=True, mode=0o700)
     try:
         write_brief(directory, brief_text, task_id, nonce)
+        argv = launch_args(worker, directory)
+        contract = None
+        if completion_mode:
+            pointer = (f"New task {task_id}, attempt {nonce}. Read {directory / 'brief.md'} "
+                       "in full and follow it exactly.")
+            argv, contract = completion.prepare(argv, directory, task_id, nonce, pointer, cwd)
     except BaseException:
         shutil.rmtree(directory, ignore_errors=True)
         raise
+    if contract:
+        with completion.lock(directory, ".lifecycle.lock", seconds=0):
+            return _launch_task(worker_name, worker, cwd, caller, task_id, agent, nonce,
+                                directory, argv, contract)
+    return _launch_task(worker_name, worker, cwd, caller, task_id, agent, nonce,
+                        directory, argv, contract)
+
+
+def _launch_task(worker_name, worker, cwd, caller, task_id, agent, nonce, directory, argv, contract):
     try:
         pane_id, tab_id = place_pane(caller["workspace_id"], cwd, caller["tab_id"])
     except BaseException as exc:
@@ -837,10 +929,14 @@ def _start_task_locked(config, worker_name, brief_text, cwd, skip_if_full, calle
         "pane_id": pane_id,
         "tab_id": tab_id,
         "workspace_id": caller["workspace_id"],
-        "argv": launch_args(worker, directory),
+        "argv": argv,
         "created_at": iso_now(),
     }
     state = default_state()
+    if contract:
+        task["completion"] = contract
+        state["exact"] = {"kind": "active", "dispatch_intent": False,
+                          "task_digest": completion.digest(task)}
     try:
         save_state(directory, state)
         write_json(directory / "task.json", task)
@@ -874,7 +970,17 @@ def _start_task_locked(config, worker_name, brief_text, cwd, skip_if_full, calle
                 print(f"warning: cannot preserve task {task_id} for pane {pane_id}: "
                       f"{recovery_error}", file=sys.stderr)
         else:
-            shutil.rmtree(directory, ignore_errors=True)
+            if contract and (directory / "task.json").exists():
+                # A reader may already have seen the identity. Keep its lock
+                # inode and record; never reuse a published attempt directory.
+                state.update(state="start_failed", closed=True,
+                             problem="publication failed; unused pane closed")
+                state["exact"] = {"kind": "closed_before_delivery",
+                                  "task_digest": completion.digest(task)}
+                with task_state_lock(directory):
+                    write_json(directory / "state.json", state)
+            else:
+                shutil.rmtree(directory, ignore_errors=True)
         raise
 
     def run_object(state_name):
@@ -901,11 +1007,12 @@ def _start_task_locked(config, worker_name, brief_text, cwd, skip_if_full, calle
         )
         started_type = (doc.get("result") or {}).get("type")
         if started_type != "agent_started":
-            start_problem = f"herdr agent start reported {started_type!r}"
+            start_problem = ("exact startup unverified; no prompt submitted" if contract else
+                             f"herdr agent start reported {started_type!r}")
         elif worker["harness"] == "pi":
             wait_for_pi_session(agent, startup_deadline)
     except HerdrError as exc:
-        start_problem = str(exc)
+        start_problem = "exact startup unverified; no prompt submitted" if contract else str(exc)
     if start_problem:
         state["state"] = "start_failed"
         state["problem"] = start_problem
@@ -916,7 +1023,7 @@ def _start_task_locked(config, worker_name, brief_text, cwd, skip_if_full, calle
     index = agent_index()
     entry = (index or {}).get(agent)
     baseline = entry.get("state_change_seq") if isinstance(entry, dict) else None
-    if isinstance(baseline, bool) or not isinstance(baseline, int) or baseline < 0:
+    if not contract and (isinstance(baseline, bool) or not isinstance(baseline, int) or baseline < 0):
         state["state"] = "start_failed"
         state["problem"] = "could not capture a usable agent baseline; prompt was not submitted"
         save_state(directory, state)
@@ -927,7 +1034,11 @@ def _start_task_locked(config, worker_name, brief_text, cwd, skip_if_full, calle
     if state["closed"] or state["state"] == "done":
         return run_object(state["state"])
 
-    pointer = f"New task {task_id}. Read {directory / 'brief.md'} in full and follow it exactly."
+    pointer = (contract["expected_inputs"][0] if contract else
+               f"New task {task_id}. Read {directory / 'brief.md'} in full and follow it exactly.")
+    if contract:
+        state["exact"]["dispatch_intent"] = True
+        save_state(directory, state)  # uncertainty is persisted before the one prompt RPC
     acknowledgement_deadline = time.monotonic() + ACK_TIMEOUT_MS / 1000
     stalled = None
     try:
@@ -954,7 +1065,8 @@ def _start_task_locked(config, worker_name, brief_text, cwd, skip_if_full, calle
         if not isinstance(acknowledged, dict):
             raise HerdrError("prompt acknowledgement has no agent object")
         status = acknowledged.get("agent_status")
-        if status not in ("working", "blocked") and not turn_ended(acknowledged, state):
+        if status not in ("working", "blocked") and not (
+                contract and status in ("idle", "done")) and not turn_ended(acknowledged, state):
             raise HerdrError(f"prompt acknowledgement reported unconfirmed status {status!r}")
         if status == "blocked":
             state["state"] = "blocked"
@@ -975,9 +1087,11 @@ def _start_task_locked(config, worker_name, brief_text, cwd, skip_if_full, calle
             notify(f"horch: {task_id} blocked", f"worker {worker_name} is waiting at a dialog in pane {pane_id}")
         else:
             state["state"] = "not_started"
-            state["problem"] = f"prompt acknowledgement not observed: {exc}"
+            state["problem"] = ("exact dispatch unverified; observe again without resubmitting"
+                                if contract else f"prompt acknowledgement not observed: {exc}")
             notify(
                 f"horch: {task_id} not_started",
+                state["problem"] if contract else
                 f"worker {worker_name} prompt acknowledgement not observed within {ACK_TIMEOUT_MS // 1000}s: {exc}",
             )
     save_state(directory, state)
@@ -1070,7 +1184,7 @@ def evaluate_task(info, agent, config):
     return "running"
 
 
-def poll_round(infos, previous, config):
+def _poll_legacy_round(infos, previous, config):
     """One herdr agent list poll for all unsettled tasks; returns (changed, polled)."""
     index = agent_index()
     if index is None:
@@ -1126,13 +1240,220 @@ def poll_round(infos, previous, config):
     return changed, True
 
 
+def state_for_task(directory, task):
+    if "completion" not in task:
+        return load_state(directory)
+    stored = completion.read_record(directory / "state.json")
+    control = stored.get("exact") if isinstance(stored, dict) else None
+    if not isinstance(control, dict) or control.get("kind") not in {
+            "active", "cancel_requested", "closed_before_delivery", "delivered"}:
+        raise completion.Unverified("exact_state_invalid")
+    if control.get("task_digest") != completion.digest(task):
+        raise completion.Unverified("launch_changed")
+    state = default_state()
+    state.update({key: value for key, value in stored.items() if key in state})
+    kind = control["kind"]
+    if kind == "delivered":
+        if not snapshot_result(task, control):
+            raise completion.Unverified("delivery_snapshot_invalid")
+        state["state"] = "done"
+        state["closed"] = control.get("cleanup") == "confirmed"
+        try:
+            receipt = completion.read_record(directory / "completion.json")
+            if isinstance(receipt, dict) and receipt.get("conflict") is True:
+                state["problem"] = "exact association assumption violated after delivery"
+        except completion.Unverified:
+            pass  # committed proof survives missing later callback storage
+    else:
+        # Compatibility fields can never authorize exact delivery/closure.
+        state["closed"] = kind == "closed_before_delivery"
+        if state["state"] == "done":
+            state["state"] = "running"
+    return state
+
+
+def snapshot_result(task, control):
+    try:
+        raw = base64.b64decode(control["result_bytes"], validate=True)
+        proof = control["proof"]
+        if (hashlib.sha256(raw).hexdigest() != control["result_sha256"]
+                or proof["contract_digest"] != task["completion"]["digest"]
+                or proof["status"] != "completed"
+                or control.get("cleanup") not in ("pending", "confirmed")
+                or not isinstance(control["delivery_id"], str)
+                or not re.fullmatch(r"[0-9a-f]{32}", control["delivery_id"])
+                or any(not isinstance(proof.get(key), str) or not 0 < len(proof[key]) <= 256
+                       for key in ("thread_id", "turn_id"))
+                or any(not isinstance(proof.get(key), str) or not re.fullmatch(r"[0-9a-f]{64}", proof[key])
+                       for key in ("binding_digest", "response_sha256"))):
+            return None
+        result = json.loads(raw)
+        return result if validate_result(result, task) == "valid" else None
+    except (KeyError, ValueError, TypeError, UnicodeError):
+        return None
+
+
+def delivered_result(directory, task, state):
+    if "completion" in task:
+        control = state.get("exact") or {}
+        return snapshot_result(task, control) if control.get("kind") == "delivered" else None
+    return read_json(directory / "result.json")
+
+
+def observable(info):
+    state = info["state"]
+    if "completion" in info["task"]:
+        return not state["closed"] and state["exact"]["kind"] in ("active", "delivered")
+    return not state["closed"] and (state["state"] not in SETTLED_STATES or info.get("recheck"))
+
+
+def exact_diagnostic(info, code):
+    with completion.lock(info["dir"]):
+        state = state_for_task(info["dir"], info["task"])
+        kind = state["exact"]["kind"]
+        message = None
+        if kind == "active":
+            message = f"exact completion unverified: {code}; retry observation without resubmitting"
+        elif kind == "delivered" and not state["closed"]:
+            message = f"exact cleanup pending: {code}; retry observation or explicit close"
+        if message and state["problem"] != "exact association assumption violated after delivery":
+            if state["problem"] != message:
+                state["problem"] = message
+                write_json(info["dir"] / "state.json", state)
+        info["state"] = state
+
+
+def exact_cleanup(info, *, explicit=False):
+    directory, task = info["dir"], info["task"]
+    with completion.lock(directory, ".lifecycle.lock", seconds=0.25 if explicit else 0):
+        with completion.lock(directory):
+            if completion.read_record(directory / "task.json") != task:
+                raise completion.Unverified("launch_changed")
+            state = state_for_task(directory, task)
+            control = state["exact"]
+            if state["closed"]:
+                info["state"] = state
+                return "already_gone"
+            if control["kind"] != "delivered":
+                if not explicit:
+                    return None
+                if control["kind"] == "active":
+                    state["exact"] = {"kind": "cancel_requested", "task_digest": completion.digest(task)}
+                    state["problem"] = "explicit cancellation requested before delivery"
+                    write_json(directory / "state.json", state)
+        # Lifecycle ownership excludes submission, delivery and another close;
+        # the short state lock is released throughout the pane RPC.
+        try:
+            outcome = close_pane(task["pane_id"])
+        except HerdrError:
+            with completion.lock(directory):
+                state = state_for_task(directory, task)
+                state["problem"] = "exact pane cleanup unverified; retry explicit close"
+                write_json(directory / "state.json", state)
+                info["state"] = state
+            return None
+        with completion.lock(directory):
+            state = state_for_task(directory, task)
+            if state["exact"]["kind"] == "delivered":
+                state["exact"]["cleanup"] = "confirmed"
+                if state["problem"] != "exact association assumption violated after delivery":
+                    state["problem"] = None
+            else:
+                state["exact"] = {"kind": "closed_before_delivery", "task_digest": completion.digest(task)}
+                state["problem"] = "explicitly closed before verified delivery"
+            state["closed"] = True
+            write_json(directory / "state.json", state)
+            info["state"] = state
+        return outcome
+
+
+def poll_exact(info, deadline):
+    directory, task = info["dir"], info["task"]
+    try:
+        state = state_for_task(directory, task)
+        if time.monotonic() >= deadline:
+            if state["exact"]["kind"] == "active":
+                raise completion.Unverified("observation_deferred")
+            return  # zero budget: no child or pane RPC
+        if state["exact"]["kind"] == "active":
+            if not state["exact"].get("dispatch_intent"):
+                raise completion.Unverified("dispatch_not_recorded")
+            candidate = completion.binding(directory, task["completion"])
+            if time.monotonic() >= deadline:
+                raise completion.Unverified("observation_deferred")
+            # Native RPC outside every task/lifecycle lock, so close can win.
+            proof = completion.observe(task["completion"], candidate, deadline)
+            with completion.lock(directory, ".lifecycle.lock", seconds=0):
+                with completion.lock(directory):
+                    if completion.read_record(directory / "task.json") != task:
+                        raise completion.Unverified("launch_changed")
+                    state = state_for_task(directory, task)
+                    if state["exact"]["kind"] != "active":
+                        info["state"] = state
+                        return
+                    if (completion.binding(directory, task["completion"]) != candidate
+                            or proof.get("contract_digest") != task["completion"]["digest"]
+                            or proof.get("binding_digest") != completion.digest(candidate)
+                            or proof.get("thread_id") != candidate["thread_id"]
+                            or proof.get("turn_id") != candidate["turn_id"]
+                            or proof.get("status") != "completed"):
+                        raise completion.Unverified("proof_changed")
+                    try:
+                        raw = completion.read_bytes(directory / "result.json")
+                        if len(raw) > 256 * 1024 or validate_result(json.loads(raw), task) != "valid":
+                            raise completion.Unverified("result_invalid")
+                    except (OSError, ValueError, UnicodeError) as exc:
+                        raise completion.Unverified("result_unavailable") from exc
+                    control = {"kind": "delivered", "delivery_id": secrets.token_hex(16),
+                               "task_digest": completion.digest(task),
+                               "proof": proof, "result_sha256": hashlib.sha256(raw).hexdigest(),
+                               "result_bytes": base64.b64encode(raw).decode(), "cleanup": "pending"}
+                    state.update(exact=control, state="done", problem=None)
+                    mark_settled(state)
+                    # Nothing may output/close until this replacement succeeds.
+                    write_json(directory / "state.json", state)
+        info["state"] = state_for_task(directory, task)
+        if info["state"]["exact"]["kind"] == "delivered":
+            # A later conflict cannot revoke a committed snapshot, but is visible.
+            try:
+                completion.binding(directory, task["completion"])
+            except completion.Unverified:
+                with completion.lock(directory):
+                    state = state_for_task(directory, task)
+                    message = "exact association assumption violated after delivery"
+                    if state["problem"] != message:
+                        state["problem"] = message
+                        write_json(directory / "state.json", state)
+            if not info["state"]["closed"] and time.monotonic() < deadline:
+                exact_cleanup(info)
+    except completion.Unverified as exc:
+        exact_diagnostic(info, str(exc))
+    finally:
+        info["state"] = state_for_task(directory, task)
+        info["reported"] = info["state"]["state"]
+
+
+def poll_round(infos, previous, config, *, deadline=None):
+    legacy = [info for info in infos if "completion" not in info["task"]]
+    changed, polled = _poll_legacy_round(legacy, previous, config) if legacy else (False, True)
+    deadline = min(deadline if deadline is not None else float("inf"), time.monotonic() + 10)
+    for info in infos:
+        if "completion" in info["task"]:
+            poll_exact(info, deadline)
+            reported = info["reported"]
+            if previous.get(info["task_id"]) != reported:
+                previous[info["task_id"]] = reported
+                changed = True
+    return changed, polled
+
+
 def wait_line(info):
-    state = load_state(info["dir"])
+    state = state_for_task(info["dir"], info["task"])
     reported = state["state"] if state["closed"] or state["state"] == "done" else info["reported"]
     # A worker may write its result before its turn ends. Do not deliver it yet.
-    parsed = read_json(info["dir"] / "result.json") if reported == "done" else None
+    parsed = delivered_result(info["dir"], info["task"], state) if reported == "done" else None
     parsed = parsed if validate_result(parsed, info["task"]) == "valid" else None
-    return {
+    line = {
         "task_id": info["task_id"],
         "state": reported,
         "closed": bool(state["closed"]),
@@ -1142,12 +1463,16 @@ def wait_line(info):
         "files": parsed.get("files") if parsed and isinstance(parsed.get("files"), list) else [],
         "question": parsed.get("question") if parsed else None,
     }
+    if "completion" in info["task"]:
+        line["result"] = parsed
+        line["delivery_id"] = (state["exact"].get("delivery_id") if parsed else None)
+    return line
 
 
 def make_info(task_id):
     directory = task_dir(task_id)
     task = load_task(directory, task_id)
-    state = load_state(directory)
+    state = state_for_task(directory, task)
     return {"task_id": task_id, "dir": directory, "task": task, "state": state, "reported": state["state"]}
 
 
@@ -1173,7 +1498,7 @@ def cmd_wait(args):
                 info = make_info(task_id)
             except (TaskInvalidError, TaskMissingError):
                 continue
-            if not info["state"]["closed"] and info["state"]["state"] not in SETTLED_STATES:
+            if observable(info):
                 infos.append(info)
     if not infos:
         return
@@ -1190,19 +1515,20 @@ def cmd_wait(args):
 
 def wait_until_change(infos, config, max_seconds):
     """Poll until a waited task changes state or max_seconds pass; no-op when all are settled."""
-    if all((info["state"]["closed"] or info["state"]["state"] in SETTLED_STATES)
-           and not info.get("recheck") for info in infos):
+    if not any(observable(info) for info in infos):
         return
     deadline = None if max_seconds is None else time.monotonic() + max(0.0, max_seconds)
     previous = {info["task_id"]: info["state"]["state"] for info in infos}
     failures = 0
     while True:
-        changed, polled = poll_round(infos, previous, config)
+        if any("completion" in info["task"] for info in infos):
+            changed, polled = poll_round(infos, previous, config, deadline=deadline)
+        else:
+            changed, polled = poll_round(infos, previous, config)
         failures = 0 if polled else failures + 1
         if failures >= 3:
             fail("herdr_error", "could not poll herdr agent list")
-        if changed or (polled and all(info["state"]["closed"] or
-                                     info["state"]["state"] in SETTLED_STATES for info in infos)):
+        if changed or (polled and not any(observable(info) for info in infos)):
             return
         now = time.monotonic()
         if deadline is not None and now >= deadline:
@@ -1210,6 +1536,8 @@ def wait_until_change(infos, config, max_seconds):
         gap = POLL_SECONDS if deadline is None else min(POLL_SECONDS, deadline - now)
         if gap > 0:
             time.sleep(gap)
+        if any("completion" in info["task"] for info in infos):
+            infos = infos[1:] + infos[:1]  # rotate admission within this wait, never persist it
 
 
 # ---------------------------------------------------------------------------
@@ -1318,7 +1646,13 @@ def cmd_stats(args):
             if directory.is_dir():
                 invalid.append(task_id)
             continue
-        result = read_json(directory / "result.json")
+        if "completion" in task:
+            try:
+                state = state_for_task(directory, task)
+            except completion.Unverified:
+                invalid.append(task_id)
+                continue
+        result = delivered_result(directory, task, state)
         minutes, source = None, None
         valid_result = state["state"] == "done" and validate_result(result, task) == "valid"
         if valid_result:
@@ -1326,9 +1660,11 @@ def cmd_stats(args):
                 if state.get("first_done_at") is not None:
                     ended = stats_timestamp(state["first_done_at"])
                     source = "first_done_at"
-                else:
+                elif "completion" not in task:
                     ended = datetime.fromtimestamp((directory / "result.json").stat().st_mtime, timezone.utc)
                     source = "result_mtime"
+                else:
+                    raise ValueError("exact delivery timestamp missing")
                 minutes = (ended - created).total_seconds() / 60
                 if minutes < 0 or ended > now:
                     minutes = None
@@ -1421,7 +1757,7 @@ def cmd_list(args):
             continue
         if args.workspace is not None and task.get("workspace_id") != args.workspace:
             continue
-        state = load_state(directory)
+        state = state_for_task(directory, task)
         rows.append(
             (
                 str(task.get("created_at") or ""),
@@ -1451,6 +1787,11 @@ def cmd_close(args):
     except TaskInvalidError as exc:
         fail("task_invalid", f"{exc}; pane is unknown. Check herdr pane list for a leftover "
              f"horch pane, then remove task directory {directory} by hand")
+    if "completion" in task:
+        info = make_info(args.task_id)
+        outcome = exact_cleanup(info, explicit=True)
+        emit({"task_id": args.task_id, "closed": info["state"]["closed"], "pane": outcome})
+        return
     outcome = close_pane(task["pane_id"])
     with task_state_lock(directory):
         current = load_state(directory)
@@ -1576,12 +1917,12 @@ def cmd_check(args):
     started = {}
     settled_times = {}
     capacity_invalid = set()
-    while pending or any(not info["state"]["closed"] and info["state"]["state"] not in SETTLED_STATES
-                         for info, _ in started.values()):
+    while pending or any(observable(info) for info, _ in started.values()):
         while pending and time.monotonic() < deadline:
             name = pending[0]
             began = time.monotonic()
-            run = start_task(config, name, CHECK_BRIEF, cwd, skip_if_full=True, caller_pane=args.caller_pane)
+            run = start_task(config, name, CHECK_BRIEF, cwd, skip_if_full=True,
+                             caller_pane=args.caller_pane, completion_mode=args.completion)
             if run is None:
                 _, invalid = task_capacity(caller["workspace_id"])
                 capacity_invalid.update(invalid)
@@ -1589,15 +1930,14 @@ def cmd_check(args):
             pending.pop(0)
             info = make_info(run["task_id"])
             started[name] = (info, began)
-            if info["state"]["closed"] or info["state"]["state"] in SETTLED_STATES:
+            if not observable(info):
                 settled_times[name] = time.monotonic()
-        waiting = [info for info, _ in started.values()
-                   if not info["state"]["closed"] and info["state"]["state"] not in SETTLED_STATES]
+        waiting = [info for info, _ in started.values() if observable(info)]
         if time.monotonic() >= deadline or (not waiting and pending):
             break  # out of time, or problem panes hold every slot
         wait_until_change(waiting, config, deadline - time.monotonic())
         for name, (info, _) in started.items():
-            if name not in settled_times and (info["state"]["closed"] or info["state"]["state"] in SETTLED_STATES):
+            if name not in settled_times and not observable(info):
                 settled_times[name] = time.monotonic()
     for name in names:
         if name not in started:
@@ -1610,8 +1950,8 @@ def cmd_check(args):
                   "pane_id": None, "seconds": None, "message": message})
             continue
         info, began = started[name]
-        info["state"] = load_state(info["dir"])
-        result = read_json(info["dir"] / "result.json")
+        info["state"] = state_for_task(info["dir"], info["task"])
+        result = delivered_result(info["dir"], info["task"], info["state"])
         status = result.get("status") if isinstance(result, dict) else None
         state = info["state"]["state"]
         message = info["state"]["problem"]
@@ -1625,7 +1965,7 @@ def cmd_check(args):
             "task_id": info["task_id"],
             "state": state,
             "ok": state == "done" and status == "completed" and info["state"]["closed"]
-                  and result_verdict(info["dir"], info["task"]) == "valid",
+                  and validate_result(result, info["task"]) == "valid",
             "pane_id": None if info["state"]["closed"] else info["task"]["pane_id"],
             "seconds": round(settled_times.get(name, time.monotonic()) - began),
             "message": message,
@@ -1649,6 +1989,8 @@ def build_parser():
     p_run.add_argument("--brief", required=True, help="path of the brief file for the worker")
     p_run.add_argument("--cwd", help="working directory for the worker (default: the current directory)")
     p_run.add_argument("--caller-pane", help="controller pane confirmed by the caller when horch runs outside every pane process tree")
+    p_run.add_argument("--completion", choices=[completion.MODE], default=None,
+                       help="experimental exact Codex completion (requires HORCH_EXACT_STORE)")
     p_run.set_defaults(func=cmd_run)
 
     p_wait = sub.add_parser("wait", help="wait until at least one waited task changes state")
@@ -1678,6 +2020,8 @@ def build_parser():
     p_check.add_argument("--cwd", help="working directory for the check workers (default: the current directory)")
     p_check.add_argument("--max-seconds", type=int, default=300, help="stop waiting after this many seconds (default: 300)")
     p_check.add_argument("--caller-pane", help="controller pane confirmed by the caller when horch runs outside every pane process tree")
+    p_check.add_argument("--completion", choices=[completion.MODE], default=None,
+                         help="experimental exact Codex completion (requires HORCH_EXACT_STORE)")
     p_check.set_defaults(func=cmd_check)
 
     return parser
@@ -1697,6 +2041,8 @@ def main(argv=None):
         fail("task_invalid", str(exc))
     except HerdrError as exc:
         fail("herdr_error", str(exc), exc.payload)
+    except completion.Unverified as exc:
+        fail("exact_unverified", str(exc))
     except KeyboardInterrupt:
         sys.exit(130)
     except Exception as exc:  # never crash with a traceback at the controller

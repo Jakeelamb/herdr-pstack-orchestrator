@@ -134,8 +134,8 @@ def _herdr_message(payload, returncode, stderr):
     return (stderr or "").strip()[:500] or f"herdr exited with status {returncode}"
 
 
-def herdr(*args, timeout=120.0):
-    """Run one herdr command and return its parsed stdout JSON document."""
+def herdr(*args, timeout=120.0, text_output=False):
+    """Run one herdr command, parsing JSON unless a text read is requested."""
     argv = ["herdr", *[str(a) for a in args]]
     try:
         proc = subprocess.run(argv, capture_output=True, text=True, timeout=timeout)
@@ -147,6 +147,8 @@ def herdr(*args, timeout=120.0):
         parsed = _read_json_text(proc.stderr) or _read_json_text(proc.stdout)
         payload = parsed if isinstance(parsed, dict) else {"raw": (proc.stderr or proc.stdout).strip()[:2000]}
         raise HerdrError(_herdr_message(payload, proc.returncode, proc.stderr), payload)
+    if text_output:
+        return proc.stdout
     parsed = _read_json_text(proc.stdout)
     if not isinstance(parsed, dict):
         raise HerdrError(f"herdr {' '.join(str(a) for a in args)} did not return a JSON object")
@@ -749,6 +751,27 @@ def wait_for_pi_session(agent, deadline):
                      "integration is installed with herdr integration install pi")
 
 
+def wait_for_codex_editor(agent, deadline):
+    """Withhold input from Codex's numbered startup picker or an unknown screen.
+
+    Idle and session hooks do not prove this pane has a task editor. This
+    passive check uses Codex's current composer and picker structure, not their
+    English labels. It is a rendering-specific mitigation, not a trust signal.
+    """
+    while (remaining := deadline - time.monotonic()) > 0:
+        screen = herdr("agent", "read", agent, "--source", "visible",
+                       timeout=min(30.0, remaining), text_output=True)
+        if re.search(r"(?m)^[ \t]*›[ \t]*[0-9]+[.)](?:[ \t]|$)", screen):
+            raise HerdrError("Codex shows a numbered selection menu; no task prompt was sent. "
+                             "Inspect its pane before starting a fresh task")
+        if re.search(r"(?m)^[ \t]*›(?:[ \t]|$)", screen) and time.monotonic() < deadline:
+            return
+        time.sleep(min(POLL_SECONDS, max(0.0, deadline - time.monotonic())))
+    raise HerdrError("Codex task editor was not observed within the startup budget; "
+                     "no task prompt was sent. Inspect its pane for a startup dialog "
+                     "or an unsupported editor layout")
+
+
 def _start_task_locked(config, worker_name, brief_text, cwd, skip_if_full, caller_pane):
     """Start one worker on one task and return the run object; fail() on contract errors."""
     caller = require_caller_context(caller_pane)
@@ -859,6 +882,8 @@ def _start_task_locked(config, worker_name, brief_text, cwd, skip_if_full, calle
             start_problem = f"herdr agent start reported {started_type!r}"
         elif worker["harness"] == "pi":
             wait_for_pi_session(agent, startup_deadline)
+        elif worker["harness"] == "codex":
+            wait_for_codex_editor(agent, startup_deadline)
     except HerdrError as exc:
         start_problem = str(exc)
     if start_problem:

@@ -38,6 +38,8 @@ Herdr must also report that the turn ended: an idle/done agent with `completion_
 
 Before submitting a Pi task, `horch` additionally waits for the installed Herdr Pi integration to report an idle/done session within the startup budget. Herdr 0.9.3's `interactive_ready` alone can describe Pi 1.1.0's trust dialog. Without the session signal, startup returns `start_failed`, retains the pane, and sends no task prompt. Install the integration and let the user resolve any dialog before starting a fresh task.
 
+For Codex, `horch` passively reads the visible screen before recording the prompt baseline. A selected numbered picker stops startup. Without a visible composer marker it waits within the startup budget. A picker, read error, or missing composer returns `start_failed` with no task prompt and leaves the pane open. The check recognizes rendering structure, not folder trust. Other numbered menus can block startup; an unnumbered dialog or a dialog appearing after the snapshot can evade the check. This mitigation does not provide an atomic or universal dialog safeguard.
+
 ## States
 
 

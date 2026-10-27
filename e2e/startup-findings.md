@@ -1,4 +1,4 @@
-# Pi startup investigation
+# Worker startup safety
 
 The relocated review driver failed before its first implementation because a Pi project-trust dialog received the task submission. This was reproduced with Herdr 0.9.3, Pi 1.1.0, and the Herdr Pi integration v9. It was not a provider latency failure.
 
@@ -32,5 +32,25 @@ python3 e2e/pi_startup.py --worker glm --output /tmp/horch-pi-startup-evidence
 ```
 
 Choose an authenticated Pi worker without a trust override and an output parent that Pi has not already trusted. The intentional blocked startup takes the normal 90-second budget. Evidence is sanitized; local diagnostic state and pane text remain in the printed run directory. No trust settings, detector manifests, or installed integration files are edited by this test.
+
+## Codex numbered startup picker
+
+Codex can also show **Folder access** while Herdr reports `agent_started`, `interactive_ready: true`, and `idle`. The retained task records from the reported incident show that prompt submission reached acknowledgement and ended `not_started`. The controller observed the trust dialog. A trust entry appeared during the incident, but those records do not prove what changed it.
+
+Herdr's [managed readiness implementation](https://github.com/herdrdev/herdr/blob/v0.9.3/src/terminal/state.rs) accepts an idle agent. Its [prompt command](https://github.com/herdrdev/herdr/blob/v0.9.3/docs/next/website/src/content/docs/agent-automation.mdx) writes text and Enter before acknowledgement. Another acknowledgement wait cannot prevent input from reaching a misclassified dialog. A Codex session hook alone is also insufficient. The [shared daemon limitation](../skills/herdr-orchestrator/references/setup.md#caller-context) can attribute hooks to another pane.
+
+Codex 0.164.0's [folder-access renderer](https://github.com/openai/codex/blob/rust-v0.164.0/codex-rs/tui/src/onboarding/trust_directory.rs) uses the shared numbered picker. Its [rendered snapshot](https://github.com/openai/codex/blob/rust-v0.164.0/codex-rs/tui/src/onboarding/snapshots/codex_tui__onboarding__trust_directory__tests__renders_snapshot_for_git_repo.snap) shows the selected row beginning with `› 1.`. `horch` now passively reads the full visible screen before recording its prompt baseline. Any selected numbered row with that structure stops startup. It does not match English dialog labels or infer that the directory is untrusted.
+
+The check also requires a visible composer line beginning with `›` and whitespace, or an empty composer after that marker. Without one, it waits within the existing startup budget. A read error, an expired budget, or a numbered picker returns `start_failed`, retains the pane, and sends no task prompt. A trusted editor proceeds without a human checkpoint or a trust-setting change. Pi retains its integration guard, and Claude startup is unchanged.
+
+This is a conservative mitigation for the current rendering, not an authoritative editor-readiness signal. Other numbered menus can stop startup, including quoted picker output in the visible transcript. An unsupported composer layout can exhaust the budget. An unnumbered dialog using the same chevron could evade this check. The read and prompt commands are separate, so a dialog appearing after the snapshot is not covered. A complete solution requires a pane-bound editor-readiness signal or an atomic conditional submission from the runtime.
+
+The regression runs the real task-start implementation against controlled Herdr subprocess responses. Its dialog fixture preserves the upstream picker structure while reporting idle and interactive readiness. It asserts zero prompt or key delivery, no baseline, and an open pane. Trusted controls assert exactly one prompt. It also checks translated labels, the second selected option, a picker over an editor, delayed editor display, missing snapshots, transport errors, and the existing acknowledgement behavior.
+
+```bash
+uv run --no-project python -m unittest discover -s tests -v
+```
+
+This is fixture-based submission-boundary verification. It does not launch Herdr, Codex workers, or model calls, and does not establish a fresh live dialog-preservation result.
 
 The original [relocation failure](evidence/relocation-e2e.json) remains in the repository as historical evidence. Fresh receipts identify the fixed source separately. The guard is verified for the versions above; it is not a claim that every harness dialog is detected or that later upstream versions behave identically.

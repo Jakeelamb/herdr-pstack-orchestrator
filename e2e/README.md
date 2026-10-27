@@ -441,6 +441,8 @@ The controller run copies the existing worker configuration and isolates task st
 
 Pi workers require the Herdr Pi integration. A git worktree can still need a separate Pi trust decision when its directory inherits project resources. The [startup investigation](startup-findings.md) explains the reproduced failure and provides a real dialog-preservation test.
 
+Codex also has a [rendering-specific startup mitigation](startup-findings.md#codex-numbered-startup-picker). `uv run --no-project python -m unittest discover -s tests -v` checks the submission boundary with faithful idle/interactive-ready dialog and trusted-editor fixtures. It makes no Herdr or model calls. This fixture coverage is separate from the live Pi evidence below.
+
 To verify Pi preflight against real Herdr, including a mixed batch that must allocate no workers when Pi integration is absent:
 
 ```bash

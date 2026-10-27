@@ -88,7 +88,11 @@ precedence remain unchanged.
 Startup saves initialized `state.json` before publishing `task.json`, which makes
 the task enumerable. If publication fails and unused-pane cleanup is uncertain,
 startup saves `start_failed` and its cleanup diagnostic before retrying identity
-publication. A retained unclosed task still reserves its slot. Confirmed cleanup
+publication. If that diagnostic save fails after initialized state was saved,
+startup still retries identity publication against the saved state and warns
+that the failure diagnostic could not be saved. The retained state can remain
+`running` without a persisted cleanup diagnostic. A retained unclosed task still
+reserves its slot. Confirmed cleanup
 removes the unused task directory. If storage repeatedly prevents state or
 identity publication, startup reports that it cannot preserve the task and pane
 reservation. An unpublished directory cannot reserve capacity. Inspect the
